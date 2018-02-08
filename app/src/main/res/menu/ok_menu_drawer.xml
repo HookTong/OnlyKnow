@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/ok_menu_drawer_FuLi"
+            android:icon="@drawable/ok_menu_fuli"
+            android:title="福 利" />
+        <item
+            android:id="@+id/ok_menu_drawer_Video"
+            android:icon="@drawable/ok_menu_video"
+            android:title="休息视频" />
+        <item
+            android:id="@+id/ok_menu_drawer_ExtensionRes"
+            android:icon="@drawable/ok_menu_res"
+            android:title="拓展资源" />
+    </group>
+
+    <group
+        android:id="@+id/group_android"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/ok_menu_drawer_Android"
+            android:icon="@drawable/ok_menu_android"
+            android:title="Android" />
+        <item
+            android:id="@+id/ok_menu_drawer_IOS"
+            android:icon="@drawable/ok_menu_ios"
+            android:title="IOS" />
+        <item
+            android:id="@+id/ok_menu_drawer_QianDuan"
+            android:icon="@drawable/ok_menu_qianduan"
+            android:title="前 端" />
+    </group>
+
+    <group
+        android:id="@+id/group_settings"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/ok_menu_drawer_Setting"
+            android:icon="@drawable/ok_menu_setting"
+            android:title="设置" />
+    </group>
+</menu>

@@ -1,0 +1,9 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.jing.scrolling.activity.CardTWActivity">
+
+    <item
+        android:id="@+id/action_tonzhiqingkon"
+        android:orderInCategory="1"
+        android:title="@string/action_tonzhi_qingkon" />
+</menu>

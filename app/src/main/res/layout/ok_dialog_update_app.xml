@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="380dp">
+
+    <ImageView
+        android:id="@+id/ok_dialog_update_app_background_image"
+        android:layout_width="match_parent"
+        android:layout_height="380dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/topgd1" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="380dp"
+        android:orientation="vertical">
+
+        <com.onlyknow.app.ui.view.OKSEImageView
+            android:id="@+id/ok_dialog_update_app_close_image"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_margin="5dp"
+            android:background="@drawable/cuowu" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/ok_dialog_update_app_icon_image"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/ic_launcher" />
+
+            <TextView
+                android:id="@+id/ok_dialog_update_app_name_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:text="唯知"
+                android:textColor="@color/md_pink_200"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/ok_dialog_update_app_oldVer_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="2dp"
+                android:text="old版本"
+                android:textColor="@color/md_pink_200"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/ok_dialog_update_app_ver_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:text="是否更新到 1.2 版本 ?"
+                android:textColor="@color/md_pink_200"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/ok_dialog_update_app_size_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="1dp"
+                android:text="最新版本大小 : 12.0MB"
+                android:textColor="@color/md_pink_200"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/ok_dialog_update_app_miaoshu_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="2dp"
+                android:maxLines="5"
+                android:text="@string/app_name"
+                android:textColor="@color/md_pink_200"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <com.onlyknow.app.ui.view.OKProgressButton
+            android:id="@+id/ok_dialog_update_app_down_button"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="3dp"
+            app:progressbtn_backgroud_color="@color/md_pink_200"
+            app:progressbtn_backgroud_second_color="@color/md_light_green_400"
+            app:progressbtn_enable_gradient="true"
+            app:progressbtn_enable_press="true"
+            app:progressbtn_radius="10"
+            app:progressbtn_text_color="@color/md_white_1000"
+            app:progressbtn_text_covercolor="@color/md_light_green_400" />
+    </RelativeLayout>
+</FrameLayout>

@@ -1,0 +1,230 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/md_amber_50"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <include layout="@layout/ok_content_common_toolbar" />
+
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp">
+
+                <EditText
+                    android:id="@+id/RELEASE_input_biaoti"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/RELEASE_TEXT2"
+                    android:text="##" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp">
+
+                <EditText
+                    android:id="@+id/RELEASE_input_tag"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/RELEASE_TEXT3"
+                    android:maxLength="14"
+                    android:text="##" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp">
+
+                <EditText
+                    android:id="@+id/RELEASE_input_link"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/RELEASE_TEXT4"
+                    android:text="##" />
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp">
+
+                <EditText
+                    android:id="@+id/RELEASE_input_zhengwen"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:enabled="true"
+                    android:gravity="top"
+                    android:hint="@string/RELEASE_TEXT5"
+                    android:inputType="textMultiLine"
+                    android:maxLines="30"
+                    android:minLines="20"
+                    android:scrollbars="vertical"
+                    android:text="##" />
+            </android.support.design.widget.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <com.onlyknow.app.ui.view.OKRelativeLayout
+                    android:id="@+id/ok_activity_addImage1_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1">
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_input_zhengwentupian1"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/add_image_black"
+                        android:scaleType="centerCrop" />
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_clear1_imag"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentTop="true"
+                        android:background="@drawable/imagclear"
+                        android:visibility="gone" />
+                </com.onlyknow.app.ui.view.OKRelativeLayout>
+
+                <com.onlyknow.app.ui.view.OKRelativeLayout
+                    android:id="@+id/ok_activity_addImage2_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1">
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_input_zhengwentupian2"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/add_image_black"
+                        android:scaleType="centerCrop" />
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_clear2_imag"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentTop="true"
+                        android:background="@drawable/imagclear"
+                        android:visibility="gone" />
+                </com.onlyknow.app.ui.view.OKRelativeLayout>
+
+                <com.onlyknow.app.ui.view.OKRelativeLayout
+                    android:id="@+id/ok_activity_addImage3_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1">
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_input_zhengwentupian3"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/add_image_black"
+                        android:scaleType="centerCrop" />
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_clear3_imag"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentTop="true"
+                        android:background="@drawable/imagclear"
+                        android:visibility="gone" />
+                </com.onlyknow.app.ui.view.OKRelativeLayout>
+
+                <com.onlyknow.app.ui.view.OKRelativeLayout
+                    android:id="@+id/ok_activity_addImage4_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1">
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_input_zhengwentupian4"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/add_image_black"
+                        android:scaleType="centerCrop" />
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_clear4_imag"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentTop="true"
+                        android:background="@drawable/imagclear"
+                        android:visibility="gone" />
+                </com.onlyknow.app.ui.view.OKRelativeLayout>
+
+                <com.onlyknow.app.ui.view.OKRelativeLayout
+                    android:id="@+id/ok_activity_addImage5_layout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_weight="1">
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_input_zhengwentupian5"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/add_image_black"
+                        android:scaleType="centerCrop" />
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/RELEASE_clear5_imag"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_alignParentRight="true"
+                        android:layout_alignParentTop="true"
+                        android:background="@drawable/imagclear"
+                        android:visibility="gone" />
+                </com.onlyknow.app.ui.view.OKRelativeLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
+</LinearLayout>

@@ -1,0 +1,98 @@
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ok_fragment_me_drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true">
+
+        <android.support.design.widget.AppBarLayout
+            android:id="@+id/ME_app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/app_bar_height"
+            android:fitsSystemWindows="true"
+            android:stateListAnimator="@null"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+            <android.support.design.widget.CollapsingToolbarLayout
+                android:id="@+id/ME_toolbar_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true"
+                app:contentScrim="?attr/colorPrimaryDark"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fitsSystemWindows="true"
+                    app:layout_collapseMode="parallax">
+
+                    <!-- 用户背景 -->
+                    <ImageView
+                        android:id="@+id/ME_toplayout_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop" />
+
+                    <include layout="@layout/ok_content_me" />
+                </FrameLayout>
+
+                <!-- toolbar顶部导航 -->
+                <android.support.v7.widget.Toolbar
+                    android:id="@+id/ME_toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dp"
+                    android:gravity="top"
+                    android:minHeight="?attr/actionBarSize"
+                    app:layout_collapseMode="pin"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/ME_topbtnSet"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="right"
+                        android:layout_marginRight="10dp"
+                        android:background="@drawable/abc_ic_menu_moreoverflow_mtrl_alpha" />
+
+                    <com.onlyknow.app.ui.view.OKSEImageView
+                        android:id="@+id/ME_topbtnRight"
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="right"
+                        android:layout_marginRight="5dp"
+                        android:background="@drawable/bianji" />
+                </android.support.v7.widget.Toolbar>
+
+                <!-- 滑动标签 -->
+                <android.support.design.widget.TabLayout
+                    android:id="@+id/ME_tabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_gravity="bottom"
+                    app:tabIndicatorColor="@color/md_light_blue_300" />
+            </android.support.design.widget.CollapsingToolbarLayout>
+        </android.support.design.widget.AppBarLayout>
+
+        <android.support.v4.view.ViewPager
+            android:id="@+id/ME_viewpager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    </android.support.design.widget.CoordinatorLayout>
+
+    <android.support.design.widget.NavigationView
+        android:id="@+id/ok_fragment_me_NavigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/ok_menu_head_drawer"
+        app:menu="@menu/ok_menu_drawer" />
+</android.support.v4.widget.DrawerLayout>
