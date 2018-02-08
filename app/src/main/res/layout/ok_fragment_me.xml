@@ -76,7 +76,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
                     android:layout_gravity="bottom"
-                    app:tabIndicatorColor="@color/md_light_blue_300" />
+                    app:tabIndicatorColor="@color/md_pink_200" />
             </android.support.design.widget.CollapsingToolbarLayout>
         </android.support.design.widget.AppBarLayout>
 

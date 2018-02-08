@@ -81,6 +81,8 @@ public class OKGanKIosFragment extends OKBaseFragment implements OnRefreshListen
 
     private int page = 1;
 
+    private boolean isPause = false;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if (rootView == null) {
@@ -106,10 +108,23 @@ public class OKGanKIosFragment extends OKBaseFragment implements OnRefreshListen
     @Override
     public void onPause() {
         super.onPause();
+        isPause = true;
         mRefreshLayout.finishRefresh();
         mRefreshLayout.finishLoadMore();
         if (mOKLoadGanKApi != null) {
             mOKLoadGanKApi.cancelTask();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        isPause = false;
+    }
+
+    public void stickTop() {
+        if (!isPause && mOKRecyclerView.getAdapter().getItemCount() != 0) {
+            mOKRecyclerView.scrollToPosition(0);
         }
     }
 

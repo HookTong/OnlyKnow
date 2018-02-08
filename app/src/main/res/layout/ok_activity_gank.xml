@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_gravity="bottom"
-            app:tabIndicatorColor="@color/md_light_blue_300" />
+            app:tabIndicatorColor="@color/md_pink_200" />
     </android.support.design.widget.AppBarLayout>
 
     <android.support.v4.view.ViewPager
@@ -31,4 +31,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/ok_activity_gank_top_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="5dp"
+        android:src="@drawable/top_zhidin"
+        app:layout_anchor="@+id/ok_activity_gank_viewPage"
+        app:layout_anchorGravity="bottom|right" />
 </android.support.design.widget.CoordinatorLayout>

@@ -119,6 +119,9 @@ public class OKBrowserActivity extends OKBaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mProgressBar.setVisibility(View.GONE);
         mWebLink = getIntent().getExtras().getString("WEB_LINK", OKConstant.ONLY_KNOW_OFFICIAL_WEBSITE_URL);
+
+        setWebStyle();
+        init();
     }
 
     @Override
@@ -144,9 +147,6 @@ public class OKBrowserActivity extends OKBaseActivity {
         if (xWalkWebView != null) {
             xWalkWebView.resumeTimers();
             xWalkWebView.onShow();
-
-            setWebStyle();
-            init();
         }
     }
 

@@ -2,12 +2,14 @@ package com.onlyknow.app.ui.activity;
 
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.ui.OKBaseActivity;
@@ -41,12 +43,22 @@ public class OKGanKActivity extends OKBaseActivity {
     @Bind(R.id.ok_activity_gank_appBarLayout)
     AppBarLayout mGanKAppBarLayout;
 
+    @Bind(R.id.ok_activity_gank_top_image)
+    FloatingActionButton mGanKTopImage;
+
     @Bind(R.id.ok_activity_gank_viewPage)
     ViewPager mGanKViewPage;
 
     private final List<Fragment> mFragments = new ArrayList<>();
     private final List<String> mTabName = new ArrayList<>();
     private OKFragmentPagerAdapter mFragmentPagerAdapter;
+
+    private OKGanKWelfareFragment mOKGanKWelfareFragment = new OKGanKWelfareFragment();
+    private OKGanKVideoFragment mOKGanKVideoFragment = new OKGanKVideoFragment();
+    private OKGanKResFragment mOKGanKResFragment = new OKGanKResFragment();
+    private OKGanKAndroidFragment mOKGanKAndroidFragment = new OKGanKAndroidFragment();
+    private OKGanKIosFragment mOKGanKIosFragment = new OKGanKIosFragment();
+    private OKGanKFrontEndFragment mOKGanKFrontEndFragment = new OKGanKFrontEndFragment();
 
     private int page = 0;
 
@@ -123,12 +135,12 @@ public class OKGanKActivity extends OKBaseActivity {
         mGanKTabLayout.addTab(mGanKTabLayout.newTab().setText("前端"));
         mFragments.clear();
         mTabName.clear();
-        mFragments.add(new OKGanKWelfareFragment());
-        mFragments.add(new OKGanKVideoFragment());
-        mFragments.add(new OKGanKResFragment());
-        mFragments.add(new OKGanKAndroidFragment());
-        mFragments.add(new OKGanKIosFragment());
-        mFragments.add(new OKGanKFrontEndFragment());
+        mFragments.add(mOKGanKWelfareFragment);
+        mFragments.add(mOKGanKVideoFragment);
+        mFragments.add(mOKGanKResFragment);
+        mFragments.add(mOKGanKAndroidFragment);
+        mFragments.add(mOKGanKIosFragment);
+        mFragments.add(mOKGanKFrontEndFragment);
         mTabName.add("福利");
         mTabName.add("视频");
         mTabName.add("资源");
@@ -142,5 +154,17 @@ public class OKGanKActivity extends OKBaseActivity {
         mGanKTabLayout.setupWithViewPager(mGanKViewPage);
         mGanKViewPage.setCurrentItem(page);
         mGanKTabLayout.setScrollPosition(page, 0f, true);
+
+        mGanKTopImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mOKGanKWelfareFragment.stickTop();
+                mOKGanKVideoFragment.stickTop();
+                mOKGanKResFragment.stickTop();
+                mOKGanKAndroidFragment.stickTop();
+                mOKGanKIosFragment.stickTop();
+                mOKGanKFrontEndFragment.stickTop();
+            }
+        });
     }
 }

@@ -11,6 +11,7 @@
     <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/md_white_1000"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
@@ -32,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -74,7 +75,7 @@
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="10dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -115,7 +116,7 @@
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="10dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -156,7 +157,7 @@
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="10dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -206,7 +207,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -243,12 +244,53 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/setting_layout_yijianfankui"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/layout_selector"
+                android:elevation="2dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/SET_TEXT13"
+                        android:textColor="@color/black"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/SET_TEXT14"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
+                    android:layout_gravity="center"
+                    android:layout_marginRight="5dp"
+                    android:background="@drawable/jingru" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/setting_layout_banbenjiesao"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="10dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -289,7 +331,7 @@
                 android:layout_height="50dp"
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="10dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -325,13 +367,13 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/setting_layout_yijianfankui"
+                android:id="@+id/setting_layout_about"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_marginBottom="5dp"
+                android:layout_marginBottom="10dp"
                 android:layout_marginLeft="15dp"
                 android:layout_marginTop="10dp"
-                android:background="@color/md_pink_200"
+                android:background="@drawable/layout_selector"
                 android:elevation="2dp"
                 android:orientation="horizontal">
 
@@ -346,7 +388,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/SET_TEXT13"
+                        android:text="@string/SET_TEXT20"
                         android:textColor="@color/black"
                         android:textSize="16sp" />
 
@@ -354,7 +396,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="@string/SET_TEXT14"
+                        android:text="@string/SET_TEXT21"
                         android:textSize="12sp" />
                 </LinearLayout>
 
@@ -365,7 +407,6 @@
                     android:layout_marginRight="5dp"
                     android:background="@drawable/jingru" />
             </LinearLayout>
-
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 </LinearLayout>

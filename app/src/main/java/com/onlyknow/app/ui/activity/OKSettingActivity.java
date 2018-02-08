@@ -34,8 +34,8 @@ import java.util.Map;
 import okhttp3.Request;
 
 public class OKSettingActivity extends OKBaseActivity {
-    private LinearLayout layoutFontSet, layoutCacheQk, layoutVersionUpdate, layoutVersionJieSao, layoutUserXieYi,
-            layoutYiJianFanKui, layoutDiBuDaoHan;
+    private LinearLayout layoutFontSet, layoutCacheQk, layoutVersionUpdate, layoutVersionJieSao, layoutUserXieYi;
+    private LinearLayout layoutYiJianFanKui, layoutDiBuDaoHan, mLinearLayoutAbout;
     private SwitchCompat switchCompat;
     private TextView textViewVersionID;
 
@@ -238,11 +238,20 @@ public class OKSettingActivity extends OKBaseActivity {
             }
         });
 
+        mLinearLayoutAbout.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Bundle mBundle = new Bundle();
+                mBundle.putString("WEB_LINK", OKConstant.ONLY_KNOW_SOURCE_CODE_URL);
+                startUserActivity(mBundle, OKBrowserActivity.class);
+            }
+        });
+
         mToolbarBack.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                OKSettingActivity.this.finish();
+                finish();
             }
         });
     }
@@ -262,6 +271,7 @@ public class OKSettingActivity extends OKBaseActivity {
         layoutUserXieYi = (LinearLayout) findViewById(R.id.setting_layout_yonhuxieyi);
         layoutYiJianFanKui = (LinearLayout) findViewById(R.id.setting_layout_yijianfankui);
         layoutDiBuDaoHan = (LinearLayout) findViewById(R.id.setting_layout_shezhidibudaohan);
+        mLinearLayoutAbout = (LinearLayout) findViewById(R.id.setting_layout_about);
         textViewVersionID = (TextView) findViewById(R.id.setting_text_banbenID);
     }
 

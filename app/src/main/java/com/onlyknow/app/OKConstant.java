@@ -37,6 +37,7 @@ public class OKConstant {
     public final static String ONLY_KNOW_RESOURCES_AD_URL = SERVICE_ROOT_URL + "AD/";
 
     public final static String ONLY_KNOW_OFFICIAL_WEBSITE_URL = SERVICE_ROOT_URL + "/index.jsp"; // 唯知官网
+    public final static String ONLY_KNOW_SOURCE_CODE_URL = "https://github.com/TongXingWen22/OnlyKnow"; // 源代码GitHub主页
 
     public final static String EXPLORE_FIND_URL = "http://m.neihanshequ.com/"; // 发现url
 

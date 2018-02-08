@@ -78,6 +78,8 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
 
     private int page = 1;
 
+    private boolean isPause = false;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         if (rootView == null) {
@@ -103,11 +105,18 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     @Override
     public void onPause() {
         super.onPause();
+        isPause = true;
         mRefreshLayout.finishRefresh();
         mRefreshLayout.finishLoadMore();
         if (mOKLoadGanKApi != null) {
             mOKLoadGanKApi.cancelTask();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        isPause = false;
     }
 
     private void init() {
@@ -140,6 +149,12 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+        }
+    }
+
+    public void stickTop() {
+        if (!isPause && mOKRecyclerView.getAdapter().getItemCount() != 0) {
+            mOKRecyclerView.scrollToPosition(0);
         }
     }
 

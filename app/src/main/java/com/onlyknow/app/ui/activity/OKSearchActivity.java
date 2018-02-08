@@ -219,11 +219,11 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                 if (bean.getCARD_TYPE().equals(OKCardBean.CardType.IMAGE.toString())) {
                     mEntryViewHolder.mTextViewTitle.setText("精彩图片");
                     mEntryViewHolder.mTextViewContent.setText(bean.getTITLE_TEXT() + " 发表");
-                    mEntryViewHolder.mTextViewDate.setText(bean.getCREATE_DATE());
+                    mEntryViewHolder.mTextViewDate.setText(formatTime(bean.getCREATE_DATE()));
                 } else {
                     mEntryViewHolder.mTextViewTitle.setText(bean.getCONTENT_TITLE_TEXT());
                     mEntryViewHolder.mTextViewContent.setText(bean.getCONTENT_TEXT());
-                    mEntryViewHolder.mTextViewDate.setText(bean.getCREATE_DATE());
+                    mEntryViewHolder.mTextViewDate.setText(formatTime(bean.getCREATE_DATE()));
                 }
                 GlideApi(mEntryViewHolder.mImageViewTitle, R.drawable.search_card, R.drawable.search_card, R.drawable.search_card);
             } else if (okSearchBean.getType() == OKSearchBean.SEARCH_TYPE.USER) {
