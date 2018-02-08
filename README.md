@@ -31,7 +31,7 @@ http://wthrcdn.etouch.cn/weather_mini?citykey=101010300
 
 ## 二，APK下载
 
-### [OnlyKnow.APK](http://101.132.168.25:8090/WeiZhiService/APP/OnlyKnow.APK)
+### [OnlyKnow.APK](http://101.132.168.25:8090/WeiZhiService/APP/OnlyKnow.apk)
 
 ## 三，声明
 
@@ -43,7 +43,10 @@ http://wthrcdn.etouch.cn/weather_mini?citykey=101010300
 
 ### 4. [OnlyKnowService](http://101.132.168.25:8090/WeiZhiService/index.jsp) 该API提供一个外部接口http://101.132.168.25:8090/WeiZhiService/ExploreCardInquiry?num=30 , num 为加载条数,返回随机条目数据;
 
-### 5.如果你想帮助我,帮我优化项目或者反馈意见,你可以加我的QQ:3232086497;
+### 5.本项目集成大量优秀的UI框架,并且大部分经过二次简单封装,用户体验良好,不过仍有不足,如果APP出现崩溃,请保证OKMainService正常运行,
+避免被意外终止,并且可能需要你手动提供定位和拍照权限;
+
+### 6.如果你想帮助我,帮我优化项目或者反馈意见,你可以加我的QQ:3232086497。
 
 ## 四，截图
 
