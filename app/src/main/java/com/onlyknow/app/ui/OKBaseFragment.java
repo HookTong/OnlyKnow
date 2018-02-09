@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -45,6 +44,7 @@ import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEdit;
+import com.onlyknow.app.ui.view.OKCatLoadingView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKBarTintUtil;
 import com.onlyknow.app.utils.OKBlurTransformation;
@@ -93,7 +93,6 @@ public class OKBaseFragment extends Fragment {
     public final String CARD_TYPE_TP = OKCardBean.CardType.IMAGE.toString();
     public final String CARD_TYPE_WZ = OKCardBean.CardType.TEXT.toString();
 
-    public ProgressDialog mDialog;
     public SharedPreferences USER_INFO_SP, SETTING_SP, WEATHER_SP, ARTICLE_SP;
 
     public final ExecutorService exec = Executors.newFixedThreadPool(100);
@@ -103,6 +102,8 @@ public class OKBaseFragment extends Fragment {
     public OKSEImageView mToolbarBack, mToolbarMenu, mToolbarSearch, mToolbarEdit, mToolbarSharing, mToolbarSend, mToolbarLogout;
     public TextView mToolbarTitle;
     public ProgressBar mToolBarProgressBar; // 只能初始化通用toolbar才能调用
+
+    public OKCatLoadingView mCatLoadingView;
 
     @Override
     public void onResume() {
@@ -114,6 +115,12 @@ public class OKBaseFragment extends Fragment {
     public void onPause() {
         super.onPause();
         Glide.with(this).pauseRequests();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        closeProgressDialog();
     }
 
     // find两个不同的toolbar,在一个界面中只能find一个
@@ -197,7 +204,7 @@ public class OKBaseFragment extends Fragment {
     }
 
     public void showSnackbar(View view, String message, String mAction) {
-        Snackbar.make(view, message + mAction, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(view, message + " " + mAction, Snackbar.LENGTH_SHORT).show();
     }
 
     public void GlideApi(ImageView mView, int id, int placeholderId, int errorId) {
@@ -270,28 +277,18 @@ public class OKBaseFragment extends Fragment {
     }
 
     public void showProgressDialog(String content) {
-        if (mDialog == null) {
-            mDialog = new ProgressDialog(getActivity());
-            mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);// 设置风格为圆形进度条
-            mDialog.setMessage(content);
-            mDialog.setIndeterminate(false);// 设置进度条是否为不明确
-            mDialog.setCancelable(true);// 设置进度条是否可以按退回键取消
-            mDialog.setCanceledOnTouchOutside(false);
-            mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    mDialog = null;
-                }
-            });
-            mDialog.show();
+        if (mCatLoadingView == null) {
+            mCatLoadingView = new OKCatLoadingView();
+            mCatLoadingView.setLoadText(content);
+            mCatLoadingView.setCancelable(false);
+            mCatLoadingView.show(getActivity().getSupportFragmentManager(), "");
         }
     }
 
     public void closeProgressDialog() {
-        if (mDialog != null) {
-            mDialog.dismiss();
-            mDialog = null;
+        if (mCatLoadingView != null) {
+            mCatLoadingView.dismiss();
+            mCatLoadingView = null;
         }
     }
 
@@ -480,24 +477,6 @@ public class OKBaseFragment extends Fragment {
         return "";
     }
 
-    public String formatTime(String date) {
-        String time[] = date.split("/");
-        if (time.length != 5) {
-            return date;
-        }
-        String nowDate = OKConstant.getNowDate();
-        String nowTime[] = nowDate.split("/");
-        if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (time[2].equals(nowTime[2]))) {
-            return "今天 " + time[3] + ":" + time[4];
-        } else if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (Integer.parseInt(nowTime[2]) - Integer.parseInt(time[2]) == 1)) {
-            return "昨天 " + time[3] + ":" + time[4];
-        } else if (time[0].equals(nowTime[0])) {
-            return time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
-        } else {
-            return time[0] + "年" + time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
-        }
-    }
-
     public void saveWeatherInfo(OKWeatherBean weatherBean) {
         initWeatherSharedPreferences();
         SharedPreferences.Editor editor = WEATHER_SP.edit();
@@ -548,6 +527,24 @@ public class OKBaseFragment extends Fragment {
         calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
         OKLunarUtil lunar = new OKLunarUtil(calendar);
         mTextViewNonLi.setText(lunar.toString() + " " + WEATHER_SP.getString("WEATHER_DATE_WEEK", ""));
+    }
+
+    public String formatTime(String date) {
+        String time[] = date.split("/");
+        if (time.length != 5) {
+            return date;
+        }
+        String nowDate = OKConstant.getNowDate();
+        String nowTime[] = nowDate.split("/");
+        if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (time[2].equals(nowTime[2]))) {
+            return "今天 " + time[3] + ":" + time[4];
+        } else if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (Integer.parseInt(nowTime[2]) - Integer.parseInt(time[2]) == 1)) {
+            return "昨天 " + time[3] + ":" + time[4];
+        } else if (time[0].equals(nowTime[0])) {
+            return time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
+        } else {
+            return time[0] + "年" + time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
+        }
     }
 
     public class BarToggle extends ActionBarDrawerToggle {

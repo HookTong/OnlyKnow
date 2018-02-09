@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -43,6 +42,7 @@ import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEdit;
+import com.onlyknow.app.ui.view.OKCatLoadingView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKBarTintUtil;
 import com.onlyknow.app.utils.OKBlurTransformation;
@@ -95,7 +95,7 @@ public class OKBaseActivity extends AppCompatActivity {
     public final String CARD_TYPE_TP = OKCardBean.CardType.IMAGE.toString();
     public final String CARD_TYPE_WZ = OKCardBean.CardType.TEXT.toString();
 
-    public ProgressDialog mDialog;
+
     public SharedPreferences USER_INFO_SP, SETTING_SP, WEATHER_SP, ARTICLE_SP;
 
     public final ExecutorService exec = Executors.newFixedThreadPool(100);
@@ -107,6 +107,8 @@ public class OKBaseActivity extends AppCompatActivity {
     public TextView mToolbarTitle;
     public ProgressBar mToolBarProgressBar; // 只能初始化通用toolbar才能调用
 
+    public OKCatLoadingView mCatLoadingView;
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -117,6 +119,12 @@ public class OKBaseActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         Glide.with(this).pauseRequests();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        closeProgressDialog();
     }
 
     @Override
@@ -212,7 +220,7 @@ public class OKBaseActivity extends AppCompatActivity {
     }
 
     public void showSnackbar(View view, String message, String errorCode) {
-        Snackbar.make(view, message + errorCode, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(view, message + " " + errorCode, Snackbar.LENGTH_SHORT).show();
     }
 
     public void GlideApi(ImageView mView, int id, int placeholderId, int errorId) {
@@ -291,29 +299,18 @@ public class OKBaseActivity extends AppCompatActivity {
     }
 
     public void showProgressDialog(String content) {
-        if (mDialog == null) {
-            mDialog = new ProgressDialog(this);
-            mDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);// 设置风格为圆形进度条
-            mDialog.setMessage(content);
-            mDialog.setIndeterminate(false);// 设置进度条是否为不明确
-            mDialog.setCancelable(true);// 设置进度条是否可以按退回键取消
-            mDialog.setCanceledOnTouchOutside(false);
-            mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-                    mDialog = null;
-                }
-            });
-            mDialog.show();
-
+        if (mCatLoadingView == null) {
+            mCatLoadingView = new OKCatLoadingView();
+            mCatLoadingView.setLoadText(content);
+            mCatLoadingView.setCancelable(false);
+            mCatLoadingView.show(getSupportFragmentManager(), "");
         }
     }
 
     public void closeProgressDialog() {
-        if (mDialog != null) {
-            mDialog.dismiss();
-            mDialog = null;
+        if (mCatLoadingView != null) {
+            mCatLoadingView.dismiss();
+            mCatLoadingView = null;
         }
     }
 

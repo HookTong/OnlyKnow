@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.bumptech.glide.load.DataSource;
@@ -11,12 +12,16 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.onlyknow.app.GlideApp;
+import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKDragPhotoView;
+import com.onlyknow.app.ui.view.OKSEImageView;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import okhttp3.Request;
 
 /**
  * 图片查看界面,提供动画效果
@@ -27,6 +32,9 @@ import butterknife.ButterKnife;
 public class OKDragPhotoActivity extends OKBaseActivity {
     @Bind(R.id.ok_activity_drag_photo)
     OKDragPhotoView okActivityDragPhoto;
+
+    @Bind(R.id.ok_activity_drag_photo_down)
+    OKSEImageView okActivityDragPhotoDown;
 
     int mOriginLeft;
     int mOriginTop;
@@ -68,6 +76,16 @@ public class OKDragPhotoActivity extends OKBaseActivity {
             @Override
             public void onExit(OKDragPhotoView view, float x, float y, float w, float h) {
                 performExitAnimation(view, x, y, w, h);
+            }
+        });
+
+        okActivityDragPhotoDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String filePath = OKConstant.IMAGE_PATH;
+                OKWebService mWebService = OKWebService.getInstance();
+                mWebService.downloadFile(mBundle.getString("url", ""), filePath, new DownloadCallback());
+                showProgressDialog("正在下载中...");
             }
         });
     }
@@ -282,6 +300,26 @@ public class OKDragPhotoActivity extends OKBaseActivity {
             okActivityDragPhoto.setMinScale(mScaleX);
 
             return false;
+        }
+    }
+
+    // 下载回调类
+    private class DownloadCallback extends OKWebService.ResultCallback {
+
+        @Override
+        public void onError(Request request, Exception e) {
+            closeProgressDialog();
+            showSnackbar(okActivityDragPhotoDown, "下载失败", "");
+        }
+
+        @Override
+        public void onResponse(Object response) {
+            closeProgressDialog();
+            showSnackbar(okActivityDragPhotoDown, "下载完成,您可以到 " + OKConstant.IMAGE_PATH + " 下查看", "");
+        }
+
+        @Override
+        public void onProgress(double total, double current) {
         }
     }
 }
