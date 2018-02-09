@@ -14,16 +14,16 @@ https://crosswalk-project.org/
 
 ### 4.zxing 二维码识别库;
 
-### 5.高德地图定位开放API;
+### 5.高德地图定位API;
 http://lbs.amap.com/
 
-### 6,环信即使通讯API;
+### 6,环信即时通讯API;
 http://www.easemob.com/
 
 ### 7.友盟分享API;
 http://www.umeng.com/
 
-### 8.GanKMM干货营开放API;
+### 8.GanKMM干货营API;
 http://gank.io/api
 
 ### 9.中国气象局天气API
