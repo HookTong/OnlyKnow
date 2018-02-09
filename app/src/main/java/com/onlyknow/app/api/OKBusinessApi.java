@@ -19,13 +19,14 @@ import com.onlyknow.app.database.bean.OKSearchBean;
 import com.onlyknow.app.database.bean.OKSignupResultBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.onlyknow.app.net.OKWebService.OKHttpApiGet;
-import static com.onlyknow.app.net.OKWebService.OKHttpPostCardApi;
+import static com.onlyknow.app.net.OKWebService.OKHttpApiPostFromFile;
 import static com.onlyknow.app.net.OKWebService.OkHttpApiPost;
 
 /**
@@ -466,8 +467,8 @@ public class OKBusinessApi extends OKBaseApi {
         }
     }
 
-    public boolean addUserCard(Map<String, String> params) {
-        String json = OKHttpPostCardApi(AddCard_URL, params);
+    public boolean addUserCard(Map<String, File> fileMap, Map<String, String> params) {
+        String json = OKHttpApiPostFromFile(AddCard_URL, fileMap, params);
         if (json == null) {
             return false;
         } else if (!json.equals("ADD_CardFailed")) {

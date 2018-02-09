@@ -110,4 +110,22 @@ public class OKCardBase64ListBean {
     public void setFormatImage5(String formatImage5) {
         this.formatImage5 = formatImage5;
     }
+
+    public void clear() {
+        count = 0;
+        baseImage1 = "";
+        formatImage1 = "";
+
+        baseImage2 = "";
+        formatImage2 = "";
+
+        baseImage3 = "";
+        formatImage3 = "";
+
+        baseImage4 = "";
+        formatImage4 = "";
+
+        baseImage5 = "";
+        formatImage5 = "";
+    }
 }

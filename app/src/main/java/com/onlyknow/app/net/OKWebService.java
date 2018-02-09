@@ -1,11 +1,8 @@
 package com.onlyknow.app.net;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.utils.OKLogUtil;
 
 import java.io.BufferedReader;
@@ -22,13 +19,13 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OKWebService {
-
     public static String OkHttpApiPost(String url, Map<String, String> params) {
         try {
             OkHttpClient okHttpClient = new OkHttpClient();
@@ -51,8 +48,7 @@ public class OKWebService {
             RequestBody body = mBuilder.build();
             Request request = new Request.Builder().url(url).post(body).build();
             Call call = okHttpClient.newCall(request);
-
-            okhttp3.Response response = call.execute();
+            Response response = call.execute();
             if (response.isSuccessful()) {
                 return bodyToString(response.body().byteStream());
             }
@@ -63,24 +59,7 @@ public class OKWebService {
         return null;
     }
 
-    public static String OKHttpApiGet(String url) {
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        Request request = new Request.Builder().url(url).build();
-
-        Call call = okHttpClient.newCall(request);
-        try {
-            Response response = call.execute();
-            if (response.isSuccessful()) {
-                return bodyToString(response.body().byteStream());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static String OKHttpPostCardApi(String url, Map<String, String> params) {
+    public static String OKHttpApiPostFromData(String url, Map<String, String> params) {
         try {
             OkHttpClient okHttpClient = new OkHttpClient();
             FormBody.Builder mBuilder = new FormBody.Builder();
@@ -102,8 +81,7 @@ public class OKWebService {
             RequestBody body = mBuilder.build();
             Request request = new Request.Builder().url(url).addHeader("Content-Type", "multipart/form-data").post(body).build();
             Call call = okHttpClient.newCall(request);
-
-            okhttp3.Response response = call.execute();
+            Response response = call.execute();
             if (response.isSuccessful()) {
                 return bodyToString(response.body().byteStream());
             }
@@ -114,36 +92,52 @@ public class OKWebService {
         return null;
     }
 
-    public static boolean uploadCardImage(File mFile) {
-        MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("application/octet-stream");
-
+    public static String OKHttpApiPostFromFile(String url, Map<String, File> files, Map<String, String> params) {
+        MultipartBody.Builder builder = new MultipartBody.Builder();
+        builder.setType(MultipartBody.FORM);
+        for (Map.Entry<String, File> entry : files.entrySet()) {
+            builder.addFormDataPart("file", entry.getKey(), RequestBody.create(MediaType.parse("application/octet-stream"), entry.getValue()));
+        }
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String value = entry.getValue();
+            if (isChinese(value)) {
+                try {
+                    value = URLEncoder.encode(value, "utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                    OKLogUtil.print("OKWebService 参数编码错误");
+                }
+            }
+            builder.addFormDataPart(entry.getKey(), value);
+        }
+        MultipartBody multipartBody = builder.build();
         OkHttpClient mOkHttpClient = new OkHttpClient();
-        Request request = new Request.Builder().url(OKConstant.ONLY_KNOW_RESOURCES_CARD_IMAGE_URL)
-                .post(RequestBody.create(MEDIA_TYPE_MARKDOWN, mFile))
-                .build();
+        Request request = new Request.Builder().url(url).post(multipartBody).build();
+        Call call = mOkHttpClient.newCall(request);
         try {
-            Response response = mOkHttpClient.newCall(request).execute();
-            OKLogUtil.print("" + response.message());
-            return response.isSuccessful();
+            Response mResponse = call.execute();
+            if (mResponse.isSuccessful()) {
+                return bodyToString(mResponse.body().byteStream());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
 
-    public static Bitmap getUrlBitmap(String url) {
-        try {
-            OkHttpClient okHttpClient = new OkHttpClient();
-            Request request = new Request.Builder().url(url).build();
-            Call call = okHttpClient.newCall(request);
+    public static String OKHttpApiGet(String url) {
+        OkHttpClient okHttpClient = new OkHttpClient();
 
-            okhttp3.Response response = call.execute();
-            byte[] bytes = response.body().bytes();
-            Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            return bmp;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            OKLogUtil.print(ex.getMessage());
+        Request request = new Request.Builder().url(url).build();
+
+        Call call = okHttpClient.newCall(request);
+        try {
+            Response response = call.execute();
+            if (response.isSuccessful()) {
+                return bodyToString(response.body().byteStream());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return null;
     }

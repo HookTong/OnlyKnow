@@ -132,6 +132,7 @@
     <string name="title_activity_card_tw">CardTWActivity</string>
     <string name="moRen_Title">永远要相信每天都有\n美好的故事发生，在不同的街道\n遇到不同的人，在不同的天气，感受不一样的心情\n今天，你好 !</string>
     <string name="dialog_remove_session">是否删除该会话 ? 删除后所有聊天记录将清空!</string>
+    <string name="articleDialog">为了保障文章质量,通常我们会对您发表的文章进行审批!如果存在违反用户协议的内容,我们会删除您的文章,如果严重我们将执行用户限制,当然您也可以在商店购买用户免审批权限,直接发表文章,但这不代表您可以违法上述内容!</string>
     <string name="filter_vcode">0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ</string>
     <string name="downloaded"> %s %%</string>
 </resources>

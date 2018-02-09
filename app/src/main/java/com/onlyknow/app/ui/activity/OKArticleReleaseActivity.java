@@ -2,21 +2,15 @@ package com.onlyknow.app.ui.activity;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences.Editor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.caimuhao.rxpicker.RxPicker;
 import com.caimuhao.rxpicker.bean.ImageItem;
@@ -30,63 +24,48 @@ import com.onlyknow.app.database.bean.OKCardBase64ListBean;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
-import com.onlyknow.app.ui.view.OKRelativeLayout;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKBase64Util;
-import com.onlyknow.app.utils.OKSDCardUtil;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 
 public class OKArticleReleaseActivity extends OKBaseActivity {
     @Bind(R.id.RELEASE_input_zhengwentupian1)
-    OKSEImageView RELEASEInputZhengwentupian1;
+    OKSEImageView mAddImage1;
     @Bind(R.id.RELEASE_clear1_imag)
-    OKSEImageView RELEASEClear1Imag;
+    OKSEImageView mClearImage1;
 
     @Bind(R.id.RELEASE_input_zhengwentupian2)
-    OKSEImageView RELEASEInputZhengwentupian2;
+    OKSEImageView mAddImage2;
     @Bind(R.id.RELEASE_clear2_imag)
-    OKSEImageView RELEASEClear2Imag;
+    OKSEImageView mClearImage2;
 
     @Bind(R.id.RELEASE_input_zhengwentupian3)
-    OKSEImageView RELEASEInputZhengwentupian3;
+    OKSEImageView mAddImage3;
     @Bind(R.id.RELEASE_clear3_imag)
-    OKSEImageView RELEASEClear3Imag;
+    OKSEImageView mClearImage3;
 
     @Bind(R.id.RELEASE_input_zhengwentupian4)
-    OKSEImageView RELEASEInputZhengwentupian4;
+    OKSEImageView mAddImage4;
     @Bind(R.id.RELEASE_clear4_imag)
-    OKSEImageView RELEASEClear4Imag;
+    OKSEImageView mClearImage4;
 
     @Bind(R.id.RELEASE_input_zhengwentupian5)
-    OKSEImageView RELEASEInputZhengwentupian5;
+    OKSEImageView mAddImage5;
     @Bind(R.id.RELEASE_clear5_imag)
-    OKSEImageView RELEASEClear5Imag;
+    OKSEImageView mClearImage5;
 
-    @Bind(R.id.ok_activity_addImage1_layout)
-    OKRelativeLayout okActivityAddImage1Layout;
+    private EditText mEditTitle, mEditTag, mEditLink, mEditContent;
 
-    @Bind(R.id.ok_activity_addImage2_layout)
-    OKRelativeLayout okActivityAddImage2Layout;
-
-    @Bind(R.id.ok_activity_addImage3_layout)
-    OKRelativeLayout okActivityAddImage3Layout;
-
-    @Bind(R.id.ok_activity_addImage4_layout)
-    OKRelativeLayout okActivityAddImage4Layout;
-
-    @Bind(R.id.ok_activity_addImage5_layout)
-    OKRelativeLayout okActivityAddImage5Layout;
-
-    private EditText editTextTitle, editTextTag, editTextLink, editTextContent;
-
-    private OKCardBase64ListBean mOKCardBase64ListBean;
+    private OKCardBase64ListBean mOKCardBase64ListBean = new OKCardBase64ListBean();
 
     private ArticleTask mArticleTask;
 
@@ -122,93 +101,44 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode) {
-            case 1: // 调用系统裁剪图片后
-                if (resultCode == RESULT_OK) {
-                    Uri uri = data.getData();
-                    if (uri == null) {
-                        showSnackbar(mToolbarAddImage, "未获取到URI地址", "");
-                        return;
-                    }
-                    OKCardBase64ListBean bean = new OKCardBase64ListBean();
-                    String path = OKSDCardUtil.getFilePathByImageUri(OKArticleReleaseActivity.this, uri);
-                    String gs = path.substring(path.lastIndexOf(".") + 1, path.length());
-                    bean.setFormatImage1(gs);
-                    bean.setBaseImage1(path);
-                    bean.setCount(1);
-                    mOKCardBase64ListBean = bean;
-
-                    GlideApi(RELEASEInputZhengwentupian1, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                }
-                break;
-            default:
-                break;
-
-        }
-    }
-
-    @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-            if ((!TextUtils.isEmpty(editTextContent.getText().toString())) && (!editTextContent.getText().toString().equals("##"))) {
-                AlertDialog alertDialog = new AlertDialog.Builder(OKArticleReleaseActivity.this).create();
+            if ((!TextUtils.isEmpty(mEditContent.getText().toString())) && (!mEditContent.getText().toString().equals("##"))) {
+                AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+                alertDialog.setIcon(R.drawable.ic_launcher);
                 alertDialog.setTitle("保存文章");
-                alertDialog.setMessage("是否保存当前编辑的文章 ?");
-
+                alertDialog.setMessage("是否保存当前编辑的文章(无法保存选择的图片) ?");
                 alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener() {
-
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         finish();
                     }
                 });
-
                 alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener() {
-
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Editor editor = ARTICLE_SP.edit();
-                        if (!TextUtils.isEmpty(editTextTitle.getText().toString()) && editTextTitle.getText().toString().equals("##")) {
-                            editor.putString("BIAOTI", editTextTitle.getText().toString());
+                        if (!TextUtils.isEmpty(mEditTitle.getText().toString()) && mEditTitle.getText().toString().equals("##")) {
+                            editor.putString("BIAOTI", mEditTitle.getText().toString());
                         }
-                        if (!TextUtils.isEmpty(editTextTag.getText().toString()) && !editTextTag.getText().toString().equals("##")) {
-                            editor.putString("TAG", editTextTag.getText().toString());
+                        if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals("##")) {
+                            editor.putString("TAG", mEditTag.getText().toString());
                         }
-                        if (!TextUtils.isEmpty(editTextLink.getText().toString()) && !editTextLink.getText().toString().equals("##")) {
-                            editor.putString("LINK", editTextLink.getText().toString());
+                        if (!TextUtils.isEmpty(mEditLink.getText().toString()) && !mEditLink.getText().toString().equals("##")) {
+                            editor.putString("LINK", mEditLink.getText().toString());
                         }
-                        editor.putString("NEIRON", editTextContent.getText().toString());
+                        editor.putString("NEIRON", mEditContent.getText().toString());
                         editor.commit();
-
                         finish();
                     }
                 });
                 alertDialog.show();
             } else {
-                OKArticleReleaseActivity.this.finish();
+                finish();
             }
             return true;
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-    public void cropPhoto(Uri uri) {
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        // 找到指定URI对应的资源图片
-        intent.setDataAndType(uri, "image/*");
-        intent.putExtra("crop", "true");
-        // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
-        // outputX outputY 是裁剪图片宽高
-        intent.putExtra("outputX", 800);
-        intent.putExtra("outputY", 800);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-        intent.putExtra("return-data", false);
-        // 进入系统裁剪图片的界面
-        startActivityForResult(intent, 1);
     }
 
     private void init() {
@@ -217,76 +147,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             @Override
             public void onClick(View v) {
                 RxPicker.init(new LoadImage());
-                RxPicker.of().single(false).camera(true).limit(1, 5).start(OKArticleReleaseActivity.this).subscribe(new Consumer<List<ImageItem>>() {
-                    @Override
-                    public void accept(List<ImageItem> imageItems) throws Exception {
-                        if (imageItems == null || imageItems.size() == 0) {
-                            showSnackbar(mToolbarAddImage, "未获选择图片", "");
-                            return;
-                        }
-                        OKCardBase64ListBean bean = new OKCardBase64ListBean();
-                        if (imageItems.size() == 1) {
-                            ImageItem item = imageItems.get(0);
-                            String path = item.getPath();
-                            String gs = path.substring(path.lastIndexOf(".") + 1, path.length());
-                            if ("jpg".equals(gs) || "png".equals(gs)) {
-                                Uri uri = OKSDCardUtil.getUriByFilePath(OKArticleReleaseActivity.this, path);
-                                if (uri == null) {
-                                    showSnackbar(mToolbarAddImage, "未获取到URI地址", "");
-                                    return;
-                                }
-                                cropPhoto(uri);
-                            } else {
-                                bean.setFormatImage1(gs);
-                                bean.setBaseImage1(path);
-                                bean.setCount(1);
-                                mOKCardBase64ListBean = bean;
-                                GlideApi(RELEASEInputZhengwentupian1, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                            }
-                            return;
-                        }
-
-                        int count = 0;
-                        for (int i = 0; i < imageItems.size(); i++) {
-                            ImageItem item = imageItems.get(i);
-                            String path = item.getPath();
-                            String gs = path.substring(path.lastIndexOf(".") + 1, path.length());
-                            if (i == 0) {
-                                bean.setFormatImage1(gs);
-                                bean.setBaseImage1(path);
-                                GlideApi(RELEASEInputZhengwentupian1, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                                RELEASEClear1Imag.setVisibility(View.VISIBLE);
-                            }
-                            if (i == 1) {
-                                bean.setFormatImage2(gs);
-                                bean.setBaseImage2(path);
-                                GlideApi(RELEASEInputZhengwentupian2, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                                RELEASEClear2Imag.setVisibility(View.VISIBLE);
-                            }
-                            if (i == 2) {
-                                bean.setFormatImage3(gs);
-                                bean.setBaseImage3(path);
-                                GlideApi(RELEASEInputZhengwentupian3, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                                RELEASEClear3Imag.setVisibility(View.VISIBLE);
-                            }
-                            if (i == 3) {
-                                bean.setFormatImage4(gs);
-                                bean.setBaseImage4(path);
-                                GlideApi(RELEASEInputZhengwentupian4, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                                RELEASEClear4Imag.setVisibility(View.VISIBLE);
-                            }
-                            if (i == 4) {
-                                bean.setFormatImage5(gs);
-                                bean.setBaseImage5(path);
-                                GlideApi(RELEASEInputZhengwentupian5, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                                RELEASEClear5Imag.setVisibility(View.VISIBLE);
-                            }
-                            count++;
-                        }
-                        bean.setCount(count);
-                        mOKCardBase64ListBean = bean;
-                    }
-                });
+                RxPicker.of().single(false).camera(true).limit(1, 5).start(OKArticleReleaseActivity.this).subscribe(new ImageSelectResult());
             }
         });
 
@@ -294,43 +155,31 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                Bundle bundle = new Bundle();
-                if ((!editTextTitle.getText().toString().equals("##")
-                        && !editTextTitle.getText().toString().equals(""))
-                        && (!editTextTag.getText().toString().equals("##")
-                        && !editTextTag.getText().toString().equals(""))
-                        && (!editTextContent.getText().toString().equals("##")
-                        && !editTextContent.getText().toString().equals(""))) {
-
+                if (isUpload()) {
                     OKCardBean mCardBean = new OKCardBean();
                     mCardBean.setUSER_NAME(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     mCardBean.setTITLE_TEXT(USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, ""));
-
-                    Toast.makeText(OKArticleReleaseActivity.this, mCardBean.getTITLE_TEXT(), Toast.LENGTH_LONG).show();
-
                     mCardBean.setTITLE_IMAGE_URL("");
-
                     if (mOKCardBase64ListBean != null && mOKCardBase64ListBean.getCount() != 0) {
                         mCardBean.setCARD_TYPE(CARD_TYPE_TW);
-                        mCardBean.setCONTENT_IMAGE_URL(new Gson().toJson(mOKCardBase64ListBean));
                     } else {
                         mCardBean.setCARD_TYPE(CARD_TYPE_WZ);
                     }
-                    if (!editTextLink.getText().toString().equals("##")
-                            && !editTextLink.getText().toString().equals("")) {
-                        mCardBean.setMESSAGE_LINK(editTextLink.getText().toString());
+                    if (!mEditLink.getText().toString().equals("##")
+                            && !mEditLink.getText().toString().equals("")) {
+                        mCardBean.setMESSAGE_LINK(mEditLink.getText().toString());
                     } else {
                         mCardBean.setMESSAGE_LINK("没有参考链接");
                     }
-                    mCardBean.setCONTENT_TITLE_TEXT(editTextTitle.getText().toString());
-                    mCardBean.setCONTENT_TEXT(editTextContent.getText().toString());
-                    mCardBean.setLABELLING(editTextTag.getText().toString());
+                    mCardBean.setCONTENT_TITLE_TEXT(mEditTitle.getText().toString());
+                    mCardBean.setCONTENT_TEXT(mEditContent.getText().toString());
+                    mCardBean.setLABELLING(mEditTag.getText().toString());
                     mCardBean.setCREATE_DATE(OKConstant.getNowDate());
 
                     if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
                         mArticleTask.cancel(true);
                     }
-                    mArticleTask = new ArticleTask();
+                    mArticleTask = new ArticleTask(mOKCardBase64ListBean);
                     mArticleTask.executeOnExecutor(exec, mCardBean);
                     showProgressDialog("正在上传文章...");
                 } else {
@@ -346,7 +195,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
                             mArticleTask.cancel(true);
                         }
-                        mArticleTask = new ArticleTask();
+                        mArticleTask = new ArticleTask(mOKCardBase64ListBean);
                         mArticleTask.executeOnExecutor(exec, mCardBean);
                         showProgressDialog("正在上传图片...");
                     } else {
@@ -356,7 +205,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             }
         });
 
-        RELEASEClear1Imag.setOnClickListener(new OnClickListener() {
+        mClearImage1.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -364,13 +213,13 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mOKCardBase64ListBean.setBaseImage1("");
                     mOKCardBase64ListBean.setFormatImage1("");
                     mOKCardBase64ListBean.setCount(mOKCardBase64ListBean.getCount() - 1);
-                    GlideApi(RELEASEInputZhengwentupian1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    RELEASEClear1Imag.setVisibility(View.GONE);
+                    GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage1.setVisibility(View.GONE);
                 }
             }
         });
 
-        RELEASEClear2Imag.setOnClickListener(new OnClickListener() {
+        mClearImage2.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -380,13 +229,13 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mOKCardBase64ListBean.setBaseImage2("");
                     mOKCardBase64ListBean.setFormatImage2("");
                     mOKCardBase64ListBean.setCount(mOKCardBase64ListBean.getCount() - 1);
-                    GlideApi(RELEASEInputZhengwentupian2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    RELEASEClear2Imag.setVisibility(View.GONE);
+                    GlideApi(mAddImage2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage2.setVisibility(View.GONE);
                 }
             }
         });
 
-        RELEASEClear3Imag.setOnClickListener(new OnClickListener() {
+        mClearImage3.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -396,13 +245,13 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mOKCardBase64ListBean.setBaseImage3("");
                     mOKCardBase64ListBean.setFormatImage3("");
                     mOKCardBase64ListBean.setCount(mOKCardBase64ListBean.getCount() - 1);
-                    GlideApi(RELEASEInputZhengwentupian3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    RELEASEClear3Imag.setVisibility(View.GONE);
+                    GlideApi(mAddImage3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage3.setVisibility(View.GONE);
                 }
             }
         });
 
-        RELEASEClear4Imag.setOnClickListener(new OnClickListener() {
+        mClearImage4.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -412,13 +261,13 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mOKCardBase64ListBean.setBaseImage4("");
                     mOKCardBase64ListBean.setFormatImage4("");
                     mOKCardBase64ListBean.setCount(mOKCardBase64ListBean.getCount() - 1);
-                    GlideApi(RELEASEInputZhengwentupian4, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    RELEASEClear4Imag.setVisibility(View.GONE);
+                    GlideApi(mAddImage4, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage4.setVisibility(View.GONE);
                 }
             }
         });
 
-        RELEASEClear5Imag.setOnClickListener(new OnClickListener() {
+        mClearImage5.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -428,8 +277,8 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mOKCardBase64ListBean.setBaseImage5("");
                     mOKCardBase64ListBean.setFormatImage5("");
                     mOKCardBase64ListBean.setCount(mOKCardBase64ListBean.getCount() - 1);
-                    GlideApi(RELEASEInputZhengwentupian5, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    RELEASEClear5Imag.setVisibility(View.GONE);
+                    GlideApi(mAddImage5, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage5.setVisibility(View.GONE);
                 }
             }
         });
@@ -441,32 +290,58 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                 finish();
             }
         });
+
+        if (ARTICLE_SP.getBoolean("NEW_ARTICLE", true)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(OKArticleReleaseActivity.this);
+            builder.setTitle("您必须要知道");
+            builder.setMessage(getResources().getString(R.string.articleDialog));
+            builder.setPositiveButton("我知道了", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ARTICLE_SP.edit().putBoolean("NEW_ARTICLE", false).commit();
+                }
+            });
+            AlertDialog dialog = builder.show();
+            dialog.setCancelable(false);
+        }
+    }
+
+    private boolean isUpload() {
+        return (!mEditTitle.getText().toString().equals("##")
+                && !mEditTitle.getText().toString().equals(""))
+                && (!mEditTag.getText().toString().equals("##")
+                && !mEditTag.getText().toString().equals(""))
+                && (!mEditContent.getText().toString().equals("##")
+                && !mEditContent.getText().toString().equals(""));
     }
 
     private void findView() {
         super.findCommonToolbarView(this);
         setSupportActionBar(mToolbar);
-
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarSend.setVisibility(View.VISIBLE);
         mToolbarAddImage.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
         mToolbarTitle.setText("发表文章");
-
-        editTextTitle = (EditText) findViewById(R.id.RELEASE_input_biaoti);
-        editTextTag = (EditText) findViewById(R.id.RELEASE_input_tag);
-        editTextLink = (EditText) findViewById(R.id.RELEASE_input_link);
-        editTextContent = (EditText) findViewById(R.id.RELEASE_input_zhengwen);
+        mEditTitle = (EditText) findViewById(R.id.RELEASE_input_biaoti);
+        mEditTag = (EditText) findViewById(R.id.RELEASE_input_tag);
+        mEditLink = (EditText) findViewById(R.id.RELEASE_input_link);
+        mEditContent = (EditText) findViewById(R.id.RELEASE_input_zhengwen);
     }
 
     private void loadData() {
-        editTextTag.setText(ARTICLE_SP.getString("TAG", "##"));
-        editTextTitle.setText(ARTICLE_SP.getString("BIAOTI", "##"));
-        editTextLink.setText(ARTICLE_SP.getString("LINK", "##"));
-        editTextContent.setText(ARTICLE_SP.getString("NEIRON", "##"));
+        mEditTag.setText(ARTICLE_SP.getString("TAG", "##"));
+        mEditTitle.setText(ARTICLE_SP.getString("BIAOTI", "##"));
+        mEditLink.setText(ARTICLE_SP.getString("LINK", "##"));
+        mEditContent.setText(ARTICLE_SP.getString("NEIRON", "##"));
     }
 
     private class ArticleTask extends AsyncTask<OKCardBean, Void, Boolean> {
+        private OKCardBase64ListBean imageListBean; // 选择的图片视频
+
+        public ArticleTask(OKCardBase64ListBean bean) {
+            this.imageListBean = bean;
+        }
 
         @Override
         protected Boolean doInBackground(OKCardBean... params) {
@@ -474,103 +349,64 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                 return false;
             }
 
-            OKCardBean mCardBean = params[0];
+            OKCardBean mCardBean = params[0]; // 文章文字内容Bean
+            Map<String, String> map = new HashMap<>(); // 文章文字内容参数
 
-            Map<String, String> map = new HashMap<>();
-
-            map.put("content_image", "");
-
-            String imageJson = mCardBean.getCONTENT_IMAGE_URL();
-
-            if (!TextUtils.isEmpty(imageJson)) {
-                OKCardBase64ListBean bean = new Gson().fromJson(imageJson, OKCardBase64ListBean.class);
-                if (bean == null) {
-                    return false;
-                }
-
-                String baseImage1 = bean.getBaseImage1();
-                if (!TextUtils.isEmpty(baseImage1)) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPurgeable = true;
-                    options.inSampleSize = 1; // 表示不压缩
-                    Bitmap bitmap = BitmapFactory.decodeFile(baseImage1, options);
-                    if (bitmap != null) {
-                        bean.setBaseImage1(OKBase64Util.BitmapToBase64(bitmap));
-                    }
-
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-
-                String baseImage2 = bean.getBaseImage2();
-                if (!TextUtils.isEmpty(baseImage2)) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPurgeable = true;
-                    options.inSampleSize = 1; // 表示不压缩
-                    Bitmap bitmap = BitmapFactory.decodeFile(baseImage2, options);
-                    if (bitmap != null) {
-                        bean.setBaseImage2(OKBase64Util.BitmapToBase64(bitmap));
-                    }
-
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-
-                String baseImage3 = bean.getBaseImage3();
-                if (!TextUtils.isEmpty(baseImage3)) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPurgeable = true;
-                    options.inSampleSize = 1; // 表示不压缩
-                    Bitmap bitmap = BitmapFactory.decodeFile(baseImage3, options);
-                    if (bitmap != null) {
-                        bean.setBaseImage3(OKBase64Util.BitmapToBase64(bitmap));
-                    }
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-
-                String baseImage4 = bean.getBaseImage4();
-                if (!TextUtils.isEmpty(baseImage4)) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPurgeable = true;
-                    options.inSampleSize = 1; // 表示不压缩
-                    Bitmap bitmap = BitmapFactory.decodeFile(baseImage4, options);
-                    if (bitmap != null) {
-                        bean.setBaseImage4(OKBase64Util.BitmapToBase64(bitmap));
-                    }
-
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-
-                String baseImage5 = bean.getBaseImage5();
-                if (!TextUtils.isEmpty(baseImage5)) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPurgeable = true;
-                    options.inSampleSize = 1; // 表示不压缩
-                    Bitmap bitmap = BitmapFactory.decodeFile(baseImage5, options);
-                    if (bitmap != null) {
-                        bean.setBaseImage5(OKBase64Util.BitmapToBase64(bitmap));
-                    }
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-
-                map.put("content_image", new Gson().toJson(bean));
-            }
-
-            // 封装请求参数
             map.put("username", mCardBean.getUSER_NAME());
-            map.put("title", mCardBean.getTITLE_TEXT());
-            map.put("title_image_url", mCardBean.getTITLE_IMAGE_URL());
+            map.put("title", mCardBean.getTITLE_TEXT()); // 弃用参数,用户昵称
+            map.put("title_image_url", mCardBean.getTITLE_IMAGE_URL()); // 弃用参数,用户头像url
             map.put("type", mCardBean.getCARD_TYPE());
             map.put("content_title", mCardBean.getCONTENT_TITLE_TEXT());
             map.put("labelling", mCardBean.getLABELLING());
             map.put("content_text", mCardBean.getCONTENT_TEXT());
             map.put("link", mCardBean.getMESSAGE_LINK());
             map.put("date", mCardBean.getCREATE_DATE());
+            map.put("content_image", ""); // 弃用参数,用户选择的图片
 
-            return new OKBusinessApi().addUserCard(map);
+            Map<String, File> mFileMap = new HashMap<>(); // 文章图片视频参数
+            if (imageListBean.getCount() != 0) {
+                String mImage1Path = imageListBean.getBaseImage1();
+                if (!TextUtils.isEmpty(mImage1Path)) {
+                    File file = new File(mImage1Path);
+                    if (file.exists()) {
+                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage1();
+                        mFileMap.put(newFileName, file);
+                    }
+                }
+                String mImage2Path = imageListBean.getBaseImage2();
+                if (!TextUtils.isEmpty(mImage2Path)) {
+                    File file = new File(mImage2Path);
+                    if (file.exists()) {
+                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage2();
+                        mFileMap.put(newFileName, file);
+                    }
+                }
+                String mImage3Path = imageListBean.getBaseImage3();
+                if (!TextUtils.isEmpty(mImage3Path)) {
+                    File file = new File(mImage3Path);
+                    if (file.exists()) {
+                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage3();
+                        mFileMap.put(newFileName, file);
+                    }
+                }
+                String mImage4Path = imageListBean.getBaseImage4();
+                if (!TextUtils.isEmpty(mImage4Path)) {
+                    File file = new File(mImage4Path);
+                    if (file.exists()) {
+                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage4();
+                        mFileMap.put(newFileName, file);
+                    }
+                }
+                String mImage5Path = imageListBean.getBaseImage5();
+                if (!TextUtils.isEmpty(mImage5Path)) {
+                    File file = new File(mImage5Path);
+                    if (file.exists()) {
+                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage5();
+                        mFileMap.put(newFileName, file);
+                    }
+                }
+            }
+            return new OKBusinessApi().addUserCard(mFileMap, map);
         }
 
         @Override
@@ -581,17 +417,18 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             }
 
             if (aBoolean) {
-                editTextTitle.setText("##");
-                editTextTag.setText("##");
-                editTextLink.setText("##");
-                editTextContent.setText("##");
+                mEditTitle.setText("##");
+                mEditTag.setText("##");
+                mEditLink.setText("##");
+                mEditContent.setText("##");
+                // 清空历史文章
                 Editor editor = ARTICLE_SP.edit();
                 editor.putString("TAG", "##");
                 editor.putString("BIAOTI", "##");
                 editor.putString("LINK", "##");
                 editor.putString("NEIRON", "##");
-                editor.putString("BASEIMAG", "");
                 editor.commit();
+
                 showSnackbar(mToolbarAddImage, "上传成功", "");
             } else {
                 showSnackbar(mToolbarAddImage, "上传失败", "");
@@ -601,10 +438,80 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     }
 
     private class LoadImage implements RxPickerImageLoader {
-
         @Override
         public void display(ImageView imageView, String path, int width, int height) {
             GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
+        }
+    }
+
+    private class ImageSelectResult implements Consumer<List<ImageItem>> {
+        @Override
+        public void accept(@NonNull List<ImageItem> imageItems) throws Exception {
+            if (imageItems == null || imageItems.size() == 0) {
+                showSnackbar(mToolbarAddImage, "未获选择图片", "");
+                return;
+            }
+            long size = 0;
+            for (ImageItem item : imageItems) { // 文件大小检查
+                File file = new File(item.getPath());
+                if (file.exists()) {
+                    size += file.length();
+                }
+            }
+            if (size > 15 * 1024 * 1024) {
+                showSnackbar(mToolbarAddImage, "一次上传的文件总量不能超过15MB", "");
+                return;
+            }
+            mOKCardBase64ListBean.clear();
+            int count = 0;
+            GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+            GlideApi(mAddImage2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+            GlideApi(mAddImage3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+            GlideApi(mAddImage4, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+            GlideApi(mAddImage5, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+            mClearImage1.setVisibility(View.GONE);
+            mClearImage2.setVisibility(View.GONE);
+            mClearImage3.setVisibility(View.GONE);
+            mClearImage4.setVisibility(View.GONE);
+            mClearImage5.setVisibility(View.GONE);
+            for (int i = 0; i < imageItems.size(); i++) {
+                ImageItem item = imageItems.get(i);
+                String path = item.getPath(); // 文件路径
+                String gs = path.substring(path.lastIndexOf(".") + 1, path.length()); // 文件格式
+
+                if (i == 0) {
+                    mOKCardBase64ListBean.setFormatImage1(gs);
+                    mOKCardBase64ListBean.setBaseImage1(path);
+                    GlideApi(mAddImage1, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage1.setVisibility(View.VISIBLE);
+                }
+                if (i == 1) {
+                    mOKCardBase64ListBean.setFormatImage2(gs);
+                    mOKCardBase64ListBean.setBaseImage2(path);
+                    GlideApi(mAddImage2, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage2.setVisibility(View.VISIBLE);
+                }
+                if (i == 2) {
+                    mOKCardBase64ListBean.setFormatImage3(gs);
+                    mOKCardBase64ListBean.setBaseImage3(path);
+                    GlideApi(mAddImage3, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage3.setVisibility(View.VISIBLE);
+                }
+                if (i == 3) {
+                    mOKCardBase64ListBean.setFormatImage4(gs);
+                    mOKCardBase64ListBean.setBaseImage4(path);
+                    GlideApi(mAddImage4, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage4.setVisibility(View.VISIBLE);
+                }
+                if (i == 4) {
+                    mOKCardBase64ListBean.setFormatImage5(gs);
+                    mOKCardBase64ListBean.setBaseImage5(path);
+                    GlideApi(mAddImage5, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage5.setVisibility(View.VISIBLE);
+                }
+                count++;
+            }
+            mOKCardBase64ListBean.setCount(count);
         }
     }
 }
