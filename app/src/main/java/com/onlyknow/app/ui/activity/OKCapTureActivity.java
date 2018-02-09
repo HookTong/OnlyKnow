@@ -11,6 +11,9 @@ import android.widget.TextView;
 import com.onlyknow.app.R;
 import com.onlyknow.app.ui.OKBaseActivity;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class OKCapTureActivity extends OKBaseActivity {
     private TextView textview;
     private Button butdk;
@@ -36,7 +39,8 @@ public class OKCapTureActivity extends OKBaseActivity {
 
     private void init() {
         textview.setText(bundle.getString("RESULT").toString());
-        if (textview.getText().toString().startsWith("http://") || textview.getText().toString().startsWith("https://")) {
+        String str = textview.getText().toString();
+        if (isUrl(str)) {
             butdk.setText("打开链接");
         } else {
             butdk.setText("复制文本");
@@ -48,7 +52,7 @@ public class OKCapTureActivity extends OKBaseActivity {
             public void onClick(View v) {
                 if (butdk.getText().toString().equals("打开链接")) {
                     Bundle bundle = new Bundle();
-                    bundle.putString("WEBLINK", textview.getText().toString());
+                    bundle.putString("WEB_LINK", textview.getText().toString());
                     Intent intent = new Intent();
                     intent.setClass(OKCapTureActivity.this, OKBrowserActivity.class);
                     intent.putExtras(bundle);
@@ -67,6 +71,16 @@ public class OKCapTureActivity extends OKBaseActivity {
                 OKCapTureActivity.this.finish();
             }
         });
+    }
+
+    private boolean isUrl(String url) {
+        boolean b;
+        String regex = "(((https|http)?://)?([a-z0-9]+[.])|(www.))" + "\\w+[.|\\/]([a-z0-9]{0,})?[[.]([a-z0-9]{0,})]+((/[\\S&&[^,;\u4E00-\u9FA5]]+)+)?([.][a-z0-9]{0,}+|/?)";//设置正则表达式
+        Pattern pat = Pattern.compile(regex.trim());
+        Matcher mat = pat.matcher(url.trim());
+        b = mat.matches();//判断是否匹配
+        boolean b2 = url.startsWith("http://") || url.startsWith("https://") || url.startsWith("file://") || url.startsWith("ftp://");
+        return b || b2;
     }
 
     private void findView() {

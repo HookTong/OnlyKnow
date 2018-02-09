@@ -1,6 +1,7 @@
 package com.onlyknow.app.ui.activity;
 
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -49,6 +50,17 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         super.onPostCreate(savedInstanceState);
         if (mToolbar != null) {
             mToolbar.setTitle("");
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mBitmapQrCode != null) {
+            mBitmapQrCode.recycle();
+        }
+        if (mQrCodeTask != null && mQrCodeTask.getStatus() == AsyncTask.Status.RUNNING) {
+            mQrCodeTask.cancel(true);
         }
     }
 
@@ -105,6 +117,10 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         super.onPause();
     }
 
+    private Bitmap mBitmapQrCode;
+
+    private QrCodeTask mQrCodeTask;
+
     private void initQeCode(Bitmap mBitmapTx, String str) {
         DisplayMetrics outMetrics = new DisplayMetrics();
         this.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
@@ -112,19 +128,11 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         ViewGroup.LayoutParams layoutParams = imageViewQrCode.getLayoutParams();
         layoutParams.height = layoutParams.width = w;// 设置高度
         imageViewQrCode.setLayoutParams(layoutParams);
-
-        try {
-            Bitmap bitmap = OKQRUtil.encodeToQRWidth(str, w);
-            if (mBitmapTx != null) {
-                mBitmapTx = OKBase64Util.toRoundBitmap(mBitmapTx);
-                bitmap = OKQRUtil.addLogo(bitmap, mBitmapTx);
-                // mBitmapTx.recycle();
-            }
-            imageViewQrCode.setImageBitmap(bitmap);
-            // bitmap.recycle();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (mQrCodeTask != null && mQrCodeTask.getStatus() == AsyncTask.Status.RUNNING) {
+            mQrCodeTask.cancel(true);
         }
+        mQrCodeTask = new QrCodeTask(mBitmapTx, w);
+        mQrCodeTask.executeOnExecutor(exec, str);
     }
 
     private void findView() {
@@ -139,5 +147,41 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         textViewNiChen = (TextView) findViewById(R.id.me_qrcode_nicheng);
         textViewQianMin = (TextView) findViewById(R.id.me_qrcode_qianmin);
         buttonSave = (Button) findViewById(R.id.me_qrcode_baocun);
+    }
+
+    private class QrCodeTask extends AsyncTask<String, Void, Bitmap> {
+        private Bitmap mBitmapTx;
+        private int mWidth;
+
+        public QrCodeTask(Bitmap mTx, int w) {
+            this.mBitmapTx = mTx;
+            this.mWidth = w;
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... strings) {
+            try {
+                mBitmapQrCode = OKQRUtil.encodeToQRWidth(strings[0], mWidth);
+                if (mBitmapTx != null) {
+                    mBitmapTx = OKBase64Util.toRoundBitmap(mBitmapTx);
+                    mBitmapQrCode = OKQRUtil.addLogo(mBitmapQrCode, mBitmapTx);
+                    mBitmapTx.recycle();
+                    mBitmapTx = null;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return mBitmapQrCode;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            if (mBitmapQrCode == null) {
+                showSnackbar(imageViewQrCode, "二维码生成失败", "");
+                return;
+            }
+            imageViewQrCode.setImageBitmap(mBitmapQrCode);
+        }
     }
 }

@@ -45,6 +45,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -263,14 +265,13 @@ public class OKBrowserActivity extends OKBaseActivity {
     }
 
     private boolean isUrlAgreement(String mUrl) {
-        if (mUrl.startsWith("http://") || mUrl.startsWith("https://") || mUrl.startsWith("file://")
-                || mUrl.startsWith("ftp://")) {
-            // 符合标准
-            return true;
-        } else {
-            // 不符合标准
-            return false;
-        }
+        boolean b;
+        String regex = "(((https|http)?://)?([a-z0-9]+[.])|(www.))" + "\\w+[.|\\/]([a-z0-9]{0,})?[[.]([a-z0-9]{0,})]+((/[\\S&&[^,;\u4E00-\u9FA5]]+)+)?([.][a-z0-9]{0,}+|/?)";//设置正则表达式
+        Pattern pat = Pattern.compile(regex.trim());
+        Matcher mat = pat.matcher(mUrl.trim());
+        b = mat.matches();//判断是否匹配
+        boolean b2 = mUrl.startsWith("http://") || mUrl.startsWith("https://") || mUrl.startsWith("file://") || mUrl.startsWith("ftp://");
+        return b || b2;
     }
 
     @Override
