@@ -42,4 +42,6 @@
     <item name="swipeRefreshLayout_tag" type="id" />
     <item name="footerView_tag" type="id" />
     <item name="reGetButton" type="id" />
+    <item name="downButton" type="id" />
+    <item name="uploadButton" type="id" />
 </resources>

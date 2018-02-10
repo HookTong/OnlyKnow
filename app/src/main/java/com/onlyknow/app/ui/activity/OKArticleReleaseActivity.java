@@ -69,6 +69,9 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
     private ArticleTask mArticleTask;
 
+    private final int TAG_UPLOAD = 1010;
+    private final int TAG_NORMAL = 1011;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,6 +96,14 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
+            mArticleTask.cancel(true);
+        }
+    }
+
+    @Override
     public void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         if (mToolbar != null) {
@@ -103,6 +114,16 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
+            if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
+                showAlertDialog("文章发表", "当前有文章正在后台上传,确定要退出?", "退出", "取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        finish();
+                    }
+                });
+                return true;
+            }
+
             if ((!TextUtils.isEmpty(mEditContent.getText().toString())) && (!mEditContent.getText().toString().equals("##"))) {
                 AlertDialog alertDialog = new AlertDialog.Builder(this).create();
                 alertDialog.setIcon(R.drawable.ic_launcher);
@@ -119,7 +140,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     public void onClick(DialogInterface dialog, int which) {
                         Editor editor = ARTICLE_SP.edit();
                         if (!TextUtils.isEmpty(mEditTitle.getText().toString()) && mEditTitle.getText().toString().equals("##")) {
-                            editor.putString("BIAOTI", mEditTitle.getText().toString());
+                            editor.putString("TITLE", mEditTitle.getText().toString());
                         }
                         if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals("##")) {
                             editor.putString("TAG", mEditTag.getText().toString());
@@ -127,7 +148,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         if (!TextUtils.isEmpty(mEditLink.getText().toString()) && !mEditLink.getText().toString().equals("##")) {
                             editor.putString("LINK", mEditLink.getText().toString());
                         }
-                        editor.putString("NEIRON", mEditContent.getText().toString());
+                        editor.putString("CONTENT", mEditContent.getText().toString());
                         editor.commit();
                         finish();
                     }
@@ -142,6 +163,8 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     }
 
     private void init() {
+        mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
+
         mToolbarAddImage.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -155,6 +178,10 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
+                if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
+                    showSnackbar(v, "您当前有文章正在上传,请等待上传完成!", "");
+                    return;
+                }
                 if (isUpload()) {
                     OKCardBean mCardBean = new OKCardBean();
                     mCardBean.setUSER_NAME(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
@@ -181,6 +208,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     }
                     mArticleTask = new ArticleTask(mOKCardBase64ListBean);
                     mArticleTask.executeOnExecutor(exec, mCardBean);
+                    mToolbarSend.setTag(R.id.uploadButton, TAG_UPLOAD);
                     showProgressDialog("正在上传文章...");
                 } else {
                     if (mOKCardBase64ListBean != null && mOKCardBase64ListBean.getCount() != 0) {
@@ -197,6 +225,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         }
                         mArticleTask = new ArticleTask(mOKCardBase64ListBean);
                         mArticleTask.executeOnExecutor(exec, mCardBean);
+                        mToolbarSend.setTag(R.id.uploadButton, TAG_UPLOAD);
                         showProgressDialog("正在上传图片...");
                     } else {
                         showSnackbar(v, "您可以不写文章,但请至少选择一张图片!", "");
@@ -331,9 +360,9 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
     private void loadData() {
         mEditTag.setText(ARTICLE_SP.getString("TAG", "##"));
-        mEditTitle.setText(ARTICLE_SP.getString("BIAOTI", "##"));
+        mEditTitle.setText(ARTICLE_SP.getString("TITLE", "##"));
         mEditLink.setText(ARTICLE_SP.getString("LINK", "##"));
-        mEditContent.setText(ARTICLE_SP.getString("NEIRON", "##"));
+        mEditContent.setText(ARTICLE_SP.getString("CONTENT", "##"));
     }
 
     private class ArticleTask extends AsyncTask<OKCardBean, Void, Boolean> {
@@ -415,24 +444,22 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return;
             }
-
             if (aBoolean) {
                 mEditTitle.setText("##");
                 mEditTag.setText("##");
                 mEditLink.setText("##");
                 mEditContent.setText("##");
-                // 清空历史文章
                 Editor editor = ARTICLE_SP.edit();
                 editor.putString("TAG", "##");
-                editor.putString("BIAOTI", "##");
+                editor.putString("TITLE", "##");
                 editor.putString("LINK", "##");
-                editor.putString("NEIRON", "##");
+                editor.putString("CONTENT", "##");
                 editor.commit();
-
                 showSnackbar(mToolbarAddImage, "上传成功", "");
             } else {
                 showSnackbar(mToolbarAddImage, "上传失败", "");
             }
+            mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
             closeProgressDialog();
         }
     }

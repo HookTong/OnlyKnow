@@ -4,8 +4,10 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
@@ -17,7 +19,10 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKDragPhotoView;
+import com.onlyknow.app.ui.view.OKProgressButton;
 import com.onlyknow.app.ui.view.OKSEImageView;
+
+import java.io.File;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -49,6 +54,8 @@ public class OKDragPhotoActivity extends OKBaseActivity {
     private float mTranslationX;
     private float mTranslationY;
 
+    private OKWebService mWebService;
+
     private Bundle mBundle;
 
     @Override
@@ -58,12 +65,21 @@ public class OKDragPhotoActivity extends OKBaseActivity {
         setContentView(R.layout.ok_activity_drag_photo);
         ButterKnife.bind(this);
         mBundle = getIntent().getExtras();
-
-        if (mBundle == null) {
+        if (mBundle == null || TextUtils.isEmpty(mBundle.getString("url", ""))) {
+            showSnackbar(okActivityDragPhotoDown, "没有的url地址", "");
             finish();
         }
+        init();
+    }
 
+    private void init() {
         GlideApp.with(this).load(mBundle.getString("url", "")).placeholder(R.drawable.topgd1).listener(new GlideRequest()).into(okActivityDragPhoto);
+        okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
+        if (isFileExists(mBundle.getString("url", ""))) {
+            okActivityDragPhotoDown.setEnabled(false);
+        } else {
+            okActivityDragPhotoDown.setEnabled(true);
+        }
 
         okActivityDragPhoto.setOnTapListener(new OKDragPhotoView.OnTapListener() {
             @Override
@@ -82,9 +98,14 @@ public class OKDragPhotoActivity extends OKBaseActivity {
         okActivityDragPhotoDown.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if ((int) okActivityDragPhotoDown.getTag(R.id.downButton) == OKProgressButton.DOWNLOADING) {
+                    showSnackbar(view, "您当前正在下载该图片", "");
+                    return;
+                }
                 String filePath = OKConstant.IMAGE_PATH;
-                OKWebService mWebService = OKWebService.getInstance();
+                mWebService = OKWebService.getInstance();
                 mWebService.downloadFile(mBundle.getString("url", ""), filePath, new DownloadCallback());
+                okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.DOWNLOADING);
                 showProgressDialog("正在下载中...");
             }
         });
@@ -93,6 +114,17 @@ public class OKDragPhotoActivity extends OKBaseActivity {
     @Override
     public void onBackPressed() {
         finishWithAnimation(okActivityDragPhoto);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if ((int) okActivityDragPhotoDown.getTag(R.id.downButton) == OKProgressButton.DOWNLOADING) {
+            if (mWebService != null) {
+                mWebService.cancelDown();
+            }
+            Toast.makeText(this, "下载已取消", Toast.LENGTH_SHORT).show();
+        }
+        super.onDestroy();
     }
 
     private void performExitAnimation(final OKDragPhotoView view, float x, float y, float w, float h) {
@@ -259,8 +291,20 @@ public class OKDragPhotoActivity extends OKBaseActivity {
         scaleXAnimator.start();
     }
 
-    private class GlideRequest implements RequestListener {
+    private boolean isFileExists(String url) {
+        File file = new File(OKConstant.IMAGE_PATH, getFileName(url));
+        if (file.exists()) {
+            return true;
+        }
+        return false;
+    }
 
+    private String getFileName(String url) {
+        String ss[] = url.split("/");
+        return ss[ss.length - 1];
+    }
+
+    private class GlideRequest implements RequestListener {
         @Override
         public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
             showSnackbar(okActivityDragPhoto, "图片加载失败", "");
@@ -305,16 +349,19 @@ public class OKDragPhotoActivity extends OKBaseActivity {
 
     // 下载回调类
     private class DownloadCallback extends OKWebService.ResultCallback {
-
         @Override
         public void onError(Request request, Exception e) {
             closeProgressDialog();
+            okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
+            okActivityDragPhotoDown.setEnabled(true);
             showSnackbar(okActivityDragPhotoDown, "下载失败", "");
         }
 
         @Override
         public void onResponse(Object response) {
             closeProgressDialog();
+            okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
+            okActivityDragPhotoDown.setEnabled(false);
             showSnackbar(okActivityDragPhotoDown, "下载完成,您可以到 " + OKConstant.IMAGE_PATH + " 下查看", "");
         }
 

@@ -15,31 +15,26 @@ import android.view.animation.RotateAnimation;
 import com.onlyknow.app.R;
 
 /**
+ * 正在加载对话框(未知进度)
+ * <p>
  * Created by Administrator on 2016/3/30.
  */
-public class OKCatLoadingView extends DialogFragment {
 
-    public OKCatLoadingView() {
-    }
-
-    Animation operatingAnim, eye_left_Anim, eye_right_Anim;
-
-    Dialog mDialog;
-
-    View mouse, eye_left, eye_right;
-
-    OKEyelidView eyelid_left, eyelid_right;
-
-    OKGraduallyTextView mGraduallyTextView;
-
-    String text;
+public class OKCatLoadingView extends DialogFragment implements View.OnClickListener {
+    private Animation operatingAnim, eye_left_Anim, eye_right_Anim;
+    private Dialog mDialog;
+    private View mouse, eye_left, eye_right;
+    private OKEyelidView eyelid_left, eyelid_right;
+    private OKGraduallyTextView mGraduallyTextView;
+    private OKSEImageView mOKSEImageViewClose;
+    private String text;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         if (mDialog == null) {
             mDialog = new Dialog(getActivity(), R.style.cart_dialog);
             mDialog.setContentView(R.layout.ok_catloading);
-            mDialog.setCanceledOnTouchOutside(true);
+            setCancelable(false);
             mDialog.getWindow().setGravity(Gravity.CENTER);
 
             operatingAnim = new RotateAnimation(360f, 0f, Animation.RELATIVE_TO_SELF, 0.5f,
@@ -70,6 +65,8 @@ public class OKCatLoadingView extends DialogFragment {
 
             eye_right = view.findViewById(R.id.eye_right);
 
+            mOKSEImageViewClose = view.findViewById(R.id.ok_catloading_close);
+
             eyelid_left = (OKEyelidView) view.findViewById(R.id.eyelid_left);
 
             eyelid_left.setColor(Color.parseColor("#d0ced1"));
@@ -87,6 +84,8 @@ public class OKCatLoadingView extends DialogFragment {
             if (!TextUtils.isEmpty(text)) {
                 mGraduallyTextView.setText(text);
             }
+
+            mOKSEImageViewClose.setOnClickListener(this);
 
             operatingAnim.setAnimationListener(new Animation.AnimationListener() {
                 @Override
@@ -144,5 +143,16 @@ public class OKCatLoadingView extends DialogFragment {
         super.onDismiss(dialog);
         mDialog = null;
         System.gc();
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.ok_catloading_close:
+                mDialog.dismiss();
+                break;
+            default:
+                break;
+        }
     }
 }

@@ -182,17 +182,15 @@ public class OKWebService {
         return false;
     }
 
-
     private OKWebService() {
         mDelivery = new Handler(Looper.getMainLooper());
     }
 
     private Handler mDelivery;// 主线程返回
-
     private Call downCall; // 下载的call
-
     private OkHttpClient mOkHttpClient = new OkHttpClient();
-
+    private String mDiskDir = "";
+    private String mFileName = "";
     private static OKWebService mWebServiceInstance; // 单例
 
     public static OKWebService getInstance() {
@@ -328,6 +326,8 @@ public class OKWebService {
      * @param callback 回调
      */
     public void downloadFile(String url, String destDir, ResultCallback callback) {
+        mDiskDir = destDir;
+        mFileName = getFileName(url);
         okHttpDownload(url, destDir, callback);
     }
 
@@ -335,6 +335,12 @@ public class OKWebService {
      * 取消下载
      */
     public void cancelDown() {
-        downCall.cancel();
+        if (downCall != null) {
+            downCall.cancel();
+            File file = new File(mDiskDir, mFileName);
+            if (file.exists()) {
+                file.delete();
+            }
+        }
     }
 }

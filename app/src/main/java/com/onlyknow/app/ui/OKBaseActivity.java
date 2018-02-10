@@ -302,7 +302,6 @@ public class OKBaseActivity extends AppCompatActivity {
         if (mCatLoadingView == null) {
             mCatLoadingView = new OKCatLoadingView();
             mCatLoadingView.setLoadText(content);
-            mCatLoadingView.setCancelable(false);
             mCatLoadingView.show(getSupportFragmentManager(), "");
         }
     }

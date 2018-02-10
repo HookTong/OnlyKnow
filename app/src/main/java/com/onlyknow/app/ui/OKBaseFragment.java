@@ -280,7 +280,6 @@ public class OKBaseFragment extends Fragment {
         if (mCatLoadingView == null) {
             mCatLoadingView = new OKCatLoadingView();
             mCatLoadingView.setLoadText(content);
-            mCatLoadingView.setCancelable(false);
             mCatLoadingView.show(getActivity().getSupportFragmentManager(), "");
         }
     }
