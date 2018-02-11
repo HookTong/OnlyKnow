@@ -33,21 +33,21 @@ public class OKBaseService extends Service {
 
     public final ExecutorService exec = Executors.newFixedThreadPool(100);
 
-    public SharedPreferences getUserInfoSp() {
+    public SharedPreferences initUserInfoSp() {
         if (USER_INFO_SP == null) {
             USER_INFO_SP = this.getApplicationContext().getSharedPreferences("userInfo", Context.MODE_PRIVATE);
         }
         return USER_INFO_SP;
     }
 
-    public SharedPreferences getSettingSp() {
+    public SharedPreferences initSettingSp() {
         if (SETTING_SP == null) {
             SETTING_SP = this.getApplicationContext().getSharedPreferences("setting", Context.MODE_PRIVATE);
         }
         return SETTING_SP;
     }
 
-    public SharedPreferences getWeatherSp() {
+    public SharedPreferences initWeatherSp() {
         if (WEATHER_SP == null) {
             WEATHER_SP = this.getApplicationContext().getSharedPreferences("weather", Context.MODE_PRIVATE);
         }

@@ -288,6 +288,11 @@
             android:name=".ui.activity.OKGanKActivity"
             android:theme="@style/AppTheme.NoActionBar" />
 
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
         <!-- 友萌分享KEY -->
         <meta-data
             android:name="UMENG_APPKEY"

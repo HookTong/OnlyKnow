@@ -1,21 +1,20 @@
 package com.onlyknow.app.ui.activity;
 
-import android.app.AlertDialog;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v7.widget.AppCompatButton;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 
+import com.caimuhao.rxpicker.RxPicker;
+import com.caimuhao.rxpicker.bean.ImageItem;
+import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
+import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKBusinessApi;
@@ -24,19 +23,20 @@ import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKBase64Util;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
-import com.onlyknow.app.utils.OKSDCardUtil;
 
-import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class OKFeedBackActivity extends OKBaseActivity {
-    private AppCompatButton appCompatButtonSend;
-    private OKSEImageView imageViewAddTuPian, imageViewClear;
-    private EditText editTextNeiRon;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
 
-    private Uri uriPath;
-    private String filePath = "";
+public class OKFeedBackActivity extends OKBaseActivity {
+    private AppCompatButton mAppCompatButtonSend;
+    private OKSEImageView mImageViewAddTuPian, mImageViewClear;
+    private EditText mEditTextNeiRon;
+
+    private String mFilePath = "";
 
     private FeedBackTask mFeedBackTask;
 
@@ -71,130 +71,30 @@ public class OKFeedBackActivity extends OKBaseActivity {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            // 从相册里面取相片的返回结果
-            case 1:
-                if (resultCode == RESULT_OK) {
-                    uriPath = data.getData();
-                    if (uriPath != null) {
-                        String fp = OKSDCardUtil.getFilePathByImageUri(OKFeedBackActivity.this.getApplicationContext(), uriPath);
-                        String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
-                        if (gs.equalsIgnoreCase("jpg") || gs.equalsIgnoreCase("png")) {
-                            cropPhoto(uriPath);// 裁剪图片
-                        } else {
-                            uriPath = null;
-                            showSnackbar(editTextNeiRon, "您不能上传动图", "");
-                        }
-                    }
-                }
-
-                break;
-            // 相机拍照后的返回结果
-            case 2:
-                if (resultCode == RESULT_OK) {
-                    File temp = new File(OKConstant.IMAGE_PATH + "camera.jpg");
-                    uriPath = Uri.fromFile(temp);
-                    cropPhoto(uriPath);// 裁剪图片
-                }
-
-                break;
-            // 调用系统裁剪图片后
-            case 3:
-                if (resultCode == RESULT_OK && uriPath != null) {
-                    filePath = OKSDCardUtil.getFilePathByImageUri(OKFeedBackActivity.this.getApplicationContext(), uriPath);
-                    GlideApi(imageViewAddTuPian, filePath, R.drawable.add_image_black, R.drawable.add_image_black);
-                } else {
-                    uriPath = null;
-                }
-                break;
-            default:
-                break;
-
-        }
-    }
-
-    public void cropPhoto(Uri uri) {
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        // 找到指定URI对应的资源图片
-        intent.setDataAndType(uri, "image/*");
-        intent.putExtra("crop", "true");
-        // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
-        // outputX outputY 是裁剪图片宽高
-        intent.putExtra("outputX", 1024);
-        intent.putExtra("outputY", 768);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-        intent.putExtra("return-data", false);
-        // 进入系统裁剪图片的界面
-        startActivityForResult(intent, 3);
-    }
-
     private void init() {
-        setSupportActionBar(mToolbar);
-
-        imageViewAddTuPian.setOnClickListener(new OnClickListener() {
+        mImageViewAddTuPian.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder DialogMenu = new AlertDialog.Builder(OKFeedBackActivity.this);
-                final View content_view = LayoutInflater.from(OKFeedBackActivity.this).inflate(R.layout.ok_dialog_choose_image,
-                        null);
-                final LinearLayout linearLayoutXiangChe = (LinearLayout) content_view
-                        .findViewById(R.id.ddalog_choose_layouta_xiangche);
-                final LinearLayout linearLayoutXiangJi = (LinearLayout) content_view
-                        .findViewById(R.id.ddalog_choose_layouta_xiangji);
-                DialogMenu.setView(content_view);
-
-                linearLayoutXiangChe.setOnClickListener(new OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        Intent mIntent = new Intent(Intent.ACTION_PICK, null);
-                        mIntent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
-                        startActivityForResult(mIntent, 1);
-                    }
-                });
-
-                linearLayoutXiangJi.setOnClickListener(new OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            mIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(OKConstant.IMAGE_PATH, "camera.jpg")));
-                            startActivityForResult(mIntent, 2);
-                        } catch (Exception e) {
-                            showSnackbar(v, "相机无法启动，请先开启相机权限", "");
-                        }
-                    }
-                });
-
-                DialogMenu.show();
+                RxPicker.init(new LoadImage());
+                RxPicker.of().single(false).camera(true).limit(1, 1).start(OKFeedBackActivity.this).subscribe(new ImageSelectResult());
             }
         });
 
-        appCompatButtonSend.setOnClickListener(new OnClickListener() {
+        mAppCompatButtonSend.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                    if (editTextNeiRon.getText().toString().length() >= 100) {
-
+                    if (mEditTextNeiRon.getText().toString().length() >= 100) {
                         Map<String, String> map = new HashMap<String, String>();
                         map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
                         map.put("equipment", new OKDeviceInfoUtil(OKFeedBackActivity.this).getIMIE());
-                        map.put("message", editTextNeiRon.getText().toString());
-                        map.put("baseimag", filePath);
+                        map.put("message", mEditTextNeiRon.getText().toString());
+                        map.put("baseimag", mFilePath);
                         map.put("date", OKConstant.getNowDate());
-
                         mFeedBackTask = new FeedBackTask();
                         mFeedBackTask.executeOnExecutor(exec, map);
-
                         showProgressDialog("正在提交意见!请稍后...");
                     } else {
                         showSnackbar(v, "反馈意见必须大于100字符", "");
@@ -202,16 +102,15 @@ public class OKFeedBackActivity extends OKBaseActivity {
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
                 }
-
             }
         });
 
-        imageViewClear.setOnClickListener(new OnClickListener() {
+        mImageViewClear.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                filePath = "";
-                GlideApi(imageViewAddTuPian, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                mFilePath = "";
+                GlideApi(mImageViewAddTuPian, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
             }
         });
 
@@ -226,19 +125,17 @@ public class OKFeedBackActivity extends OKBaseActivity {
 
     private void findView() {
         super.findCommonToolbarView(this);
+        setSupportActionBar(mToolbar);
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
-
         mToolbarTitle.setText("意见反馈");
-
-        appCompatButtonSend = (AppCompatButton) findViewById(R.id.Feedback_TiJiaoBtn);
-        imageViewAddTuPian = (OKSEImageView) findViewById(R.id.Feedback_input_imag);
-        imageViewClear = (OKSEImageView) findViewById(R.id.Feedback_clear_imag);
-        editTextNeiRon = (EditText) findViewById(R.id.Feedback_input_text);
+        mAppCompatButtonSend = (AppCompatButton) findViewById(R.id.Feedback_TiJiaoBtn);
+        mImageViewAddTuPian = (OKSEImageView) findViewById(R.id.Feedback_input_imag);
+        mImageViewClear = (OKSEImageView) findViewById(R.id.Feedback_clear_imag);
+        mEditTextNeiRon = (EditText) findViewById(R.id.Feedback_input_text);
     }
 
     private class FeedBackTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-
         @Override
         protected Boolean doInBackground(Map<String, String>... params) {
             if (isCancelled()) {
@@ -246,9 +143,7 @@ public class OKFeedBackActivity extends OKBaseActivity {
             }
 
             Map<String, String> map = params[0];
-
             String filePath = map.get("baseimag");
-
             if (!TextUtils.isEmpty(filePath)) {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inPurgeable = true;
@@ -265,13 +160,37 @@ public class OKFeedBackActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return;
             }
-
             if (aBoolean) {
-                showSnackbar(appCompatButtonSend, "反馈成功", "");
+                showSnackbar(mAppCompatButtonSend, "反馈成功", "");
             } else {
-                showSnackbar(appCompatButtonSend, "反馈失败,请检查网络", "");
+                showSnackbar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
             }
             closeProgressDialog();
+        }
+    }
+
+    private class LoadImage implements RxPickerImageLoader {
+        @Override
+        public void display(ImageView imageView, String path, int width, int height) {
+            GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
+        }
+    }
+
+    private class ImageSelectResult implements Consumer<List<ImageItem>> {
+        @Override
+        public void accept(@NonNull List<ImageItem> imageItems) throws Exception {
+            if (imageItems == null || imageItems.size() == 0) {
+                showSnackbar(mToolbarAddImage, "未获选择图片", "");
+                return;
+            }
+            String fp = imageItems.get(0).getPath();
+            String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
+            if (gs.equalsIgnoreCase("gif")) {
+                showSnackbar(mAppCompatButtonSend, "您不能选择动图", "");
+                return;
+            }
+            mFilePath = imageItems.get(0).getPath();
+            GlideApi(mImageViewAddTuPian, mFilePath, R.drawable.add_image_black, R.drawable.add_image_black);
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
-import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
@@ -8,18 +8,20 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v7.widget.AppCompatButton;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.caimuhao.rxpicker.RxPicker;
+import com.caimuhao.rxpicker.bean.ImageItem;
+import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
+import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKBusinessApi;
@@ -29,29 +31,28 @@ import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.utils.OKBase64Util;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKSDCardUtil;
+import com.yalantis.ucrop.UCrop;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+
 public class OKUserEdit extends OKBaseActivity {
-    private AppCompatButton butTiJiao;
-
-    private EditText edit_Name, edit_Phone, edit_Email, edit_Tag, edit_Nian, edit_Yue, edit_Ri;
-    private OKCircleImageView ImageViewTouXian;
-    private RadioGroup RgSex;
-    private RadioButton RbNan, RbNv;
-
-    private TextView textViewQrCode;
+    private AppCompatButton mButtonCommit;
+    private EditText mEditName, mEditPhone, mEditEmail, mEditTag, mEditNian, mEditYue, mEditRi;
+    private OKCircleImageView mImageViewTouXian;
+    private RadioGroup mRgSex;
+    private RadioButton mRbNan, mRbNv;
+    private TextView mTextViewQrCode;
 
     private String USERNAME, NICKNAME, PHONE, EMAIL, QIANMIN, SEX, BIRTH_DATE;
-
     private String XG_NICKNAME = "", XG_PHONE = "", XG_EMAIL = "", XG_QIANMIN = "", XG_BIRTHDATE = "", XG_SEX = "";
-
-    private Uri uriPath;
-    private String filePath;
+    private String mFilePath;
 
     private UserEditTask mUserEditTask_HP, mUserEditTask_INFO;
 
@@ -77,29 +78,29 @@ public class OKUserEdit extends OKBaseActivity {
 
         String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
 
-        GlideRoundApi(ImageViewTouXian, url, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+        GlideRoundApi(mImageViewTouXian, url, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
 
-        edit_Name.setText(NICKNAME);
-        edit_Phone.setText(PHONE);
-        edit_Email.setText(EMAIL);
+        mEditName.setText(NICKNAME);
+        mEditPhone.setText(PHONE);
+        mEditEmail.setText(EMAIL);
 
         if (!TextUtils.isEmpty(QIANMIN)) {
-            edit_Tag.setText(QIANMIN);
+            mEditTag.setText(QIANMIN);
         }
 
         if (!TextUtils.isEmpty(BIRTH_DATE) && !BIRTH_DATE.equals("NULL")) {
             String[] items = BIRTH_DATE.split("/");
-            edit_Nian.setText(items[0]);
-            edit_Yue.setText(items[1]);
-            edit_Ri.setText(items[2]);
+            mEditNian.setText(items[0]);
+            mEditYue.setText(items[1]);
+            mEditRi.setText(items[2]);
         }
 
         if (!TextUtils.isEmpty(SEX) && SEX.equals("NAN")) {
-            RbNan.setChecked(true);
-            RbNv.setChecked(false);
+            mRbNan.setChecked(true);
+            mRbNv.setChecked(false);
         } else if (!TextUtils.isEmpty(SEX) && SEX.equals("NV")) {
-            RbNan.setChecked(false);
-            RbNv.setChecked(true);
+            mRbNan.setChecked(false);
+            mRbNv.setChecked(true);
         }
     }
 
@@ -121,6 +122,17 @@ public class OKUserEdit extends OKBaseActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mUserEditTask_INFO != null && mUserEditTask_INFO.getStatus() == AsyncTask.Status.RUNNING) {
+            mUserEditTask_INFO.cancel(true);
+        }
+        if (mUserEditTask_HP != null && mUserEditTask_HP.getStatus() == AsyncTask.Status.RUNNING) {
+            mUserEditTask_HP.cancel(true);
+        }
+    }
+
+    @Override
     public void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         if (mToolbar != null) {
@@ -130,80 +142,41 @@ public class OKUserEdit extends OKBaseActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
         switch (requestCode) {
-            // 从相册里面取相片的返回结果
-            case 1:
+            case UCrop.REQUEST_CROP:
                 if (resultCode == RESULT_OK) {
-                    uriPath = data.getData();
-                    if (uriPath != null) {
-                        String fp = OKSDCardUtil.getFilePathByImageUri(OKUserEdit.this.getApplicationContext(), uriPath);
-                        String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
-                        if (gs.equalsIgnoreCase("jpg") || gs.equalsIgnoreCase("png")) {
-                            cropPhoto(uriPath);// 裁剪图片
-                        } else {
-                            uriPath = null;
-                            showSnackbar(butTiJiao, "您不能上传动图作为头像", "");
-                        }
+                    Uri resultUri = UCrop.getOutput(data);
+                    if (resultUri == null) {
+                        showSnackbar(mButtonCommit, "没有URI地址", "");
+                        return;
                     }
-                }
-
-                break;
-            // 相机拍照后的返回结果
-            case 2:
-                if (resultCode == RESULT_OK) {
-                    File temp = new File(OKConstant.IMAGE_PATH + "camera.jpg");
-                    uriPath = Uri.fromFile(temp);
-                    cropPhoto(uriPath);// 裁剪图片
-                }
-
-                break;
-            // 调用系统裁剪图片后
-            case 3:
-                if (resultCode == RESULT_OK && uriPath != null) {
-                    filePath = OKSDCardUtil.getFilePathByImageUri(OKUserEdit.this.getApplicationContext(), uriPath);
-                    if (filePath != null) {
-                        mUserEditTask_HP = new UserEditTask("UpdateHeadPortrait");
-                        Map<String, String> params = new HashMap<>();
-                        params.put("username", USERNAME);
-                        params.put("baseimag", filePath);
-                        params.put("type", "TOUXIAN");
-                        mUserEditTask_HP.executeOnExecutor(exec, params);
-                        showProgressDialog("正在上传头像!请稍后...");
-                    } else {
-                        showSnackbar(butTiJiao, "文件错误", "");
+                    mFilePath = OKSDCardUtil.getFilePathByImageUri(OKUserEdit.this, resultUri);
+                    if (TextUtils.isEmpty(mFilePath)) {
+                        showSnackbar(mButtonCommit, "文件错误", "");
+                        return;
                     }
-                } else {
-                    uriPath = null;
+                    mUserEditTask_HP = new UserEditTask("UpdateHeadPortrait");
+                    Map<String, String> params = new HashMap<>();
+                    params.put("username", USERNAME);
+                    params.put("baseimag", mFilePath);
+                    params.put("type", "TOUXIAN");
+                    mUserEditTask_HP.executeOnExecutor(exec, params);
+                    showProgressDialog("正在上传头像!请稍后...");
                 }
+                break;
+            case UCrop.RESULT_ERROR:
+                showSnackbar(mButtonCommit, "剪裁失败", "");
                 break;
             default:
                 break;
         }
-    }
+        super.
 
-    public void cropPhoto(Uri uri) {
-        Intent intent = new Intent("com.android.camera.action.CROP");
-        // 找到指定URI对应的资源图片
-        intent.setDataAndType(uri, "image/*");
-        intent.putExtra("crop", "true");
-        // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
-        // outputX outputY 是裁剪图片宽高
-        intent.putExtra("outputX", 512);
-        intent.putExtra("outputY", 512);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-        intent.putExtra("return-data", false);
-        // 进入系统裁剪图片的界面
-        startActivityForResult(intent, 3);
+                onActivityResult(requestCode, resultCode, data);
     }
 
     private void init() {
-        setSupportActionBar(mToolbar);
-
-        butTiJiao.setOnClickListener(new OnClickListener() {
+        mButtonCommit.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -212,35 +185,34 @@ public class OKUserEdit extends OKBaseActivity {
                 XG_EMAIL = EMAIL;
                 XG_QIANMIN = QIANMIN;
                 XG_BIRTHDATE = BIRTH_DATE;
-                if (!TextUtils.isEmpty(edit_Name.getText().toString()) && !edit_Name.getText().toString().equals(NICKNAME)) {
-                    XG_NICKNAME = edit_Name.getText().toString();
+                if (!TextUtils.isEmpty(mEditName.getText().toString()) && !mEditName.getText().toString().equals(NICKNAME)) {
+                    XG_NICKNAME = mEditName.getText().toString();
                 }
-                if (!TextUtils.isEmpty(edit_Phone.getText().toString()) && !edit_Phone.getText().toString().equals(PHONE)) {
-                    XG_PHONE = edit_Phone.getText().toString();
+                if (!TextUtils.isEmpty(mEditPhone.getText().toString()) && !mEditPhone.getText().toString().equals(PHONE)) {
+                    XG_PHONE = mEditPhone.getText().toString();
                 }
-                if (!TextUtils.isEmpty(edit_Email.getText().toString()) && !edit_Email.getText().toString().equals(EMAIL)) {
-                    XG_EMAIL = edit_Email.getText().toString();
+                if (!TextUtils.isEmpty(mEditEmail.getText().toString()) && !mEditEmail.getText().toString().equals(EMAIL)) {
+                    XG_EMAIL = mEditEmail.getText().toString();
                 }
-                if (!TextUtils.isEmpty(edit_Tag.getText().toString()) && !edit_Tag.getText().toString().equals(QIANMIN)) {
-                    XG_QIANMIN = edit_Tag.getText().toString();
+                if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals(QIANMIN)) {
+                    XG_QIANMIN = mEditTag.getText().toString();
                 }
-                if (!TextUtils.isEmpty(edit_Nian.getText().toString())
-                        && !TextUtils.isEmpty(edit_Yue.getText().toString())
-                        && !TextUtils.isEmpty(edit_Ri.getText().toString())) {
+                if (!TextUtils.isEmpty(mEditNian.getText().toString())
+                        && !TextUtils.isEmpty(mEditYue.getText().toString())
+                        && !TextUtils.isEmpty(mEditRi.getText().toString())) {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
-                    boolean isbirth = Integer.parseInt(dateFormat.format(new Date())) > Integer.parseInt(edit_Nian.getText().toString());
-                    if (isbirth) {
-                        XG_BIRTHDATE = edit_Nian.getText().toString() + "/" + edit_Yue.getText().toString()
-                                + "/" + edit_Ri.getText().toString();
+                    boolean isBirth = Integer.parseInt(dateFormat.format(new Date())) > Integer.parseInt(mEditNian.getText().toString());
+                    if (isBirth) {
+                        XG_BIRTHDATE = mEditNian.getText().toString() + "/" + mEditYue.getText().toString()
+                                + "/" + mEditRi.getText().toString();
                     } else {
-                        showSnackbar(butTiJiao, "生日不能大于当前年份", "");
+                        showSnackbar(mButtonCommit, "生日不能大于当前年份", "");
                         return;
                     }
                 }
                 if (TextUtils.isEmpty(XG_SEX)) {
                     XG_SEX = SEX;
                 }
-
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("username", USERNAME);
                 params.put("nickname", XG_NICKNAME);
@@ -251,70 +223,40 @@ public class OKUserEdit extends OKBaseActivity {
                 params.put("sex", XG_SEX);
                 mUserEditTask_INFO = new UserEditTask("UpdateEditInfo");
                 mUserEditTask_INFO.executeOnExecutor(exec, params);
-                showProgressDialog("正在修改您的资料!请稍后...");
-
+                showProgressDialog("正在修改资料...");
             }
         });
 
-        ImageViewTouXian.setOnClickListener(new OnClickListener() {
+        mImageViewTouXian.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder DialogMenu = new AlertDialog.Builder(OKUserEdit.this);
-                final View content_view = LayoutInflater.from(OKUserEdit.this).inflate(R.layout.ok_dialog_choose_image, null);
-                final LinearLayout linearLayoutXiangChe = (LinearLayout) content_view
-                        .findViewById(R.id.ddalog_choose_layouta_xiangche);
-                final LinearLayout linearLayoutXiangJi = (LinearLayout) content_view
-                        .findViewById(R.id.ddalog_choose_layouta_xiangji);
-                DialogMenu.setView(content_view);
-
-                linearLayoutXiangChe.setOnClickListener(new OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        // 返回被选中项的URI
-                        Intent mIntent = new Intent(Intent.ACTION_PICK, null);
-                        // 得到所有图片的URI
-                        mIntent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
-                        startActivityForResult(mIntent, 1);
-                    }
-                });
-
-                linearLayoutXiangJi.setOnClickListener(new OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        try {
-                            Intent mIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            mIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(new File(OKConstant.IMAGE_PATH, "camera.jpg")));
-                            startActivityForResult(mIntent, 2);
-                        } catch (Exception e) {
-                            showSnackbar(v, "相机无法启动，请先开启相机权限", "");
-                        }
-                    }
-                });
-
-                DialogMenu.show();
+                RxPicker.init(new LoadImage());
+                RxPicker.of().single(false).camera(true).limit(1, 1).start(OKUserEdit.this).subscribe(new ImageSelectResult());
             }
         });
 
         mToolbarLogout.setOnClickListener(new OnClickListener() {
-
             @Override
             public void onClick(View v) {
-                USER_INFO_SP.edit().putBoolean("STATE", false).commit();
-                USER_INFO_SP.edit().putBoolean("STATE_CHANGE", true).commit();
-                OKConstant.clearListCache(INTERFACE_NOTICE);
-                OKConstant.clearListCache(INTERFACE_DYNAMIC);
-                OKConstant.clearListCache(INTERFACE_ATTENTION);
-                OKConstant.clearListCache(INTERFACE_COLLECTION);
-                OKConstant.clearListCache(INTERFACE_CARD_AND_COMMENT);
-                sendUserBroadcast(ACTION_MAIN_SERVICE_LOGOUT_IM, null);
-                finish();
+                showAlertDialog("用户管理", "是否退出当前账号?退出之后将无法使用部分功能!", "退出", "取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        USER_INFO_SP.edit().putBoolean("STATE", false).commit();
+                        USER_INFO_SP.edit().putBoolean("STATE_CHANGE", true).commit();
+                        OKConstant.clearListCache(INTERFACE_NOTICE);
+                        OKConstant.clearListCache(INTERFACE_DYNAMIC);
+                        OKConstant.clearListCache(INTERFACE_ATTENTION);
+                        OKConstant.clearListCache(INTERFACE_COLLECTION);
+                        OKConstant.clearListCache(INTERFACE_CARD_AND_COMMENT);
+                        sendUserBroadcast(ACTION_MAIN_SERVICE_LOGOUT_IM, null);
+                        finish();
+                    }
+                });
             }
         });
 
-        textViewQrCode.setOnClickListener(new OnClickListener() {
+        mTextViewQrCode.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -327,13 +269,13 @@ public class OKUserEdit extends OKBaseActivity {
             }
         });
 
-        RgSex.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        mRgSex.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                if (checkedId == RbNan.getId()) {
+                if (checkedId == mRbNan.getId()) {
                     XG_SEX = "NAN";
-                } else if (checkedId == RbNv.getId()) {
+                } else if (checkedId == mRbNv.getId()) {
                     XG_SEX = "NV";
                 }
             }
@@ -350,25 +292,24 @@ public class OKUserEdit extends OKBaseActivity {
 
     private void findView() {
         super.findCommonToolbarView(this);
+        setSupportActionBar(mToolbar);
         mToolbarLogout.setVisibility(View.VISIBLE);
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
-
         mToolbarTitle.setText("用户信息编辑");
-
-        butTiJiao = (AppCompatButton) findViewById(R.id.UserEdit_btn_TiJiao);
-        edit_Name = (EditText) findViewById(R.id.UserEdit_input_name);
-        edit_Phone = (EditText) findViewById(R.id.UserEdit_input_phone);
-        edit_Email = (EditText) findViewById(R.id.UserEdit_input_email);
-        edit_Tag = (EditText) findViewById(R.id.UserEdit_input_tag);
-        edit_Nian = (EditText) findViewById(R.id.UserEdit_input_nian);
-        edit_Yue = (EditText) findViewById(R.id.UserEdit_input_yue);
-        edit_Ri = (EditText) findViewById(R.id.UserEdit_input_ri);
-        RgSex = (RadioGroup) findViewById(R.id.UserEdit_RG_sex);
-        RbNan = (RadioButton) findViewById(R.id.UserEdit_RB_male);
-        RbNv = (RadioButton) findViewById(R.id.UserEdit_RB_female);
-        ImageViewTouXian = (OKCircleImageView) findViewById(R.id.UserEdit_TouXian_Imag);
-        textViewQrCode = (TextView) findViewById(R.id.UserEdit_link_qrcode);
+        mButtonCommit = (AppCompatButton) findViewById(R.id.UserEdit_btn_TiJiao);
+        mEditName = (EditText) findViewById(R.id.UserEdit_input_name);
+        mEditPhone = (EditText) findViewById(R.id.UserEdit_input_phone);
+        mEditEmail = (EditText) findViewById(R.id.UserEdit_input_email);
+        mEditTag = (EditText) findViewById(R.id.UserEdit_input_tag);
+        mEditNian = (EditText) findViewById(R.id.UserEdit_input_nian);
+        mEditYue = (EditText) findViewById(R.id.UserEdit_input_yue);
+        mEditRi = (EditText) findViewById(R.id.UserEdit_input_ri);
+        mRgSex = (RadioGroup) findViewById(R.id.UserEdit_RG_sex);
+        mRbNan = (RadioButton) findViewById(R.id.UserEdit_RB_male);
+        mRbNv = (RadioButton) findViewById(R.id.UserEdit_RB_female);
+        mImageViewTouXian = (OKCircleImageView) findViewById(R.id.UserEdit_TouXian_Imag);
+        mTextViewQrCode = (TextView) findViewById(R.id.UserEdit_link_qrcode);
     }
 
     private class UserEditTask extends AsyncTask<Map<String, String>, Void, Boolean> {
@@ -439,15 +380,39 @@ public class OKUserEdit extends OKBaseActivity {
 
                     loadData();
                 } else if (this.Type.equals("UpdateHeadPortrait")) {
-                    GlideRoundApi(ImageViewTouXian, filePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+                    GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
                 }
 
-                showSnackbar(butTiJiao, "修改成功", "");
+                showSnackbar(mButtonCommit, "修改成功", "");
             } else {
-                showSnackbar(butTiJiao, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
+                showSnackbar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
             }
 
             closeProgressDialog();
+        }
+    }
+
+    private class LoadImage implements RxPickerImageLoader {
+        @Override
+        public void display(ImageView imageView, String path, int width, int height) {
+            GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
+        }
+    }
+
+    private class ImageSelectResult implements Consumer<List<ImageItem>> {
+        @Override
+        public void accept(@NonNull List<ImageItem> imageItems) throws Exception {
+            if (imageItems == null || imageItems.size() == 0) {
+                showSnackbar(mToolbarAddImage, "未获选择图片", "");
+                return;
+            }
+            String fp = imageItems.get(0).getPath();
+            String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
+            if (gs.equalsIgnoreCase("gif")) {
+                showSnackbar(mButtonCommit, "您不能选择动图作为头像", "");
+                return;
+            }
+            startUCrop(imageItems.get(0).getPath(), 1, 1);
         }
     }
 }

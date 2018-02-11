@@ -114,49 +114,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-            if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
-                showAlertDialog("文章发表", "当前有文章正在后台上传,确定要退出?", "退出", "取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        finish();
-                    }
-                });
-                return true;
-            }
-
-            if ((!TextUtils.isEmpty(mEditContent.getText().toString())) && (!mEditContent.getText().toString().equals("##"))) {
-                AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-                alertDialog.setIcon(R.drawable.ic_launcher);
-                alertDialog.setTitle("保存文章");
-                alertDialog.setMessage("是否保存当前编辑的文章(无法保存选择的图片) ?");
-                alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-                alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Editor editor = ARTICLE_SP.edit();
-                        if (!TextUtils.isEmpty(mEditTitle.getText().toString()) && mEditTitle.getText().toString().equals("##")) {
-                            editor.putString("TITLE", mEditTitle.getText().toString());
-                        }
-                        if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals("##")) {
-                            editor.putString("TAG", mEditTag.getText().toString());
-                        }
-                        if (!TextUtils.isEmpty(mEditLink.getText().toString()) && !mEditLink.getText().toString().equals("##")) {
-                            editor.putString("LINK", mEditLink.getText().toString());
-                        }
-                        editor.putString("CONTENT", mEditContent.getText().toString());
-                        editor.commit();
-                        finish();
-                    }
-                });
-                alertDialog.show();
-            } else {
-                finish();
-            }
+            backFinish();
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -165,8 +123,21 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     private void init() {
         mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
 
-        mToolbarAddImage.setOnClickListener(new OnClickListener() {
+        if (ARTICLE_SP.getBoolean("NEW_ARTICLE", true)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(OKArticleReleaseActivity.this);
+            builder.setTitle("您必须要知道");
+            builder.setMessage(getResources().getString(R.string.articleDialog));
+            builder.setPositiveButton("我知道了", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ARTICLE_SP.edit().putBoolean("NEW_ARTICLE", false).commit();
+                }
+            });
+            AlertDialog dialog = builder.show();
+            dialog.setCancelable(false);
+        }
 
+        mToolbarAddImage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 RxPicker.init(new LoadImage());
@@ -175,7 +146,6 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
         });
 
         mToolbarSend.setOnClickListener(new OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
@@ -192,8 +162,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     } else {
                         mCardBean.setCARD_TYPE(CARD_TYPE_WZ);
                     }
-                    if (!mEditLink.getText().toString().equals("##")
-                            && !mEditLink.getText().toString().equals("")) {
+                    if (!TextUtils.isEmpty(mEditLink.getText().toString()) && !mEditLink.getText().toString().equals("##")) {
                         mCardBean.setMESSAGE_LINK(mEditLink.getText().toString());
                     } else {
                         mCardBean.setMESSAGE_LINK("没有参考链接");
@@ -202,7 +171,6 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mCardBean.setCONTENT_TEXT(mEditContent.getText().toString());
                     mCardBean.setLABELLING(mEditTag.getText().toString());
                     mCardBean.setCREATE_DATE(OKConstant.getNowDate());
-
                     if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
                         mArticleTask.cancel(true);
                     }
@@ -219,7 +187,6 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         mCardBean.setCARD_TYPE(CARD_TYPE_TP);
                         mCardBean.setCONTENT_IMAGE_URL(new Gson().toJson(mOKCardBase64ListBean));
                         mCardBean.setCREATE_DATE(OKConstant.getNowDate());
-
                         if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
                             mArticleTask.cancel(true);
                         }
@@ -228,7 +195,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         mToolbarSend.setTag(R.id.uploadButton, TAG_UPLOAD);
                         showProgressDialog("正在上传图片...");
                     } else {
-                        showSnackbar(v, "您可以不写文章,但请至少选择一张图片!", "");
+                        showSnackbar(v, "您可以不写文章,但至少选择一张图片!", "");
                     }
                 }
             }
@@ -316,23 +283,9 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                finish();
+                backFinish();
             }
         });
-
-        if (ARTICLE_SP.getBoolean("NEW_ARTICLE", true)) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(OKArticleReleaseActivity.this);
-            builder.setTitle("您必须要知道");
-            builder.setMessage(getResources().getString(R.string.articleDialog));
-            builder.setPositiveButton("我知道了", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    ARTICLE_SP.edit().putBoolean("NEW_ARTICLE", false).commit();
-                }
-            });
-            AlertDialog dialog = builder.show();
-            dialog.setCancelable(false);
-        }
     }
 
     private boolean isUpload() {
@@ -363,6 +316,52 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
         mEditTitle.setText(ARTICLE_SP.getString("TITLE", "##"));
         mEditLink.setText(ARTICLE_SP.getString("LINK", "##"));
         mEditContent.setText(ARTICLE_SP.getString("CONTENT", "##"));
+    }
+
+    private void backFinish() {
+        if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
+            showAlertDialog("文章发表", "当前有文章正在后台上传,确定要退出?", "退出", "取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    finish();
+                }
+            });
+            return;
+        }
+
+        if ((!TextUtils.isEmpty(mEditContent.getText().toString())) && (!mEditContent.getText().toString().equals("##"))) {
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setIcon(R.drawable.ic_launcher);
+            alertDialog.setTitle("保存文章");
+            alertDialog.setMessage("是否保存当前编辑的文章(无法保存选择的图片) ?");
+            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    finish();
+                }
+            });
+            alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Editor editor = ARTICLE_SP.edit();
+                    if (!TextUtils.isEmpty(mEditTitle.getText().toString()) && mEditTitle.getText().toString().equals("##")) {
+                        editor.putString("TITLE", mEditTitle.getText().toString());
+                    }
+                    if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals("##")) {
+                        editor.putString("TAG", mEditTag.getText().toString());
+                    }
+                    if (!TextUtils.isEmpty(mEditLink.getText().toString()) && !mEditLink.getText().toString().equals("##")) {
+                        editor.putString("LINK", mEditLink.getText().toString());
+                    }
+                    editor.putString("CONTENT", mEditContent.getText().toString());
+                    editor.commit();
+                    finish();
+                }
+            });
+            alertDialog.show();
+        } else {
+            finish();
+        }
     }
 
     private class ArticleTask extends AsyncTask<OKCardBean, Void, Boolean> {

@@ -237,7 +237,9 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
 
         private void initViews(final CardViewHolder mCardViewHolder, final OKCardBean okCardBean, final int position) {
             mCardViewHolder.setListPosition(position);
-            if (!okCardBean.getUSER_NAME().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
+            if (okCardBean.getUSER_NAME().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
+                mCardViewHolder.mImageViewDelete.setVisibility(View.VISIBLE);
+            } else {
                 mCardViewHolder.mImageViewDelete.setVisibility(View.GONE);
             }
             GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTITLE_IMAGE_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
@@ -247,9 +249,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             if (cardType.equals(CARD_TYPE_TW)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
-
                 GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
-
                 String z = Integer.toString(okCardBean.getZAN_NUM());
                 String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
                 String p = Integer.toString(okCardBean.getPINGLUN_NUM());
@@ -263,11 +263,9 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             } else if (cardType.equals(CARD_TYPE_WZ)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.GONE);
-
                 String z = Integer.toString(okCardBean.getZAN_NUM());
                 String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
                 String p = Integer.toString(okCardBean.getPINGLUN_NUM());
-
                 mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
                 mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
@@ -425,7 +423,6 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                 if (isCancelled() || (mCardViewHolder.getListPosition() != mPosition)) {
                     return;
                 }
-
                 if (aBoolean) {
                     removeCardBean(mPosition);
                     showSnackbar(mCardViewHolder.mCardView, "您已移除该卡片", "");
