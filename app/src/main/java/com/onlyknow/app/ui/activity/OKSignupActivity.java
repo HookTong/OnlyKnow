@@ -103,7 +103,7 @@ public class OKSignupActivity extends OKBaseActivity {
                     mSignupTask = new SignupTask(editTextUserName.getText().toString(), editTextPassword.getText().toString());
                     mSignupTask.executeOnExecutor(exec, params);
 
-                    showProgressDialog("正在注册账号!请稍后...");
+                    showProgressDialog("正在注册账号...");
                 } else {
                     showSnackbar(v, "注册信息错误", "ErrorMsg :" + errorMsg);
                 }

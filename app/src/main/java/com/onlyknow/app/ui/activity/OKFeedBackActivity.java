@@ -95,7 +95,7 @@ public class OKFeedBackActivity extends OKBaseActivity {
                         map.put("date", OKConstant.getNowDate());
                         mFeedBackTask = new FeedBackTask();
                         mFeedBackTask.executeOnExecutor(exec, map);
-                        showProgressDialog("正在提交意见!请稍后...");
+                        showProgressDialog("正在提交信息...");
                     } else {
                         showSnackbar(v, "反馈意见必须大于100字符", "");
                     }

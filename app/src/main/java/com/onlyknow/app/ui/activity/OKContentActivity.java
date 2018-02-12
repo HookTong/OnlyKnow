@@ -50,7 +50,7 @@ public class OKContentActivity extends OKBaseActivity {
         mContentTask = new ContentTask();
         mContentTask.executeOnExecutor(exec, map);
 
-        showProgressDialog("正在获取服务器内容!请稍后...");
+        showProgressDialog("正在获取内容...");
     }
 
     @Override

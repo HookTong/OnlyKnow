@@ -142,6 +142,7 @@ public class OKUserEdit extends OKBaseActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case UCrop.REQUEST_CROP:
                 if (resultCode == RESULT_OK) {
@@ -152,8 +153,11 @@ public class OKUserEdit extends OKBaseActivity {
                     }
                     mFilePath = OKSDCardUtil.getFilePathByImageUri(OKUserEdit.this, resultUri);
                     if (TextUtils.isEmpty(mFilePath)) {
-                        showSnackbar(mButtonCommit, "文件错误", "");
+                        showSnackbar(mButtonCommit, "文件路径错误", "");
                         return;
+                    }
+                    if (mUserEditTask_HP != null && mUserEditTask_HP.getStatus() == AsyncTask.Status.RUNNING) {
+                        mUserEditTask_HP.cancel(true);
                     }
                     mUserEditTask_HP = new UserEditTask("UpdateHeadPortrait");
                     Map<String, String> params = new HashMap<>();
@@ -161,7 +165,7 @@ public class OKUserEdit extends OKBaseActivity {
                     params.put("baseimag", mFilePath);
                     params.put("type", "TOUXIAN");
                     mUserEditTask_HP.executeOnExecutor(exec, params);
-                    showProgressDialog("正在上传头像!请稍后...");
+                    showProgressDialog("正在上传头像...");
                 }
                 break;
             case UCrop.RESULT_ERROR:
@@ -170,9 +174,6 @@ public class OKUserEdit extends OKBaseActivity {
             default:
                 break;
         }
-        super.
-
-                onActivityResult(requestCode, resultCode, data);
     }
 
     private void init() {
@@ -212,6 +213,9 @@ public class OKUserEdit extends OKBaseActivity {
                 }
                 if (TextUtils.isEmpty(XG_SEX)) {
                     XG_SEX = SEX;
+                }
+                if (mUserEditTask_INFO != null && mUserEditTask_INFO.getStatus() == AsyncTask.Status.RUNNING) {
+                    mUserEditTask_INFO.cancel(true);
                 }
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("username", USERNAME);
