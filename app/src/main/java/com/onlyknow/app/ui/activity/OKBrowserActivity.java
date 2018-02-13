@@ -373,7 +373,7 @@ public class OKBrowserActivity extends OKBaseActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            showProgressDialog("正在下载文件!请稍后...");
+            showProgressDialog("正在下载文件...");
         }
 
         @Override
