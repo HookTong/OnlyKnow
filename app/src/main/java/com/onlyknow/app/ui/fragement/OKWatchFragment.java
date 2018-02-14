@@ -188,7 +188,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
             Map<String, String> map = new HashMap<>();// 请求参数
             map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
             map.put("max_id", Integer.toString(mCardBean.getCARD_ID()));
-            map.put("load_type", "SC_ENTRY");
+            map.put("load_type", "WATCH_CARD");
             if (mOKLoadWatchApi == null) {
                 mOKLoadWatchApi = new OKLoadWatchApi(getActivity(), true);
             }

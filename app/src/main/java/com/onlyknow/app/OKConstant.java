@@ -16,7 +16,7 @@ import java.util.Map;
 * */
 
 public class OKConstant {
-    public final static String APP_VERSION = "2.0.4"; // app版本号
+    public final static String APP_VERSION = "2.0.5"; // app版本号
 
     // 广播动作
     public final static String ACTION_UPDATE_CAROUSE_AND_AD_IMAGE = "com.onlyknow.app.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE";

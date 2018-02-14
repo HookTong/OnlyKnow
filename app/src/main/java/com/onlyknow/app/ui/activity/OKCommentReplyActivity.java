@@ -230,7 +230,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
             return;
         }
         Map<String, String> map = new HashMap<>();// 请求参数,历史界面无需请求参数,直接获取数据库数据的
-        map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        map.put("username", "" + mCommentBean.getCOM_ID());
         map.put("max_id", Integer.toString(mCommentReplyBean.getCOMR_ID()));
         map.put("load_type", "COMMENT_REPLY_ENTRY");
         if (mOKLoadCommentReplyApi == null) {
