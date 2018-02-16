@@ -120,7 +120,7 @@ public class OKDragPhotoView extends PhotoView {
                     if (event.getPointerCount() == 1) {
                         onActionUp(event);
                         isTouchEvent = false;
-                        //judge finish or not
+                        //judge weatherApiComplete or not
                         postDelayed(new Runnable() {
                             @Override
                             public void run() {

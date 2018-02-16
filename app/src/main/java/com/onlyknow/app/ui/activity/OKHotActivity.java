@@ -32,26 +32,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKHotActivity extends OKBaseActivity implements OnRefreshListener {
+public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, OKLoadHotApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private CardViewAdapter mCardViewAdapter;
 
     private OKLoadHotApi mOKLoadHotApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
-
-    private OKLoadHotApi.onCallBack mOnCallBack = new OKLoadHotApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardBean> list) {
-            if (list != null) {
-                mCardBeanList.clear();
-                mCardBeanList.addAll(list);
-                OKConstant.putListCache(INTERFACE_HOT, mCardBeanList);
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            mRefreshLayout.finishRefresh();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,7 +120,7 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener {
             if (mOKLoadHotApi == null) {
                 mOKLoadHotApi = new OKLoadHotApi(this);
             }
-            mOKLoadHotApi.requestCardBeanList(map, mOnCallBack);
+            mOKLoadHotApi.requestCardBeanList(map, this);
         } else {
             if (mOKRecyclerView.getAdapter().getItemCount() == 0) {
                 mCardBeanList.clear();
@@ -142,6 +129,17 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mOKRecyclerView, "没有网络连接!", "");
         }
+    }
+
+    @Override
+    public void hotApiComplete(List<OKCardBean> list) {
+        if (list != null) {
+            mCardBeanList.clear();
+            mCardBeanList.addAll(list);
+            OKConstant.putListCache(INTERFACE_HOT, mCardBeanList);
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+        mRefreshLayout.finishRefresh();
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

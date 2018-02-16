@@ -49,42 +49,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener {
+public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadCommentReplyApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private CommentReplyCardViewAdapter mCommentReplyCardViewAdapter;
-
     private OKCircleImageView imageViewTX;
     private TextView textViewBT, textViewNR, textViewDate;
     private EditText editTextMsg;
     private OKSEImageView sendButtonMsg;
 
-    private OKCommentBean mCommentBean;// 父评论
-
     private OKLoadCommentReplyApi mOKLoadCommentReplyApi;
     private List<OKCommentReplyBean> mCommentReplyBeanList = new ArrayList<>();
     private SendCommentReplyTask mSendCommentReplyTask;
 
-    private OKLoadCommentReplyApi.onCallBack mOnCallBack = new OKLoadCommentReplyApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCommentReplyBean> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mCommentReplyBeanList.clear();
-                    mCommentReplyBeanList.addAll(list);
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mCommentReplyBeanList.addAll(list);
-                }
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-                mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
+    private OKCommentBean mCommentBean;// 父评论
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -230,29 +208,50 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
             return;
         }
         Map<String, String> map = new HashMap<>();// 请求参数,历史界面无需请求参数,直接获取数据库数据的
-        map.put("username", "" + mCommentBean.getCOM_ID());
-        map.put("max_id", Integer.toString(mCommentReplyBean.getCOMR_ID()));
+        map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        map.put("tag", "" + mCommentBean.getCOM_ID());
+        map.put("max_id", "" + mCommentReplyBean.getCOMR_ID());
         map.put("load_type", "COMMENT_REPLY_ENTRY");
         if (mOKLoadCommentReplyApi == null) {
             mOKLoadCommentReplyApi = new OKLoadCommentReplyApi(OKCommentReplyActivity.this, true);
         }
-        mOKLoadCommentReplyApi.requestCardBeanList(map, true, mOnCallBack);
+        mOKLoadCommentReplyApi.requestCardBeanList(map, true, this);
     }
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(this)) {
             Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("com_id", Integer.toString(mCommentBean.getCOM_ID()));
+            map.put("com_id", "" + mCommentBean.getCOM_ID());
             map.put("num", OKConstant.COMMENT_REPLY_LOAD_COUNT);
             map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
             if (mOKLoadCommentReplyApi == null) {
                 mOKLoadCommentReplyApi = new OKLoadCommentReplyApi(this, false);
             }
-            mOKLoadCommentReplyApi.requestCardBeanList(map, false, mOnCallBack);
+            mOKLoadCommentReplyApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+        }
+    }
+
+    @Override
+    public void commentReplyApiComplete(List<OKCommentReplyBean> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mCommentReplyBeanList.clear();
+                mCommentReplyBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mCommentReplyBeanList.addAll(list);
+            }
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+            mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
         }
     }
 
@@ -268,13 +267,11 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
         private void initViews(final CommentReplyViewHolder mViewHolder, final OKCommentReplyBean bean, final int position) {
             mViewHolder.setListPosition(position);
-
             GlideRoundApi(mViewHolder.mImageViewTitle, bean.getHEAD_PORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             mViewHolder.mTextViewTitle.setText(bean.getNICKNAME());
             mViewHolder.mTextViewContent.setText(bean.getCOMMENT_CONTENT());
             mViewHolder.mTextViewZ.setText("" + bean.getZAN_NUM());
             mViewHolder.mTextViewDate.setText(formatTime(bean.getDATE()));
-
             if (bean.IS_ZAN()) {
                 GlideApi(mViewHolder.mImageViewZ, R.drawable.comment_red_zan, R.drawable.comment_red_zan, R.drawable.comment_red_zan);
                 mViewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
@@ -524,7 +521,11 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
             if (aBoolean) {
                 editTextMsg.setText("");
-                mRefreshLayout.autoRefresh();
+                if (mCommentReplyBeanList.size() == 0) {
+                    mRefreshLayout.autoRefresh();
+                } else {
+                    mRefreshLayout.autoLoadMore();
+                }
                 showSnackbar(mOKRecyclerView, "发送成功", "");
             } else {
                 showSnackbar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);

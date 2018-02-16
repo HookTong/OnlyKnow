@@ -25,7 +25,7 @@ public class OKLoadGoodsApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKGoodsBean> mOKGoodsBeanList);
+        void goodsApiComplete(List<OKGoodsBean> list);
     }
 
     public void requestCardBeanList(Map<String, String> param, boolean isLm, onCallBack mCallBack) {
@@ -71,7 +71,7 @@ public class OKLoadGoodsApi extends OKBaseApi {
 
             super.onPostExecute(mOKGoodsBeanList);
 
-            mOnCallBack.cardList(mOKGoodsBeanList);
+            mOnCallBack.goodsApiComplete(mOKGoodsBeanList);
         }
     }
 }

@@ -24,7 +24,7 @@ public class OKLoadHotApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKCardBean> mOKCardBeanList);
+        void hotApiComplete(List<OKCardBean> list);
     }
 
     public void requestCardBeanList(Map<String, String> param, onCallBack mCallBack) {
@@ -74,7 +74,7 @@ public class OKLoadHotApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.cardList(mOKCardBeanList);
+            mOnCallBack.hotApiComplete(mOKCardBeanList);
             super.onPostExecute(mOKCardBeanList);
         }
     }

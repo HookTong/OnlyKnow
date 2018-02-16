@@ -25,7 +25,7 @@ public class OKLoadCardAndCommentApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKCardAndCommentBean> list);
+        void cardAndCommentApiComplete(List<OKCardAndCommentBean> list);
     }
 
     public void requestCardAndCommentBeanList(Map<String, String> param, boolean isLm, onCallBack mCallBack) {
@@ -71,7 +71,7 @@ public class OKLoadCardAndCommentApi extends OKBaseApi {
 
             super.onPostExecute(list);
 
-            mOnCallBack.cardList(list);
+            mOnCallBack.cardAndCommentApiComplete(list);
         }
     }
 }

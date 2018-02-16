@@ -130,6 +130,7 @@ public class OKBaseActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         closeProgressDialog();
+        System.gc();
     }
 
     @Override

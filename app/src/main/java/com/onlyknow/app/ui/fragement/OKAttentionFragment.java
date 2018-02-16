@@ -40,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKAttentionFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener {
+public class OKAttentionFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener, OKLoadAttentionApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mRecyclerView;
     private EntryViewAdapter mEntryViewAdapter;
@@ -51,28 +51,6 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
     private boolean isInitLoad = true;
     private OKLoadAttentionApi mOKLoadAttentionApi;
     private List<OKAttentionBean> mAttentionBeanList = new ArrayList<>();
-
-    private OKLoadAttentionApi.onCallBack mOnCallBack = new OKLoadAttentionApi.onCallBack() {
-        @Override
-        public void cardList(List<OKAttentionBean> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mAttentionBeanList.clear();
-                    mAttentionBeanList.addAll(list);
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mAttentionBeanList.addAll(list);
-                }
-                OKConstant.putListCache(INTERFACE_ATTENTION, mAttentionBeanList);
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-            isInitLoad = false;
-        }
-    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -190,7 +168,7 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
             if (mOKLoadAttentionApi == null) {
                 mOKLoadAttentionApi = new OKLoadAttentionApi(getActivity(), true);
             }
-            mOKLoadAttentionApi.requestEntryBeanList(map, true, mOnCallBack);
+            mOKLoadAttentionApi.requestEntryBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackbar(mRecyclerView, "登录后加载", "");
@@ -216,11 +194,32 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
             if (mOKLoadAttentionApi == null) {
                 mOKLoadAttentionApi = new OKLoadAttentionApi(getActivity(), false);
             }
-            mOKLoadAttentionApi.requestEntryBeanList(map, false, mOnCallBack);
+            mOKLoadAttentionApi.requestEntryBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(rootView, "登录后查看!", "");
         }
+    }
+
+    @Override
+    public void attentionApiComplete(List<OKAttentionBean> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mAttentionBeanList.clear();
+                mAttentionBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mAttentionBeanList.addAll(list);
+            }
+            OKConstant.putListCache(INTERFACE_ATTENTION, mAttentionBeanList);
+            mRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
+        isInitLoad = false;
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {

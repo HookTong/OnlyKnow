@@ -71,7 +71,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OnNavigationItemSelectedListener {
+public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OnNavigationItemSelectedListener, OKLoadExploreApi.onCallBack, OKWeatherApi.onCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fab;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -89,39 +89,9 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     private OKLoadExploreApi mOKLoadExploreApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
-    private View rootView;
-
-    private OKLoadExploreApi.onCallBack mOnCallBack = new OKLoadExploreApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardBean> list) {
-            if (list != null) {
-                mCardBeanList.addAll(list);
-                OKConstant.putListCache(INTERFACE_EXPLORE, mCardBeanList);
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
-
     private OKWeatherBean mOKWeatherBean;
 
-    private OKWeatherApi.onCallBack mWeatherOnCallBack = new OKWeatherApi.onCallBack() {
-        @Override
-        public void finish(OKWeatherBean weatherBean) {
-            if (weatherBean == null) {
-                showSnackbar(rootView, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
-                return;
-            }
-            mOKWeatherBean = weatherBean;
-            saveWeatherInfo(mOKWeatherBean);
-            bindWeatherView();
-            bindNavigationHeadView(mNavigationView.getHeaderView(0));
-        }
-    };
+    private View rootView;
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -401,7 +371,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
 
         OKWeatherApi mWeatherApi = new OKWeatherApi(getActivity());
-        mWeatherApi.requestWeather(city_id, mWeatherOnCallBack);
+        mWeatherApi.requestWeather(city_id, this);
     }
 
     private void bindWeatherView() {
@@ -472,7 +442,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadExploreApi == null) {
             mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, mOnCallBack);
+        mOKLoadExploreApi.requestCardBeanList(map, this);
     }
 
     @Override
@@ -482,7 +452,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadExploreApi == null) {
             mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, mOnCallBack);
+        mOKLoadExploreApi.requestCardBeanList(map, this);
     }
 
     @Override
@@ -515,6 +485,32 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void weatherApiComplete(OKWeatherBean weatherBean) {
+        if (weatherBean == null) {
+            showSnackbar(rootView, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
+            return;
+        }
+        mOKWeatherBean = weatherBean;
+        saveWeatherInfo(mOKWeatherBean);
+        bindWeatherView();
+        bindNavigationHeadView(mNavigationView.getHeaderView(0));
+    }
+
+    @Override
+    public void exploreApiComplete(List<OKCardBean> list) {
+        if (list != null) {
+            mCardBeanList.addAll(list);
+            OKConstant.putListCache(INTERFACE_EXPLORE, mCardBeanList);
+            mRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

@@ -23,7 +23,7 @@ public class OKLoadHistoryApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKCardBean> mOKCardBeanList);
+        void historyApiComplete(List<OKCardBean> list);
     }
 
     public void requestCardBeanList(boolean b, onCallBack mCallBack) {
@@ -57,7 +57,7 @@ public class OKLoadHistoryApi extends OKBaseApi {
             }
             super.onPostExecute(okCardBeen);
 
-            mOnCallBack.cardList(okCardBeen);
+            mOnCallBack.historyApiComplete(okCardBeen);
         }
     }
 

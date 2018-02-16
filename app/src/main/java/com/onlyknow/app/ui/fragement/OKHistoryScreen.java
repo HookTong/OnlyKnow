@@ -53,7 +53,7 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener {
+public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener, OKLoadHistoryApi.onCallBack {
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private OKKenBurnsView mHeaderPicture;
@@ -69,23 +69,6 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
     private View rootView;
-
-    private OKLoadHistoryApi.onCallBack mOnCallBack = new OKLoadHistoryApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardBean> list) {
-            if (list != null) {
-                mCardBeanList.clear();
-                mCardBeanList.addAll(list);
-                OKConstant.putListCache(INTERFACE_HISTORY, mCardBeanList);
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -261,7 +244,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadHistoryApi == null) {
             mOKLoadHistoryApi = new OKLoadHistoryApi(getActivity());
         }
-        mOKLoadHistoryApi.requestCardBeanList(true, mOnCallBack);
+        mOKLoadHistoryApi.requestCardBeanList(true, this);
     }
 
     @Override
@@ -269,7 +252,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadHistoryApi == null) {
             mOKLoadHistoryApi = new OKLoadHistoryApi(getActivity());
         }
-        mOKLoadHistoryApi.requestCardBeanList(true, mOnCallBack);
+        mOKLoadHistoryApi.requestCardBeanList(true, this);
     }
 
     @Override
@@ -302,6 +285,22 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void historyApiComplete(List<OKCardBean> list) {
+        if (list != null) {
+            mCardBeanList.clear();
+            mCardBeanList.addAll(list);
+            OKConstant.putListCache(INTERFACE_HISTORY, mCardBeanList);
+            mRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {

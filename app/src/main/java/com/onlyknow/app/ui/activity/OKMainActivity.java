@@ -163,21 +163,16 @@ public class OKMainActivity extends OKBaseActivity {
     }
 
     private long back_time = 0;
-    private boolean isGroupType = true;
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
-            if (isGroupType) {
-                if (System.currentTimeMillis() - back_time > 2000l) {
-                    Toast.makeText(this, "再按一次退程序 !", Toast.LENGTH_SHORT).show();
-                    back_time = System.currentTimeMillis();
-                } else {
-                    finish();
-                    System.exit(0);
-                }
+            if (System.currentTimeMillis() - back_time > 2000l) {
+                Toast.makeText(this, "再按一次退程序 !", Toast.LENGTH_SHORT).show();
+                back_time = System.currentTimeMillis();
             } else {
-                this.finish();
+                finish();
+                System.exit(0);
             }
             return true;
         }

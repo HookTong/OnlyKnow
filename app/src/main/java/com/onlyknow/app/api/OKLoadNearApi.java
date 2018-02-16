@@ -25,7 +25,7 @@ public class OKLoadNearApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKCardBean> mOKCardBeanList);
+        void nearApiComplete(List<OKCardBean> list);
     }
 
     public void requestCardBeanList(Map<String, String> param, onCallBack mCallBack) {
@@ -80,7 +80,7 @@ public class OKLoadNearApi extends OKBaseApi {
             }
 
             super.onPostExecute(okCardBeen);
-            mOnCallBack.cardList(okCardBeen);
+            mOnCallBack.nearApiComplete(okCardBeen);
         }
     }
 

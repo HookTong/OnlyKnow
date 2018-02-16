@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKSearchActivity extends OKBaseActivity implements OnRefreshListener {
+public class OKSearchActivity extends OKBaseActivity implements OnRefreshListener, OKLoadSearchApi.onCallBack {
     private Toolbar searchToolbar;
     private OKSEImageView buttonBack;
     private EditText searchEditText;
@@ -53,27 +53,6 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
     private OKSearchBean.SEARCH_TYPE mSearchType;
     private String mSearchMsg;
     private int interfaceType;
-
-    private OKLoadSearchApi.onCallBack mOnCallBack = new OKLoadSearchApi.onCallBack() {
-        @Override
-        public void cardList(List<OKSearchBean> list) {
-            if (list != null) {
-                mOKSearchBeanList.clear();
-                mOKSearchBeanList.addAll(list);
-                OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-
-                mSearchMsg = "";
-                searchEditText.setText("");
-            } else {
-                mOKSearchBeanList.clear();
-                OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-                showSnackbar(searchEditText, "没有搜索到数据", "");
-            }
-            mRefreshLayout.finishRefresh();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -191,11 +170,30 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                 mOKLoadSearchApi.cancelTask();
             }
             mOKLoadSearchApi = new OKLoadSearchApi(this);
-            mOKLoadSearchApi.requestSearchBeanList(map, mOnCallBack);
+            mOKLoadSearchApi.requestSearchBeanList(map, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(searchEditText, "没有网络连接", "");
         }
+    }
+
+    @Override
+    public void searchApiComplete(List<OKSearchBean> list) {
+        if (list != null) {
+            mOKSearchBeanList.clear();
+            mOKSearchBeanList.addAll(list);
+            OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+
+            mSearchMsg = "";
+            searchEditText.setText("");
+        } else {
+            mOKSearchBeanList.clear();
+            OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+            showSnackbar(searchEditText, "没有搜索到数据", "");
+        }
+        mRefreshLayout.finishRefresh();
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {

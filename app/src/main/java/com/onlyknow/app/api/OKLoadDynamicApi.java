@@ -27,7 +27,7 @@ public class OKLoadDynamicApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKCardBean> mOKCardBeanList);
+        void dynamicApiComplete(List<OKCardBean> list);
     }
 
     public void requestCardBeanList(Map<String, String> param, boolean isLm, onCallBack mCallBack) {
@@ -90,7 +90,7 @@ public class OKLoadDynamicApi extends OKBaseApi {
 
             super.onPostExecute(okCardBeen);
 
-            mOnCallBack.cardList(okCardBeen);
+            mOnCallBack.dynamicApiComplete(okCardBeen);
         }
     }
 }

@@ -2,7 +2,9 @@ package com.onlyknow.app.api;
 
 import android.content.Context;
 import android.os.AsyncTask;
+
 import com.onlyknow.app.database.bean.OKAttentionBean;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +25,7 @@ public class OKLoadAttentionApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKAttentionBean> mOKAttentionBeanList);
+        void attentionApiComplete(List<OKAttentionBean> list);
     }
 
     public void requestEntryBeanList(Map<String, String> param, boolean isLm, onCallBack mCallBack) {
@@ -68,7 +70,7 @@ public class OKLoadAttentionApi extends OKBaseApi {
 
             super.onPostExecute(okAttentionBeenList);
 
-            mOnCallBack.cardList(okAttentionBeenList);
+            mOnCallBack.attentionApiComplete(okAttentionBeenList);
         }
     }
 }

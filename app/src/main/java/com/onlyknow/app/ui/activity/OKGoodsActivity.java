@@ -43,34 +43,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener {
+public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadGoodsApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private EntryViewAdapter mEntryViewAdapter;
 
     private OKLoadGoodsApi mOKLoadGoodsApi;
     private List<OKGoodsBean> mOKGoodsBeanList = new ArrayList<>();
-
-    private OKLoadGoodsApi.onCallBack mOnCallBack = new OKLoadGoodsApi.onCallBack() {
-        @Override
-        public void cardList(List<OKGoodsBean> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mOKGoodsBeanList.clear();
-                    mOKGoodsBeanList.addAll(list);
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mOKGoodsBeanList.addAll(list);
-                }
-                OKConstant.putListCache(INTERFACE_GOODS, mOKGoodsBeanList);
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,7 +142,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         if (mOKLoadGoodsApi == null) {
             mOKLoadGoodsApi = new OKLoadGoodsApi(OKGoodsActivity.this, true);
         }
-        mOKLoadGoodsApi.requestCardBeanList(map, true, mOnCallBack);
+        mOKLoadGoodsApi.requestCardBeanList(map, true, this);
     }
 
     @Override
@@ -180,11 +159,31 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             if (mOKLoadGoodsApi == null) {
                 mOKLoadGoodsApi = new OKLoadGoodsApi(this, false);
             }
-            mOKLoadGoodsApi.requestCardBeanList(map, false, mOnCallBack);
+            mOKLoadGoodsApi.requestCardBeanList(map, false, this);
             mOKRecyclerView.setEnabled(false);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+        }
+    }
+
+    @Override
+    public void goodsApiComplete(List<OKGoodsBean> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mOKGoodsBeanList.clear();
+                mOKGoodsBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mOKGoodsBeanList.addAll(list);
+            }
+            OKConstant.putListCache(INTERFACE_GOODS, mOKGoodsBeanList);
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
         }
     }
 

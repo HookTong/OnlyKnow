@@ -42,7 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener {
+public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener, OKLoadDynamicApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mRecyclerView;
     private CardViewAdapter mCardViewAdapter;
@@ -53,28 +53,6 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
     private View rootView;
     public boolean isPause = true;
     public boolean isInitLoad = true;
-
-    private OKLoadDynamicApi.onCallBack mOnCallBack = new OKLoadDynamicApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardBean> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mCardBeanList.clear();
-                    mCardBeanList.addAll(list);
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mCardBeanList.addAll(list);
-                }
-                OKConstant.putListCache(INTERFACE_DYNAMIC, mCardBeanList);
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-            isInitLoad = false;
-        }
-    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -192,7 +170,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             if (mOKLoadDynamicApi == null) {
                 mOKLoadDynamicApi = new OKLoadDynamicApi(getActivity(), true);
             }
-            mOKLoadDynamicApi.requestCardBeanList(map, true, mOnCallBack);
+            mOKLoadDynamicApi.requestCardBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackbar(mRecyclerView, "登录后加载", "");
@@ -218,11 +196,32 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             if (mOKLoadDynamicApi == null) {
                 mOKLoadDynamicApi = new OKLoadDynamicApi(getActivity(), false);
             }
-            mOKLoadDynamicApi.requestCardBeanList(map, false, mOnCallBack);
+            mOKLoadDynamicApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mRecyclerView, "登录后查看", "");
         }
+    }
+
+    @Override
+    public void dynamicApiComplete(List<OKCardBean> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mCardBeanList.clear();
+                mCardBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mCardBeanList.addAll(list);
+            }
+            OKConstant.putListCache(INTERFACE_DYNAMIC, mCardBeanList);
+            mRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
+        isInitLoad = false;
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

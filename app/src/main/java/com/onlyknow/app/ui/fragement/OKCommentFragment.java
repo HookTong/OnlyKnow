@@ -45,7 +45,7 @@ import java.util.Map;
  * Created by Administrator on 2018/2/1.
  */
 
-public class OKCommentFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener {
+public class OKCommentFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener, OKLoadCardAndCommentApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private CardViewAdapter mCardViewAdapter;
@@ -56,28 +56,6 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
     private View rootView;
     public boolean isPause = true;
     private boolean isInitLoad = true;
-
-    private OKLoadCardAndCommentApi.onCallBack mOnCallBack = new OKLoadCardAndCommentApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardAndCommentBean> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mOKCardAndCommentBeanList.clear();
-                    mOKCardAndCommentBeanList.addAll(list);
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mOKCardAndCommentBeanList.addAll(list);
-                }
-                OKConstant.putListCache(INTERFACE_CARD_AND_COMMENT, mOKCardAndCommentBeanList);
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-            isInitLoad = false;
-        }
-    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -192,7 +170,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             if (mOKLoadCardAndCommentApi == null) {
                 mOKLoadCardAndCommentApi = new OKLoadCardAndCommentApi(getActivity(), true);
             }
-            mOKLoadCardAndCommentApi.requestCardAndCommentBeanList(map, true, mOnCallBack);
+            mOKLoadCardAndCommentApi.requestCardAndCommentBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackbar(mOKRecyclerView, "登录后加载", "");
@@ -218,11 +196,32 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             if (mOKLoadCardAndCommentApi == null) {
                 mOKLoadCardAndCommentApi = new OKLoadCardAndCommentApi(getActivity(), false);
             }
-            mOKLoadCardAndCommentApi.requestCardAndCommentBeanList(map, false, mOnCallBack);
+            mOKLoadCardAndCommentApi.requestCardAndCommentBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(rootView, "登录后查看!", "");
         }
+    }
+
+    @Override
+    public void cardAndCommentApiComplete(List<OKCardAndCommentBean> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mOKCardAndCommentBeanList.clear();
+                mOKCardAndCommentBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mOKCardAndCommentBeanList.addAll(list);
+            }
+            OKConstant.putListCache(INTERFACE_CARD_AND_COMMENT, mOKCardAndCommentBeanList);
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
+        isInitLoad = false;
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

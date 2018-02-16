@@ -27,7 +27,7 @@ public class OKLoadWatchApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKCardBean> mOKCardBeanList);
+        void watchApiComplete(List<OKCardBean> mOKCardBeanList);
     }
 
     public void requestCardBeanList(Map<String, String> param, boolean isLm, onCallBack mCallBack) {
@@ -90,7 +90,7 @@ public class OKLoadWatchApi extends OKBaseApi {
 
             super.onPostExecute(mOKCardBeanList);
 
-            mOnCallBack.cardList(mOKCardBeanList);
+            mOnCallBack.watchApiComplete(mOKCardBeanList);
         }
     }
 }

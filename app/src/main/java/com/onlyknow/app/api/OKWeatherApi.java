@@ -21,7 +21,7 @@ public class OKWeatherApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void finish(OKWeatherBean weather);
+        void weatherApiComplete(OKWeatherBean weather);
     }
 
     /**
@@ -68,7 +68,7 @@ public class OKWeatherApi extends OKBaseApi {
             super.onPostExecute(result);
 
             if (mListener != null) {
-                mListener.finish(result);
+                mListener.weatherApiComplete(result);
             }
         }
     }

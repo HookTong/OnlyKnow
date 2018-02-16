@@ -22,7 +22,7 @@ public class OKLoadSearchApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKSearchBean> list);
+        void searchApiComplete(List<OKSearchBean> list);
     }
 
     public void requestSearchBeanList(Map<String, String> param, onCallBack mCallBack) {
@@ -59,7 +59,7 @@ public class OKLoadSearchApi extends OKBaseApi {
             }
             super.onPostExecute(list);
 
-            mOnCallBack.cardList(list);
+            mOnCallBack.searchApiComplete(list);
         }
     }
 }

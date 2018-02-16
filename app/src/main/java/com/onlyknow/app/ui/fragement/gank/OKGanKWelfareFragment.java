@@ -38,7 +38,7 @@ import butterknife.ButterKnife;
  * Created by Administrator on 2018/2/6.
  */
 
-public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener {
+public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshListener, OnLoadMoreListener, OKLoadGanKApi.onCallBack {
     @Bind(R.id.ok_content_collapsing_RecyclerView)
     OKRecyclerView mOKRecyclerView;
     @Bind(R.id.ok_content_collapsing_refresh)
@@ -50,31 +50,6 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     private List<OKGanKBean.Results> mGanKBeanList = new ArrayList<>();
 
     private View rootView;
-
-    private OKLoadGanKApi.onCallBack mOnCallBack = new OKLoadGanKApi.onCallBack() {
-        @Override
-        public void cardList(List<OKGanKBean.Results> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mGanKBeanList.clear();
-                    mGanKBeanList.addAll(list);
-                    page = 1;
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mGanKBeanList.addAll(list);
-                }
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            } else {
-                if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    page--;
-                }
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
 
     private int page = 1;
 
@@ -135,7 +110,7 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
             page++;
-            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.WELFARE_URL + page, mOnCallBack);
+            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.WELFARE_URL + page, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackbar(mOKRecyclerView, "没有网络连接!", "");
@@ -145,7 +120,7 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
-            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.WELFARE_URL + "1", mOnCallBack);
+            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.WELFARE_URL + "1", this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mOKRecyclerView, "没有网络连接!", "");
@@ -155,6 +130,30 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     public void stickTop() {
         if (!isPause && mOKRecyclerView.getAdapter().getItemCount() != 0) {
             mOKRecyclerView.scrollToPosition(0);
+        }
+    }
+
+    @Override
+    public void ganKioApiComplete(List<OKGanKBean.Results> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mGanKBeanList.clear();
+                mGanKBeanList.addAll(list);
+                page = 1;
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mGanKBeanList.addAll(list);
+            }
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        } else {
+            if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page--;
+            }
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
         }
     }
 

@@ -50,7 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener {
+public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OKLoadHomeApi.onCallBack {
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private RefreshLayout mRefreshLayout;
@@ -74,27 +74,6 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
     private LoadUserTask mLoadUserTask;
     private OKUserInfoBean mBindUserInfoBean;
     private AttentionTask mAttentionTask;
-
-    private OKLoadHomeApi.onCallBack mOnCallBack = new OKLoadHomeApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardBean> list) {
-            if (list != null) {
-                if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                    mCardBeanList.clear();
-                    mCardBeanList.addAll(list);
-                } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                    mCardBeanList.addAll(list);
-                }
-                OKConstant.putListCache(INTERFACE_HOME, mCardBeanList);
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -342,7 +321,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
         if (mOKLoadHomeApi == null) {
             mOKLoadHomeApi = new OKLoadHomeApi(this, true);
         }
-        mOKLoadHomeApi.requestCardBeanList(map, true, mOnCallBack);
+        mOKLoadHomeApi.requestCardBeanList(map, true, this);
     }
 
     @Override
@@ -354,7 +333,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             if (mOKLoadHomeApi == null) {
                 mOKLoadHomeApi = new OKLoadHomeApi(this, false);
             }
-            mOKLoadHomeApi.requestCardBeanList(map, false, mOnCallBack);
+            mOKLoadHomeApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackbar(mOKRecyclerView, "请检查用户状态和网络设置!", "");
@@ -395,6 +374,26 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
         HeaderTextViewAttentionNum.setText("" + mOKUserInfoBean.getGUANZHU());
         HeaderTextViewWatchNum.setText("" + mOKUserInfoBean.getSHOUCHAN());
         HeaderTextViewValueNum.setText("" + mOKUserInfoBean.getJIFENG());
+    }
+
+    @Override
+    public void homeApiComplete(List<OKCardBean> list) {
+        if (list != null) {
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mCardBeanList.clear();
+                mCardBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mCardBeanList.addAll(list);
+            }
+            OKConstant.putListCache(INTERFACE_HOME, mCardBeanList);
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

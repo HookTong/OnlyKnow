@@ -31,7 +31,7 @@ public class OKLoadGanKApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        public void cardList(List<OKGanKBean.Results> mOKCardBeanList);
+        void ganKioApiComplete(List<OKGanKBean.Results> mOKCardBeanList);
     }
 
     public void requestGanKBeanList(String url, onCallBack mCallBack) {
@@ -72,7 +72,7 @@ public class OKLoadGanKApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.cardList(mOKCardBeanList);
+            mOnCallBack.ganKioApiComplete(mOKCardBeanList);
             super.onPostExecute(mOKCardBeanList);
         }
     }

@@ -57,7 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener {
+public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener, OKLoadNearApi.onCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fabReGet;
     private TextView textViewGanMao;
@@ -74,22 +74,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
     private View rootView;
-
-    private OKLoadNearApi.onCallBack mOnCallBack = new OKLoadNearApi.onCallBack() {
-        @Override
-        public void cardList(List<OKCardBean> list) {
-            if (list != null) {
-                mCardBeanList.addAll(list);
-                OKConstant.putListCache(INTERFACE_NEAR, mCardBeanList);
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
-            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
-                mRefreshLayout.finishRefresh();
-            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
-                mRefreshLayout.finishLoadMore();
-            }
-        }
-    };
 
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -258,7 +242,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             if (mOKLoadNearApi == null) {
                 mOKLoadNearApi = new OKLoadNearApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, mOnCallBack);
+            mOKLoadNearApi.requestCardBeanList(map, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackbar(rootView, "没有网络连接!", "");
@@ -276,7 +260,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             if (mOKLoadNearApi == null) {
                 mOKLoadNearApi = new OKLoadNearApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, mOnCallBack);
+            mOKLoadNearApi.requestCardBeanList(map, this);
         } else {
             if (mRecyclerView.getAdapter().getItemCount() == 0) {
                 mCardBeanList.addAll(OKConstant.getListCache(INTERFACE_NEAR));
@@ -317,6 +301,21 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void nearApiComplete(List<OKCardBean> list) {
+        if (list != null) {
+            mCardBeanList.addAll(list);
+            OKConstant.putListCache(INTERFACE_NEAR, mCardBeanList);
+            mRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

@@ -38,7 +38,7 @@ import butterknife.ButterKnife;
  * Created by Administrator on 2018/2/4.
  */
 
-public class OKWeatherActivity extends OKBaseActivity {
+public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.onCallBack {
     @Bind(R.id.ok_collapsing_toolbar_back_image)
     OKSEImageView okCollapsingToolbarBackImage;
 
@@ -127,33 +127,6 @@ public class OKWeatherActivity extends OKBaseActivity {
     Banner mBanner;
 
     private OKWeatherBean mOKWeatherBean;
-
-    private OKWeatherApi.onCallBack mWeatherOnCallBack = new OKWeatherApi.onCallBack() {
-        @Override
-        public void finish(OKWeatherBean weatherBean) {
-            if (weatherBean == null) {
-                mProgressBar.setVisibility(View.GONE);
-                showSnackbar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
-                return;
-            }
-            OKWeatherBean.Forecast forecast = weatherBean.data.forecast.get(0);
-            SharedPreferences.Editor editor = WEATHER_SP.edit();
-            editor.putString("CITY_NAME", USER_INFO_SP.getString("CITY_NAME", ""));
-            editor.putString("CITY_ID", USER_INFO_SP.getString("CITY_ID", ""));
-            editor.putString("DISTRICT", USER_INFO_SP.getString("DISTRICT", ""));
-            editor.putString("TEMPERATURE", weatherBean.data.wendu + " ℃");
-            editor.putString("TEMPERATURE_LOW", forecast.low);
-            editor.putString("TEMPERATURE_HIG", forecast.high);
-            editor.putString("WEATHER_TYPE", forecast.type);
-            editor.putString("GAN_MAO", weatherBean.data.ganmao);
-            editor.putString("WEATHER_DATE", forecast.date);
-            editor.putString("WEATHER_DATE_WEEK", forecast.date.substring(forecast.date.indexOf("日") + 1));
-            editor.commit();
-            mOKWeatherBean = weatherBean;
-            bindWeatherInfo();
-            mProgressBar.setVisibility(View.GONE);
-        }
-    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -339,12 +312,6 @@ public class OKWeatherActivity extends OKBaseActivity {
         }
     }
 
-    private void updateBanner(List<Map<String, String>> list) {
-        if (mBanner != null) {
-            mBanner.update(list);
-        }
-    }
-
     private void bindWeatherIcon(ImageView view, int resId) {
         GlideApi(view, resId, R.drawable.tianqi_other, R.drawable.tianqi_other);
     }
@@ -403,23 +370,41 @@ public class OKWeatherActivity extends OKBaseActivity {
                 return;
             }
             OKWeatherApi mWeatherApi = new OKWeatherApi(this);
-            mWeatherApi.requestWeather(city_id, mWeatherOnCallBack);
+            mWeatherApi.requestWeather(city_id, this);
         } else {
             showSnackbar(okActivityWeatherCollapsingToolbarLayout, "没有网络连接", "");
         }
+    }
+
+    @Override
+    public void weatherApiComplete(OKWeatherBean weatherBean) {
+        if (weatherBean == null) {
+            mProgressBar.setVisibility(View.GONE);
+            showSnackbar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
+            return;
+        }
+        OKWeatherBean.Forecast forecast = weatherBean.data.forecast.get(0);
+        SharedPreferences.Editor editor = WEATHER_SP.edit();
+        editor.putString("CITY_NAME", USER_INFO_SP.getString("CITY_NAME", ""));
+        editor.putString("CITY_ID", USER_INFO_SP.getString("CITY_ID", ""));
+        editor.putString("DISTRICT", USER_INFO_SP.getString("DISTRICT", ""));
+        editor.putString("TEMPERATURE", weatherBean.data.wendu + " ℃");
+        editor.putString("TEMPERATURE_LOW", forecast.low);
+        editor.putString("TEMPERATURE_HIG", forecast.high);
+        editor.putString("WEATHER_TYPE", forecast.type);
+        editor.putString("GAN_MAO", weatherBean.data.ganmao);
+        editor.putString("WEATHER_DATE", forecast.date);
+        editor.putString("WEATHER_DATE_WEEK", forecast.date.substring(forecast.date.indexOf("日") + 1));
+        editor.commit();
+        mOKWeatherBean = weatherBean;
+        bindWeatherInfo();
+        mProgressBar.setVisibility(View.GONE);
     }
 
     private class LoadBannerImage extends ImageLoader {
 
         @Override
         public void displayImage(Context context, Object path, ImageView imageView) {
-            /**
-             注意：
-             图片加载器由自己选择，这里不限制，只是提供几种使用方法;
-             返回的图片路径为Object类型，由于不能确定你到底使用的那种图片加载器;
-             传输的到的是什么格式，那么这种就使用Object接收和返回，你只需要强转成你传输的类型就行;
-             切记不要胡乱强转
-             */
             Map<String, String> map = (Map<String, String>) path;
             GlideApi(imageView, map.get("URL"), R.drawable.topgd1, R.drawable.topgd1);
         }
