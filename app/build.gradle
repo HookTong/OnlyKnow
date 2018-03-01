@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "com.onlyknow.app"
         minSdkVersion 19
-        targetSdkVersion 23
+        targetSdkVersion 27
         versionCode 2
         versionName "2.0.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -56,15 +56,29 @@ android {
     }
 }
 
+// 解决v4包冲突
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        def requested = details.requested
+        if (requested.group == 'com.android.support') {
+            if (!requested.name.startsWith("multidex")) {
+                details.useVersion '27.0.2'
+            }
+        }
+    }
+}
+
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:27.0.0'
-    compile 'com.android.support:cardview-v7:27.0.0'
-    compile 'com.android.support:design:27.0.0'
+    compile 'com.android.support:appcompat-v7:27.0.2'
+    compile 'com.android.support:cardview-v7:27.0.2'
+    compile 'com.android.support:design:27.0.2'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.android.support:multidex:1.0.1'
+
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.youth.banner:banner:1.4.10'
     compile 'com.github.chrisbanes:PhotoView:1.3.1'
@@ -77,6 +91,7 @@ dependencies {
     compile 'com.github.yalantis:ucrop:2.2.1-native'
 
     testCompile 'junit:junit:4.12'
+
     compile files('libs/AMap_Location_V3.6.1_20171012.jar')
     compile files('libs/gson-2.3.1.jar')
     compile files('libs/hyphenatechat_3.3.7.jar')
