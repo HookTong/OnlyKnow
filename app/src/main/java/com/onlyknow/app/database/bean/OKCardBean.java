@@ -5,7 +5,9 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 /**
- * Created by Administrator on 2017/12/10.
+ * 卡片bean
+ * <p>
+ * Created by Administrator on 2018/03/01.
  */
 
 @DatabaseTable(tableName = "card_table")
@@ -209,7 +211,11 @@ public class OKCardBean {
     }
 
     public OKCardUrlListBean getBean() {
-        return bean;
+        if (bean != null) {
+            return bean;
+        } else {
+            return null;
+        }
     }
 
     public void setBean(OKCardUrlListBean bean) {

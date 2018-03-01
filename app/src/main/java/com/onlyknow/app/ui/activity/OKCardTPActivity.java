@@ -349,13 +349,12 @@ public class OKCardTPActivity extends OKBaseActivity {
                 mOKCardUrlListBean.setCount(1);
                 mOKCardUrlListBean.setUrlImage1(mCardBean.getCONTENT_IMAGE_URL());
             }
+            mCardBean.setBean(mOKCardUrlListBean);
         }
 
         int count = mOKCardUrlListBean.getCount();
 
-        if (count == 0) {
-            showSnackbar(MESSAGETopCardView, "没有图片地址", "");
-        }
+        if (count == 0) showSnackbar(MESSAGETopCardView, "没有图片地址", "");
 
         if (count == 1) {
             okActivityCardImageContentImage2.setVisibility(View.GONE);

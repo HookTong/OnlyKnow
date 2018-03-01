@@ -17,6 +17,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -297,12 +300,21 @@ public class OKBrowserActivity extends OKBaseActivity {
         public void onPageLoadStarted(XWalkView view, String url) {
             super.onPageLoadStarted(view, url);
             mEditTextLink.setText(url);
+            Animation anim = AnimationUtils.loadAnimation(OKBrowserActivity.this, R.anim.ok_rotate_anim);
+            if (anim != null) {
+                LinearInterpolator interpolator = new LinearInterpolator(); // 设置匀速旋转,在xml文件中设置会出现卡顿
+                anim.setInterpolator(interpolator);
+                mImageViewReGet.startAnimation(anim); // 开始动画
+                mImageViewReGet.setEnabled(false);
+            }
         }
 
         @Override
         public void onPageLoadStopped(XWalkView view, String url, LoadStatus status) {
             super.onPageLoadStopped(view, url, status);
             mEditTextLink.setText(url);
+            mImageViewReGet.clearAnimation();
+            mImageViewReGet.setEnabled(true);
         }
     }
 
