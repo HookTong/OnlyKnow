@@ -46,6 +46,13 @@ import java.util.Map;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+/**
+ * 图片卡片浏览界面
+ * 传入启动界面标识与列表Position
+ * 匹配缓存中的副本列表,如果匹配失败该界面将退出
+ * Created by ReSet on 2018/03/01.
+ */
+
 public class OKCardTPActivity extends OKBaseActivity {
     @Bind(R.id.MESSAGE_top_biaoti_imag)
     OKCircleImageView MESSAGETopBiaotiImag;

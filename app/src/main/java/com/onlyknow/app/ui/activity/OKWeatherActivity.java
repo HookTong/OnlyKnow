@@ -20,6 +20,7 @@ import com.onlyknow.app.api.OKWeatherApi;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.youth.banner.Banner;
 import com.youth.banner.BannerConfig;
@@ -35,7 +36,11 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * Created by Administrator on 2018/2/4.
+ * 天气预报界面
+ * 传入天气Json数据,并转换成天气对象
+ * 如果天气预报天数不足5天则该界面退出
+ * <p>
+ * Created by ReSet on 2018/03/01.
  */
 
 public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.onCallBack {
@@ -203,10 +208,22 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
     }
 
     private void bindWeatherInfo() {
-        int i = new Random().nextInt(5);
-        GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getHeadUrls().get(i).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+        List<OKWeatherBean.Forecast> mForecastList = mOKWeatherBean.getData().getForecast();
+        if (mForecastList == null || mForecastList.size() < 5) {
+            OKLogUtil.print("天气信息错误,请重新获取!");
+            finish();
+            return;
+        }
 
-        List<OKWeatherBean.Forecast> mForecastList = mOKWeatherBean.data.forecast;
+        int i = new Random().nextInt(5);
+        if (i < OKConstant.getHeadUrls().size()) {
+            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getHeadUrls().get(i).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+        } else if (OKConstant.getHeadUrls().size() != 0) {
+            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getHeadUrls().get(0).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+        } else {
+            GlideBlurApi(okActivityWeatherHeadImage, R.drawable.topgd1, R.drawable.topgd1, R.drawable.topgd1);
+        }
+
         OKWeatherBean.Forecast forecast1 = mForecastList.get(0);
         okActivityWeatherHeadCityText.setText(mOKWeatherBean.data.city + "市");
         okActivityWeatherHeadTypeText.setText(forecast1.type);
@@ -220,14 +237,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
         okActivityWeatherTimeWendufanweiText.setText(forecast1.low.replace("低温 ", "") + " / " + forecast1.high.replace("高温 ", ""));
         bindWeatherView(okActivityWeatherTimeTypeImage, forecast1.type);
         okActivityWeatherTimeTypeText.setText(forecast1.type);
-        String fl = forecast1.fengli;
-        fl = fl.replace("[", "");
-        fl = fl.replace("]", "");
-        fl = fl.replace("<", "");
-        fl = fl.replace(">", "");
-        fl = fl.replace("!", "");
-        fl = fl.replace("CDATA", "");
-        okActivityWeatherTimeFengxiangText.setText(forecast1.fengxiang + fl);
+        okActivityWeatherTimeFengxiangText.setText(forecast1.fengxiang + windPowerFormat(forecast1.fengli));
 
         OKWeatherBean.Forecast forecast2 = mForecastList.get(1);
         String date2 = forecast2.date;
@@ -237,14 +247,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
         okActivityWeatherTime1WendufanweiText.setText(forecast2.low.replace("低温 ", "") + " / " + forecast2.high.replace("高温 ", ""));
         bindWeatherView(okActivityWeatherTime1TypeImage, forecast2.type);
         okActivityWeatherTime1TypeText.setText(forecast2.type);
-        String fl1 = forecast2.fengli;
-        fl1 = fl1.replace("[", "");
-        fl1 = fl1.replace("]", "");
-        fl1 = fl1.replace("<", "");
-        fl1 = fl1.replace(">", "");
-        fl1 = fl1.replace("!", "");
-        fl1 = fl1.replace("CDATA", "");
-        okActivityWeatherTime1FengxiangText.setText(forecast2.fengxiang + fl1);
+        okActivityWeatherTime1FengxiangText.setText(forecast2.fengxiang + windPowerFormat(forecast2.fengli));
 
         OKWeatherBean.Forecast forecast3 = mForecastList.get(2);
         String date3 = forecast3.date;
@@ -254,14 +257,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
         okActivityWeatherTime2WendufanweiText.setText(forecast3.low.replace("低温 ", "") + " / " + forecast3.high.replace("高温 ", ""));
         bindWeatherView(okActivityWeatherTime2TypeImage, forecast3.type);
         okActivityWeatherTime2TypeText.setText(forecast3.type);
-        String fl3 = forecast3.fengli;
-        fl3 = fl3.replace("[", "");
-        fl3 = fl3.replace("]", "");
-        fl3 = fl3.replace("<", "");
-        fl3 = fl3.replace(">", "");
-        fl3 = fl3.replace("!", "");
-        fl3 = fl3.replace("CDATA", "");
-        okActivityWeatherTime2FengxiangText.setText(forecast3.fengxiang + fl3);
+        okActivityWeatherTime2FengxiangText.setText(forecast3.fengxiang + windPowerFormat(forecast3.fengli));
 
         OKWeatherBean.Forecast forecast4 = mForecastList.get(3);
         String date4 = forecast4.date;
@@ -271,14 +267,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
         okActivityWeatherTime3WendufanweiText.setText(forecast4.low.replace("低温 ", "") + " / " + forecast4.high.replace("高温 ", ""));
         bindWeatherView(okActivityWeatherTime3TypeImage, forecast4.type);
         okActivityWeatherTime3TypeText.setText(forecast4.type);
-        String fl4 = forecast4.fengli;
-        fl4 = fl4.replace("[", "");
-        fl4 = fl4.replace("]", "");
-        fl4 = fl4.replace("<", "");
-        fl4 = fl4.replace(">", "");
-        fl4 = fl4.replace("!", "");
-        fl4 = fl4.replace("CDATA", "");
-        okActivityWeatherTime3FengxiangText.setText(forecast4.fengxiang + fl4);
+        okActivityWeatherTime3FengxiangText.setText(forecast4.fengxiang + windPowerFormat(forecast4.fengli));
 
         OKWeatherBean.Forecast forecast5 = mForecastList.get(4);
         String date5 = forecast5.date;
@@ -288,16 +277,19 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
         okActivityWeatherTime4WendufanweiText.setText(forecast5.low.replace("低温 ", "") + " / " + forecast5.high.replace("高温 ", ""));
         bindWeatherView(okActivityWeatherTime4TypeImage, forecast5.type);
         okActivityWeatherTime4TypeText.setText(forecast5.type);
-        String fl5 = forecast5.fengli;
-        fl5 = fl5.replace("[", "");
-        fl5 = fl5.replace("]", "");
-        fl5 = fl5.replace("<", "");
-        fl5 = fl5.replace(">", "");
-        fl5 = fl5.replace("!", "");
-        fl5 = fl5.replace("CDATA", "");
-        okActivityWeatherTime4FengxiangText.setText(forecast5.fengxiang + fl5);
+        okActivityWeatherTime4FengxiangText.setText(forecast5.fengxiang + windPowerFormat(forecast5.fengli));
 
         okActivityWeatherGanmaoText.setText(mOKWeatherBean.data.ganmao);
+    }
+
+    private String windPowerFormat(String wp) {
+        wp = wp.replace("[", "");
+        wp = wp.replace("]", "");
+        wp = wp.replace("<", "");
+        wp = wp.replace(">", "");
+        wp = wp.replace("!", "");
+        wp = wp.replace("CDATA", "");
+        return wp;
     }
 
     private void startBanner() {

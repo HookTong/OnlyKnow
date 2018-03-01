@@ -39,6 +39,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 文字卡片浏览界面
+ * 传入启动界面标识与列表Position
+ * 匹配缓存中的副本列表,如果匹配失败该界面将退出
+ * Created by ReSet on 2018/03/01.
+ */
+
 public class OKCardWZActivity extends OKBaseActivity {
     private OKCircleImageView imageHeadPortrait;
     private TextView textNickName, textSignature, textContentTitle, textContent, textZan, textWatch, textComment, textTag, textLink, textDate;

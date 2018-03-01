@@ -25,8 +25,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OKSignupActivity extends OKBaseActivity {
-    private AppCompatButton buttonSignup;
+public class OKSigNupActivity extends OKBaseActivity {
+    private AppCompatButton buttonSigNup;
     private EditText editTextUserName, editTextNickName, editTextPhone, editTextEmail, editTextPassword;
     private RadioGroup sexRg;
     private RadioButton nanRb, nvRb;
@@ -35,7 +35,7 @@ public class OKSignupActivity extends OKBaseActivity {
     private String strSex = "NAN";
     private TextView textView;
 
-    private SignupTask mSignupTask;
+    private SigNupTask mSigNupTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,13 +54,13 @@ public class OKSignupActivity extends OKBaseActivity {
     public void onPause() {
         super.onPause();
 
-        if (mSignupTask != null && mSignupTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mSignupTask.cancel(true);
+        if (mSigNupTask != null && mSigNupTask.getStatus() == AsyncTask.Status.RUNNING) {
+            mSigNupTask.cancel(true);
         }
     }
 
     private void findView() {
-        buttonSignup = (AppCompatButton) findViewById(R.id.register_btn_signup);
+        buttonSigNup = (AppCompatButton) findViewById(R.id.register_btn_signup);
         editTextUserName = (EditText) findViewById(R.id.register_input_name);
         editTextNickName = (EditText) findViewById(R.id.register_input_nickname);
         editTextPhone = (EditText) findViewById(R.id.register_input_phone);
@@ -78,7 +78,7 @@ public class OKSignupActivity extends OKBaseActivity {
     }
 
     private void init() {
-        buttonSignup.setOnClickListener(new OnClickListener() {
+        buttonSigNup.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 String errorMsg = legitimateTesting();
@@ -97,11 +97,11 @@ public class OKSignupActivity extends OKBaseActivity {
                     params.put("age", "0");
                     params.put("redate", date);
 
-                    if (mSignupTask != null && mSignupTask.getStatus() == AsyncTask.Status.RUNNING) {
-                        mSignupTask.cancel(true);
+                    if (mSigNupTask != null && mSigNupTask.getStatus() == AsyncTask.Status.RUNNING) {
+                        mSigNupTask.cancel(true);
                     }
-                    mSignupTask = new SignupTask(editTextUserName.getText().toString(), editTextPassword.getText().toString());
-                    mSignupTask.executeOnExecutor(exec, params);
+                    mSigNupTask = new SigNupTask(editTextUserName.getText().toString(), editTextPassword.getText().toString());
+                    mSigNupTask.executeOnExecutor(exec, params);
 
                     showProgressDialog("正在注册账号...");
                 } else {
@@ -126,9 +126,9 @@ public class OKSignupActivity extends OKBaseActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    buttonSignup.setEnabled(true);
+                    buttonSigNup.setEnabled(true);
                 } else {
-                    buttonSignup.setEnabled(false);
+                    buttonSigNup.setEnabled(false);
                 }
             }
         });
@@ -137,7 +137,7 @@ public class OKSignupActivity extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                OKSignupActivity.this.finish();
+                OKSigNupActivity.this.finish();
             }
         });
 
@@ -215,10 +215,10 @@ public class OKSignupActivity extends OKBaseActivity {
         return errorMsg;
     }
 
-    private class SignupTask extends AsyncTask<Map<String, String>, Void, OKSignupResultBean> {
+    private class SigNupTask extends AsyncTask<Map<String, String>, Void, OKSignupResultBean> {
         private String ImUserName, ImPassWord;
 
-        public SignupTask(String username, String password) {
+        public SigNupTask(String username, String password) {
             this.ImUserName = username;
             this.ImPassWord = password;
         }
@@ -248,14 +248,14 @@ public class OKSignupActivity extends OKBaseActivity {
                     mBundle.putString(OKUserInfoBean.KEY_PASSWORD, ImPassWord);
                     sendUserBroadcast(ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM, mBundle);
 
-                    showSnackbar(buttonSignup, "注册成功", "");
+                    showSnackbar(buttonSigNup, "注册成功", "");
 
                     finish();
                 } else {
-                    showSnackbar(buttonSignup, "注册失败," + mSignupResultBean.getERROR_INFO() + "已存在!", "");
+                    showSnackbar(buttonSigNup, "注册失败," + mSignupResultBean.getERROR_INFO() + "已存在!", "");
                 }
             } else {
-                showSnackbar(buttonSignup, "注册失败,服务器错误!", "");
+                showSnackbar(buttonSigNup, "注册失败,服务器错误!", "");
             }
         }
     }

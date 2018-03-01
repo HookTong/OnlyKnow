@@ -52,7 +52,7 @@ public class OKLoginActivity extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                startUserActivity(null, OKSignupActivity.class);
+                startUserActivity(null, OKSigNupActivity.class);
             }
         });
 

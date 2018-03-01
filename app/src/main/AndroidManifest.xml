@@ -112,7 +112,7 @@
             android:label="@string/app_name"
             android:theme="@style/ImageTranslucentTheme" />
         <activity
-            android:name="com.onlyknow.app.ui.activity.OKSignupActivity"
+            android:name="com.onlyknow.app.ui.activity.OKSigNupActivity"
             android:label="@string/app_name"
             android:theme="@style/ImageTranslucentTheme" />
         <activity

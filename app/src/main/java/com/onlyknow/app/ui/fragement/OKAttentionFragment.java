@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -237,7 +238,11 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
             String url = okAttentionBean.getHEAD_PORTRAIT_URL();
             GlideRoundApi(mEntryViewHolder.mImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             mEntryViewHolder.mTextViewTitle.setText(okAttentionBean.getNICKNAME());
-            mEntryViewHolder.mTextViewContent.setText(okAttentionBean.getAUTOGRAPH());
+            if (!TextUtils.isEmpty(okAttentionBean.getAUTOGRAPH()) && !"NULL".equalsIgnoreCase(okAttentionBean.getAUTOGRAPH())) {
+                mEntryViewHolder.mTextViewContent.setText(okAttentionBean.getAUTOGRAPH());
+            } else {
+                mEntryViewHolder.mTextViewContent.setText("这个人很懒,什么都没有留下!");
+            }
             mEntryViewHolder.mButtonOpt.setText("取消关注");
 
             mEntryViewHolder.mImageViewTitle.setOnClickListener(new OnClickListener() {
