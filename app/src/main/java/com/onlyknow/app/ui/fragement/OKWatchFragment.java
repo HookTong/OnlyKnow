@@ -77,13 +77,13 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
                 mRefreshLayout.autoRefresh();
             }
             setEmptyButtonTag(RE_GET);
-            setEmptyButtonTitle("重 试");
-            setEmptyTextTitle("别急,小二可能在忙!");
+            setEmptyButtonTitle("重  试");
+            setEmptyTextTitle(getResources().getString(R.string.ListView_NoData));
         } else {
             mCardBeanList.clear();
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
             setEmptyButtonTag(LOG_IN);
-            setEmptyButtonTitle("登 录");
+            setEmptyButtonTitle("登  录");
             setEmptyTextTitle("未登录,登录后查看!");
         }
     }
