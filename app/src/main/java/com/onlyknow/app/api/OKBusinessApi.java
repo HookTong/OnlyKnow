@@ -65,6 +65,7 @@ public class OKBusinessApi extends OKBaseApi {
     private final String CarouselAndAdImage_URL = "http://" + IP + "/WeiZhiService/OKCarouselAndAdImageInquiry";
     private final String CardAndComment_Url = "http://" + IP + "/WeiZhiService/OKCardAndCommentInquiry";
     private final String Search_Url = "http://" + IP + "/WeiZhiService/OKSearchInquiry";
+    private final String Approve_Url = "http://" + IP + "/WeiZhiService/OKApproveCardInquire";
 
     public ArrayList<OKCardBean> getExploreCard(Map<String, String> params) {
         String json = OkHttpApiPost(ExploreCard_URL, params);
@@ -115,6 +116,29 @@ public class OKBusinessApi extends OKBaseApi {
     public ArrayList<OKCardBean> getUserCard(Map<String, String> params) {
         String json = OkHttpApiPost(UserCard_URL, params);
         if (json == null || json.equals("UserCard_ForFailure")) {
+            return null;
+        }
+        JsonParser parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(json).getAsJsonArray();
+
+        Gson gson = new Gson();
+        ArrayList<OKCardBean> mCardBeanList = new ArrayList<OKCardBean>();
+
+        for (JsonElement cardJson : jsonArray) {
+            try {
+                OKCardBean mCardBean = gson.fromJson(cardJson, OKCardBean.class);
+                mCardBeanList.add(mCardBean);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return mCardBeanList;
+    }
+
+    public ArrayList<OKCardBean> getApproveCard(Map<String, String> params) {
+        String json = OkHttpApiPost(Approve_Url, params);
+        if (json == null || json.equals("OKApproveCardInquire_ForFailure")) {
             return null;
         }
         JsonParser parser = new JsonParser();

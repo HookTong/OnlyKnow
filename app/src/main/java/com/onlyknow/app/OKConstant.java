@@ -16,7 +16,7 @@ import java.util.Map;
 * */
 
 public class OKConstant {
-    public final static String APP_VERSION = "2.0.6"; // app版本号
+    public final static String APP_VERSION = "2.0.7"; // app版本号
 
     // 广播动作
     public final static String ACTION_UPDATE_CAROUSE_AND_AD_IMAGE = "com.onlyknow.app.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE";
@@ -85,6 +85,9 @@ public class OKConstant {
 
     public final static int CARD_AND_COMMENT_COUNT = 30;
     public final static String CARD_AND_COMMENT_LOAD_COUNT = "30";
+
+    public final static int APPROVE_COUNT = 30;
+    public final static String APPROVE_LOAD_COUNT = "30";
 
     private final static List<Map<String, Object>> HEAD_IMAGE_LIST_URL = new ArrayList<>();
 

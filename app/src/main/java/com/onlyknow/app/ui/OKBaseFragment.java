@@ -81,6 +81,7 @@ public class OKBaseFragment extends Fragment {
     public final int INTERFACE_COMMENT_REPLY = 13; // 评论回复界面
     public final int INTERFACE_SEARCH = 14; // 搜索界面
     public final int INTERFACE_CARD_AND_COMMENT = 15;
+    public final int INTERFACE_APPROVE = 16;
 
     public final String ACTION_MAIN_SERVICE_SHOW_NOTICE = "ACTION_MAIN_SERVICE_SHOW_NOTICE";
     public final String ACTION_MAIN_SERVICE_LOGIN_IM = "ACTION_MAIN_SERVICE_LOGIN_IM";

@@ -80,6 +80,12 @@ public class OKCardBean {
     private String READ_DATE = "";
     public final static String KEY_READ_DATE = "READ_DATE";
 
+    public final static String KEY_APPROVE_BY = "APPROVE_BY";
+    private int APPROVE_BY = 1; // 审批状态 -1:未通过 0:审批中 1:通过
+
+    public final static String KEY_APPROVE_INFO = "APPROVE_INFO";
+    private String APPROVE_INFO = "";
+
     private OKCardUrlListBean bean;
 
     public int getCARD_ID() {
@@ -220,5 +226,21 @@ public class OKCardBean {
 
     public void setBean(OKCardUrlListBean bean) {
         this.bean = bean;
+    }
+
+    public int getAPPROVE_BY() {
+        return APPROVE_BY;
+    }
+
+    public void setAPPROVE_BY(int APPROVE_BY) {
+        this.APPROVE_BY = APPROVE_BY;
+    }
+
+    public String getAPPROVE_INFO() {
+        return APPROVE_INFO;
+    }
+
+    public void setAPPROVE_INFO(String APPROVE_INFO) {
+        this.APPROVE_INFO = APPROVE_INFO;
     }
 }

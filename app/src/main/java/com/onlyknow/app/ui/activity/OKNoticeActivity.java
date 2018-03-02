@@ -21,9 +21,11 @@ import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.database.bean.OKNoticeBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
+import com.onlyknow.app.ui.fragement.OKMeScreen;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
@@ -35,6 +37,7 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -277,43 +280,63 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
     private class LoadNoticeTask extends AsyncTask<Void, Void, List<OKNoticeBean>> {
         @Override
         protected List<OKNoticeBean> doInBackground(Void... params) {
-            if (isCancelled()) {
-                return null;
-            }
+            if (isCancelled()) return null; // 线程已终止
+
             Map<String, EMConversation> conversations = EMClient.getInstance().chatManager().getAllConversations();
-            if (conversations == null || conversations.size() == 0) {
-                return null;
-            }
+            if (conversations == null || conversations.size() == 0) return null; // 没有会话
+
             List<OKNoticeBean> list = new ArrayList<>();
             for (Map.Entry<String, EMConversation> entry : conversations.entrySet()) {
                 EMConversation mEMConversation = entry.getValue();
-                EMMessage LastMsg = mEMConversation.getLastMessage(); // 会话的最后一条消息
-                EMMessage LatestMsg = mEMConversation.getLatestMessageFromOthers(); // 会话接收到的最后一条消息
+                EMMessage lastMsg = mEMConversation.getLastMessage(); // 会话的最后一条消息
+                EMMessage receiveLastMsg = mEMConversation.getLatestMessageFromOthers(); // 会话接收到的最后一条消息
+
                 OKNoticeBean mNoticeBean = new OKNoticeBean();
-                if (LatestMsg == null) {
-                    mNoticeBean.setUSER_NAME(LastMsg.getTo());
-                    mNoticeBean.setNOTICE_TITLE(LastMsg.getStringAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, ""));
-                    mNoticeBean.setHEAD_PORTRAIT_URL(LastMsg.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""));
+                if (receiveLastMsg != null) {
+                    mNoticeBean.setUSER_NAME(receiveLastMsg.getFrom());
+                    mNoticeBean.setNOTICE_TITLE(receiveLastMsg.getStringAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, ""));
+                    mNoticeBean.setHEAD_PORTRAIT_URL(receiveLastMsg.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""));
+
+                    OKUserInfoBean bean = getUserHeadPortrait(receiveLastMsg.getFrom());
+                    if (bean != null) {
+                        mNoticeBean.setNOTICE_TITLE(bean.getNICKNAME());
+                        mNoticeBean.setHEAD_PORTRAIT_URL(bean.getHEADPORTRAIT_URL());
+                    }
                 } else {
-                    mNoticeBean.setUSER_NAME(LatestMsg.getFrom());
-                    mNoticeBean.setNOTICE_TITLE(LatestMsg.getStringAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, ""));
-                    mNoticeBean.setHEAD_PORTRAIT_URL(LatestMsg.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""));
+                    mNoticeBean.setUSER_NAME(lastMsg.getTo());
+                    mNoticeBean.setNOTICE_TITLE(lastMsg.getStringAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, ""));
+                    mNoticeBean.setHEAD_PORTRAIT_URL(lastMsg.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""));
+
+                    OKUserInfoBean bean = getUserHeadPortrait(lastMsg.getTo());
+                    if (bean != null) {
+                        mNoticeBean.setNOTICE_TITLE(bean.getNICKNAME());
+                        mNoticeBean.setHEAD_PORTRAIT_URL(bean.getHEADPORTRAIT_URL());
+                    }
                 }
-                if (LastMsg.getType() == EMMessage.Type.TXT) {
-                    mNoticeBean.setNOTICE_CONTENT(((EMTextMessageBody) LastMsg.getBody()).getMessage());
-                } else if (LastMsg.getType() == EMMessage.Type.IMAGE) {
+
+                if (lastMsg.getType() == EMMessage.Type.TXT) {
+                    mNoticeBean.setNOTICE_CONTENT(((EMTextMessageBody) lastMsg.getBody()).getMessage());
+                } else if (lastMsg.getType() == EMMessage.Type.IMAGE) {
                     mNoticeBean.setNOTICE_CONTENT("[图片]");
                 } else {
                     mNoticeBean.setNOTICE_CONTENT("[其他消息]");
                 }
+
                 mNoticeBean.setSTATE(mEMConversation.getUnreadMsgCount() > 0 ? true : false);
                 mNoticeBean.setUNREAD_NUM(mEMConversation.getUnreadMsgCount());
                 mNoticeBean.setALL_MESSAGE_NUM(mEMConversation.getAllMsgCount());
-                mNoticeBean.setDATE(new SimpleDateFormat("yyyy/MM/dd/HH/mm").format(new Date(LastMsg.getMsgTime())));
+                mNoticeBean.setDATE(new SimpleDateFormat("yyyy/MM/dd/HH/mm").format(new Date(lastMsg.getMsgTime())));
 
                 list.add(mNoticeBean);
             }
             return list;
+        }
+
+        private OKUserInfoBean getUserHeadPortrait(String userName) {
+            Map<String, String> map = new HashMap<>();// 请求参数
+            map.put("username", userName);
+            map.put("type", "HEAD_PORTRAIT");
+            return new OKBusinessApi().getUserInfo(map);
         }
 
         @Override

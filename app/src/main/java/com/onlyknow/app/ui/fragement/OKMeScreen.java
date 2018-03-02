@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.fragement;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -69,6 +70,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     private final OKAttentionFragment mAttentionFragment = new OKAttentionFragment();
     private final OKWatchFragment mWatchFragment = new OKWatchFragment();
     private final OKCommentFragment mCommentFragment = new OKCommentFragment();
+    private final OKApproveFragment mApproveFragment = new OKApproveFragment();
 
     private View rootView;
 
@@ -163,12 +165,14 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         }
     }
 
+    @SuppressLint("ResourceType")
     private void init() {
         mTabLayout.setTabMode(TabLayout.MODE_FIXED);// 设置TabLayout的模式
         mTabLayout.addTab(mTabLayout.newTab().setText("动态"));
         mTabLayout.addTab(mTabLayout.newTab().setText("关注"));
         mTabLayout.addTab(mTabLayout.newTab().setText("收藏"));
         mTabLayout.addTab(mTabLayout.newTab().setText("评论"));
+        mTabLayout.addTab(mTabLayout.newTab().setText("审批"));
         mFragmentList.clear();
         mTabNameList.clear();
         // 简单创建一个FragmentPagerAdapter
@@ -176,13 +180,15 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         mFragmentList.add(mAttentionFragment);
         mFragmentList.add(mWatchFragment);
         mFragmentList.add(mCommentFragment);
+        mFragmentList.add(mApproveFragment);
         mTabNameList.add("动态");
         mTabNameList.add("关注");
         mTabNameList.add("收藏");
         mTabNameList.add("评论");
+        mTabNameList.add("审批");
         mFragmentPagerAdapter = new OKFragmentPagerAdapter(getChildFragmentManager(), mFragmentList, mTabNameList);
         mViewPager.setAdapter(mFragmentPagerAdapter);
-        mViewPager.setOffscreenPageLimit(4);
+        mViewPager.setOffscreenPageLimit(5);
         mTabLayout.setupWithViewPager(mViewPager);
         mNavigationView.setNavigationItemSelectedListener(this);
         mBarToggle = new ActionBarDrawerToggle(getActivity(), mDrawerLayout, toolbar, R.drawable.ok_toolbar_menu, R.drawable.ok_toolbar_back);
@@ -290,11 +296,13 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
             mAttentionFragment.setSwipeRefreshEnabled(true);
             mWatchFragment.setSwipeRefreshEnabled(true);
             mCommentFragment.setSwipeRefreshEnabled(true);
+            mApproveFragment.setSwipeRefreshEnabled(true);
         } else {
             mDynamicFragment.setSwipeRefreshEnabled(false);
             mAttentionFragment.setSwipeRefreshEnabled(false);
             mWatchFragment.setSwipeRefreshEnabled(false);
             mCommentFragment.setSwipeRefreshEnabled(false);
+            mApproveFragment.setSwipeRefreshEnabled(false);
         }
     }
 

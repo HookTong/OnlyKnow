@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
+import android.annotation.SuppressLint;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -31,6 +32,7 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -45,7 +47,9 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.functions.Consumer;
 
@@ -61,11 +65,15 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     private String THIS_USER_NICKNAME;
     private String SEND_USER_NAME;
     private String SEND_USER_NICKNAME;
+    private OKUserInfoBean THE_USER_INFO;
+    private OKUserInfoBean ME_USER_INFO;
+    private final int UPDATE_SESSION = 3;
 
     private LoadSessionTask mLoadSessionTask;
     private MessageCallBack messageCallBackReceived, messageCallBackSend;
     private List<EMMessage> EMMessageList = new ArrayList<>();
 
+    @SuppressLint("HandlerLeak")
     private Handler mMsgHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -82,6 +90,11 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                     showSnackbar(mOKRecyclerView, "消息发送失败", "");
                     break;
                 case MessageCallBack.RECEIVED_MESSAGE:
+                    mOKRecyclerView.getAdapter().notifyDataSetChanged();
+                    mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
+                    break;
+                case UPDATE_SESSION:
+                    mToolbarTitle.setText("与 " + SEND_USER_NICKNAME + " 的会话");
                     mOKRecyclerView.getAdapter().notifyDataSetChanged();
                     mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
                     break;
@@ -170,6 +183,26 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
 
         messageCallBackReceived = new MessageCallBack(mMsgHandler);
         EMClient.getInstance().chatManager().addMessageListener(messageCallBackReceived); // 添加当前Activity的消息接收监听器
+
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                Map<String, String> map = new HashMap<>();
+                map.put("username", THIS_USER_NAME);
+                map.put("type", "HEAD_PORTRAIT");
+                ME_USER_INFO = new OKBusinessApi().getUserInfo(map);
+                THIS_USER_NICKNAME = ME_USER_INFO.getNICKNAME();
+
+                Map<String, String> map2 = new HashMap<>();
+                map2.put("username", SEND_USER_NAME);
+                map2.put("type", "HEAD_PORTRAIT");
+                THE_USER_INFO = new OKBusinessApi().getUserInfo(map2);
+                SEND_USER_NICKNAME = THE_USER_INFO.getNICKNAME();
+
+                mMsgHandler.sendEmptyMessage(UPDATE_SESSION);
+            }
+        }.start();
 
         sendButtonMsg.setOnClickListener(new OnClickListener() {
 
@@ -268,8 +301,12 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         private void initLeftViews(final SessionViewHolder viewHolder, final EMMessage mMessage, final int position) {
-            String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
-            GlideRoundApi(viewHolder.leftImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            if (THE_USER_INFO == null) {
+                String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+                GlideRoundApi(viewHolder.leftImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            } else {
+                GlideRoundApi(viewHolder.leftImageViewTitle, THE_USER_INFO.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            }
             if (mMessage.getType() == EMMessage.Type.TXT) {
                 viewHolder.leftImageViewContent.setVisibility(View.GONE);
                 viewHolder.leftTextViewContent.setVisibility(View.VISIBLE);
@@ -316,8 +353,12 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         public void initRightViews(final SessionViewHolder viewHolder, final EMMessage mMessage, final int position) {
-            String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
-            GlideRoundApi(viewHolder.rightImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            if (ME_USER_INFO == null) {
+                String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+                GlideRoundApi(viewHolder.rightImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            } else {
+                GlideRoundApi(viewHolder.rightImageViewTitle, ME_USER_INFO.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            }
             if (mMessage.getType() == EMMessage.Type.TXT) {
                 viewHolder.rightImageViewContent.setVisibility(View.GONE);
                 viewHolder.rightTextViewContent.setVisibility(View.VISIBLE);
