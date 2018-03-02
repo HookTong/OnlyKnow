@@ -81,7 +81,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
             }
             setEmptyButtonTag(RE_GET);
             setEmptyButtonTitle("重 试");
-            setEmptyTextTitle("该列表对拥有免审批权限者不可见!");
+            setEmptyTextTitle("别急!小二可能在忙!");
         } else {
             mOKCardBeanList.clear();
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
