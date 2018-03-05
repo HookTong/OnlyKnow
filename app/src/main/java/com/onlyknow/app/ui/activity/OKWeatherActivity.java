@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKWeatherApi;
+import com.onlyknow.app.api.OKLoadWeatherApi;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -43,7 +43,7 @@ import butterknife.ButterKnife;
  * Created by ReSet on 2018/03/01.
  */
 
-public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.onCallBack {
+public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherApi.onCallBack {
     @Bind(R.id.ok_collapsing_toolbar_back_image)
     OKSEImageView okCollapsingToolbarBackImage;
 
@@ -361,7 +361,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKWeatherApi.on
                 showSnackbar(okActivityWeatherCollapsingToolbarLayout, "未获取到城市", "");
                 return;
             }
-            OKWeatherApi mWeatherApi = new OKWeatherApi(this);
+            OKLoadWeatherApi mWeatherApi = new OKLoadWeatherApi(this);
             mWeatherApi.requestWeather(city_id, this);
         } else {
             showSnackbar(okActivityWeatherCollapsingToolbarLayout, "没有网络连接", "");

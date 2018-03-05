@@ -15,7 +15,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKSignupResultBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
@@ -228,7 +228,7 @@ public class OKSigNupActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return null;
             }
-            return new OKBusinessApi().registerUser(params[0]);
+            return new OKBusinessNet().registerUser(params[0]);
         }
 
         @Override

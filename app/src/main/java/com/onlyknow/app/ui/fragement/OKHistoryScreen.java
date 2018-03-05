@@ -241,10 +241,16 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
 
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
+        OKCardBean lastBean = mEntryViewAdapter.getLastBean();
+        if (lastBean == null) {
+            mRefreshLayout.finishLoadMore(1500);
+            showSnackbar(mRecyclerView, "没有历史记录!", "");
+            return;
+        }
         if (mOKLoadHistoryApi == null) {
             mOKLoadHistoryApi = new OKLoadHistoryApi(getActivity());
         }
-        mOKLoadHistoryApi.requestCardBeanList(true, this);
+        mOKLoadHistoryApi.requestCardBeanList(true, lastBean.getREAD_DATE_LONG(), this);
     }
 
     @Override
@@ -252,7 +258,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadHistoryApi == null) {
             mOKLoadHistoryApi = new OKLoadHistoryApi(getActivity());
         }
-        mOKLoadHistoryApi.requestCardBeanList(true, this);
+        mOKLoadHistoryApi.requestCardBeanList(false, 0L, this);
     }
 
     @Override
@@ -290,12 +296,15 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     @Override
     public void historyApiComplete(List<OKCardBean> list) {
         if (list != null) {
-            mCardBeanList.clear();
-            mCardBeanList.addAll(list);
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mCardBeanList.clear();
+                mCardBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mCardBeanList.addAll(list);
+            }
             OKConstant.putListCache(INTERFACE_HISTORY, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
-
         if (mRefreshLayout.getState() == RefreshState.Refreshing) {
             mRefreshLayout.finishRefresh();
         } else if (mRefreshLayout.getState() == RefreshState.Loading) {
@@ -317,11 +326,11 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
             if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                 mEntryViewHolder.mTextViewTitle.setText("精彩图片");
                 mEntryViewHolder.mTextViewContent.setText(okCardBean.getTITLE_TEXT() + " 发表");
-                mEntryViewHolder.mTextViewDate.setText(formatTime(okCardBean.getREAD_DATE()));
+                mEntryViewHolder.mTextViewDate.setText(formatTime(okCardBean.toStringReadDate()));
             } else {
                 mEntryViewHolder.mTextViewTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
                 mEntryViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
-                mEntryViewHolder.mTextViewDate.setText(formatTime(okCardBean.getREAD_DATE()));
+                mEntryViewHolder.mTextViewDate.setText(formatTime(okCardBean.toStringReadDate()));
             }
 
             mEntryViewHolder.mCardView.setOnClickListener(new OnClickListener() {
@@ -364,6 +373,14 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         @Override
         public int getItemCount() {
             return mBeanList.size();
+        }
+
+        public OKCardBean getLastBean() {
+            if (mBeanList.size() != 0) {
+                return mBeanList.get(mBeanList.size() - 1);
+            } else {
+                return null;
+            }
         }
 
         class EntryViewHolder extends RecyclerView.ViewHolder {

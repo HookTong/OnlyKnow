@@ -32,7 +32,7 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -191,13 +191,13 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                 Map<String, String> map = new HashMap<>();
                 map.put("username", THIS_USER_NAME);
                 map.put("type", "HEAD_PORTRAIT");
-                ME_USER_INFO = new OKBusinessApi().getUserInfo(map);
+                ME_USER_INFO = new OKBusinessNet().getUserInfo(map);
                 THIS_USER_NICKNAME = ME_USER_INFO.getNICKNAME();
 
                 Map<String, String> map2 = new HashMap<>();
                 map2.put("username", SEND_USER_NAME);
                 map2.put("type", "HEAD_PORTRAIT");
-                THE_USER_INFO = new OKBusinessApi().getUserInfo(map2);
+                THE_USER_INFO = new OKBusinessNet().getUserInfo(map2);
                 SEND_USER_NICKNAME = THE_USER_INFO.getNICKNAME();
 
                 mMsgHandler.sendEmptyMessage(UPDATE_SESSION);

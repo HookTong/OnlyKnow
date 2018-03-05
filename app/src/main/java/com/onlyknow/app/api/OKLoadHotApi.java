@@ -5,12 +5,15 @@ import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.OKDatabaseHelper;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 热门界面数据源加载Api
+ * <p>
  * Created by Administrator on 2017/12/23.
  */
 
@@ -47,26 +50,8 @@ public class OKLoadHotApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-            List<OKCardBean> mOKCardBeanList = mOKBusinessApi.getHotCard(params[0]);
-            if (mOKCardBeanList != null) {
-                OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
-                for (OKCardBean mCardBean : mOKCardBeanList) {
-                    try {
-                        OKCardBean dbBean = helper.getCardDao().queryForId(mCardBean.getCARD_ID());
-                        if (dbBean != null) {
-                            mCardBean.setIS_READ(dbBean.IS_READ());
-                            mCardBean.setREAD_DATE(dbBean.getREAD_DATE());
-                            helper.getCardDao().createOrUpdate(mCardBean);
-                        } else {
-                            helper.getCardDao().create(mCardBean);
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-            return mOKCardBeanList;
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
+            return mOKBusinessNet.getHotCard(params[0]);
         }
 
         @Override

@@ -21,6 +21,7 @@ public class OKConstant {
     // 广播动作
     public final static String ACTION_UPDATE_CAROUSE_AND_AD_IMAGE = "com.onlyknow.app.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE";
     public final static String ACTION_SHOW_NOTICE = "com.onlyknow.app.ACTION_SHOW_NOTICE";
+    public final static String ACTION_RESET_LOCATION = "com.onlyknow.app.ACTION_RE_LOCATION";
 
     // app本地路径
     public final static String IMAGE_PATH = Environment.getExternalStorageDirectory().getPath() + "/WeiZhi/Image/";
@@ -201,8 +202,12 @@ public class OKConstant {
         sourceList.clear();
     }
 
-    public final static String getNowDate() {
+    public final static String getNowDateByString() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
         return dateFormat.format(new Date());
+    }
+
+    public final static long getNowDateByLong() {
+        return new Date().getTime();
     }
 }

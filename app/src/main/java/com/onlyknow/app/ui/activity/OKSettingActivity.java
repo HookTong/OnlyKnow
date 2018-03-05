@@ -19,7 +19,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKSafetyInfoBean;
 import com.onlyknow.app.net.OKWebService;
@@ -342,7 +342,7 @@ public class OKSettingActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return null;
             }
-            return new OKBusinessApi().securityCheck(params[0]);
+            return new OKBusinessNet().securityCheck(params[0]);
         }
 
         @Override

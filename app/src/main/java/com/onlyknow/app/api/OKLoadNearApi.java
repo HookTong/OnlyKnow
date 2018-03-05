@@ -6,12 +6,15 @@ import android.os.AsyncTask;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.OKDatabaseHelper;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 附近界面数据源加载APi
+ * <p>
  * Created by Administrator on 2017/12/22.
  */
 
@@ -19,6 +22,7 @@ public class OKLoadNearApi extends OKBaseApi {
     private onCallBack mOnCallBack;
     private Context context;
     private LoadCardListTask mLoadCardListTask;
+    private boolean isLoadMore = false;
 
     public OKLoadNearApi(Context con) {
         this.context = con;
@@ -28,7 +32,8 @@ public class OKLoadNearApi extends OKBaseApi {
         void nearApiComplete(List<OKCardBean> list);
     }
 
-    public void requestCardBeanList(Map<String, String> param, onCallBack mCallBack) {
+    public void requestCardBeanList(Map<String, String> param, boolean isLoad, onCallBack mCallBack) {
+        this.isLoadMore = isLoad;
         this.mOnCallBack = mCallBack;
         cancelTask();
         mLoadCardListTask = new LoadCardListTask();
@@ -48,29 +53,32 @@ public class OKLoadNearApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
+            List<OKCardBean> nearCardList = mOKBusinessNet.getNearCard(params[0]);
+            if (!isLoadMore) {
+                return nearCardList;
+            } else {
+                return cardBeanListSorting(nearCardList);
+            }
+        }
 
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
-            List<OKCardBean> nearCardList = mOKBusinessApi.getNearCard(params[0]);
-
-            if (nearCardList != null) {
-                OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
-                for (OKCardBean mCardBean : nearCardList) {
-                    try {
-                        OKCardBean dbBean = helper.getCardDao().queryForId(mCardBean.getCARD_ID());
-                        if (dbBean != null) {
-                            mCardBean.setIS_READ(dbBean.IS_READ());
-                            mCardBean.setREAD_DATE(dbBean.getREAD_DATE());
-                            helper.getCardDao().createOrUpdate(mCardBean);
-                        } else {
-                            helper.getCardDao().create(mCardBean);
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+        private List<OKCardBean> cardBeanListSorting(List<OKCardBean> aims) {
+            if (OKConstant.getListCache(INTERFACE_NEAR) == null) {
+                return aims;
+            }
+            List<OKCardBean> source = OKConstant.getListCache(INTERFACE_NEAR);
+            for (int i = 0; i < source.size(); i++) {
+                OKCardBean sourceBean = source.get(i);
+                for (int p = 0; p < aims.size(); p++) {
+                    OKCardBean aimsBean = aims.get(p);
+                    if (sourceBean.getCARD_ID() == aimsBean.getCARD_ID()) {
+                        source.set(i, aimsBean);
+                        aims.remove(p);
+                        break;
                     }
                 }
             }
-            return cardBeanListSorting(nearCardList);
+            return aims;
         }
 
         @Override
@@ -82,24 +90,5 @@ public class OKLoadNearApi extends OKBaseApi {
             super.onPostExecute(okCardBeen);
             mOnCallBack.nearApiComplete(okCardBeen);
         }
-    }
-
-    private List<OKCardBean> cardBeanListSorting(List<OKCardBean> aims) {
-        if (OKConstant.getListCache(INTERFACE_NEAR) == null) {
-            return aims;
-        }
-        List<OKCardBean> source = OKConstant.getListCache(INTERFACE_NEAR);
-        for (int i = 0; i < source.size(); i++) {
-            OKCardBean sourceBean = source.get(i);
-            for (int p = 0; p < aims.size(); p++) {
-                OKCardBean aimsBean = aims.get(p);
-                if (sourceBean.getCARD_ID() == aimsBean.getCARD_ID()) {
-                    source.set(i, aimsBean);
-                    aims.remove(p);
-                    break;
-                }
-            }
-        }
-        return aims;
     }
 }

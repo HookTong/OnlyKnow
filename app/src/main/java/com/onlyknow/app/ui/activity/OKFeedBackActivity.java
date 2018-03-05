@@ -17,7 +17,7 @@ import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -92,7 +92,7 @@ public class OKFeedBackActivity extends OKBaseActivity {
                         map.put("equipment", new OKDeviceInfoUtil(OKFeedBackActivity.this).getIMIE());
                         map.put("message", mEditTextNeiRon.getText().toString());
                         map.put("baseimag", mFilePath);
-                        map.put("date", OKConstant.getNowDate());
+                        map.put("date", OKConstant.getNowDateByString());
                         mFeedBackTask = new FeedBackTask();
                         mFeedBackTask.executeOnExecutor(exec, map);
                         showProgressDialog("正在提交信息...");
@@ -151,7 +151,7 @@ public class OKFeedBackActivity extends OKBaseActivity {
                 Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
                 map.put("baseimag", OKBase64Util.BitmapToBase64(bitmap));
             }
-            return new OKBusinessApi().feedBack(map);
+            return new OKBusinessNet().feedBack(map);
         }
 
         @Override

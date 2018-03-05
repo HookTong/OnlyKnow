@@ -28,7 +28,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
@@ -403,7 +403,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
                 return null;
             }
 
-            return new OKBusinessApi().getUserInfo(params[0]);
+            return new OKBusinessNet().getUserInfo(params[0]);
         }
     }
 }

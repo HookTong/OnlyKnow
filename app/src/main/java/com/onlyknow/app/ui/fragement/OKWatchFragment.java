@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.api.OKLoadWatchApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
@@ -434,7 +434,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
                 if (isCancelled()) {
                     return false;
                 }
-                OKBusinessApi mWebApi = new OKBusinessApi();
+                OKBusinessNet mWebApi = new OKBusinessNet();
                 return mWebApi.RemoveCard(params[0]);
             }
         }

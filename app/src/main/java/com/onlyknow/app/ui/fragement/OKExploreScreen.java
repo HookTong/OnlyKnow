@@ -33,7 +33,7 @@ import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKLoadExploreApi;
-import com.onlyknow.app.api.OKWeatherApi;
+import com.onlyknow.app.api.OKLoadWeatherApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.database.bean.OKWeatherBean;
@@ -71,7 +71,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OnNavigationItemSelectedListener, OKLoadExploreApi.onCallBack, OKWeatherApi.onCallBack {
+public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OnNavigationItemSelectedListener, OKLoadExploreApi.onCallBack, OKLoadWeatherApi.onCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fab;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -89,6 +89,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     private OKLoadExploreApi mOKLoadExploreApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
+    private OKLoadWeatherApi mWeatherApi;
     private OKWeatherBean mOKWeatherBean;
 
     private View rootView;
@@ -153,6 +154,14 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         super.onDestroyView();
         if (null != rootView) {
             ((ViewGroup) rootView.getParent()).removeView(rootView);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mWeatherApi != null) {
+            mWeatherApi.cancelTask();
         }
     }
 
@@ -369,8 +378,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (TextUtils.isEmpty(city_id)) {
             return;
         }
-
-        OKWeatherApi mWeatherApi = new OKWeatherApi(getActivity());
+        mWeatherApi = new OKLoadWeatherApi(getActivity());
         mWeatherApi.requestWeather(city_id, this);
     }
 
@@ -442,7 +450,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadExploreApi == null) {
             mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, this);
+        mOKLoadExploreApi.requestCardBeanList(map, true, this);
     }
 
     @Override
@@ -452,7 +460,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadExploreApi == null) {
             mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, this);
+        mOKLoadExploreApi.requestCardBeanList(map, false, this);
     }
 
     @Override
@@ -502,7 +510,12 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     @Override
     public void exploreApiComplete(List<OKCardBean> list) {
         if (list != null) {
-            mCardBeanList.addAll(list);
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mCardBeanList.clear();
+                mCardBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mCardBeanList.addAll(list);
+            }
             OKConstant.putListCache(INTERFACE_EXPLORE, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }

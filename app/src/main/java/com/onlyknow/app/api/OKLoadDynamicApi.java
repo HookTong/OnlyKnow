@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 动态界面数据源加载Api
+ * <p>
  * Created by Administrator on 2017/12/22.
  */
 
@@ -51,34 +54,13 @@ public class OKLoadDynamicApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
             List<OKCardBean> dynamicCardList = new ArrayList<>();
             if (isLoadMore) {
-                dynamicCardList = mOKBusinessApi.loadMoreUserCard(params[0]);
+                dynamicCardList = mOKBusinessNet.loadMoreUserCard(params[0]);
             } else {
-                dynamicCardList = mOKBusinessApi.getUserCard(params[0]);
+                dynamicCardList = mOKBusinessNet.getUserCard(params[0]);
             }
-
-            if (dynamicCardList != null) {
-                OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
-                for (OKCardBean mCardBean : dynamicCardList) {
-                    try {
-                        OKCardBean dbBean = helper.getCardDao().queryForId(mCardBean.getCARD_ID());
-                        if (dbBean != null) {
-                            mCardBean.setIS_READ(dbBean.IS_READ());
-                            mCardBean.setREAD_DATE(dbBean.getREAD_DATE());
-                            helper.getCardDao().createOrUpdate(mCardBean);
-                        } else {
-                            helper.getCardDao().create(mCardBean);
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-
             return dynamicCardList;
         }
 
@@ -87,10 +69,8 @@ public class OKLoadDynamicApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-
-            super.onPostExecute(okCardBeen);
-
             mOnCallBack.dynamicApiComplete(okCardBeen);
+            super.onPostExecute(okCardBeen);
         }
     }
 }

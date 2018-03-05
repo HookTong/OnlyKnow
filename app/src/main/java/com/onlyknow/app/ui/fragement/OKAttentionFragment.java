@@ -18,7 +18,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.api.OKLoadAttentionApi;
 import com.onlyknow.app.database.bean.OKAttentionBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
@@ -389,7 +389,7 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
                 if (isCancelled()) {
                     return false;
                 }
-                OKBusinessApi mWebApi = new OKBusinessApi();
+                OKBusinessNet mWebApi = new OKBusinessNet();
                 return mWebApi.RemoveCard(params[0]);
             }
         }

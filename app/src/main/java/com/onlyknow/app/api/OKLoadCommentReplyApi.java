@@ -4,12 +4,15 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKCommentReplyBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 用户评论回复界面数据源加载Api
+ * <p>
  * Created by Administrator on 2017/12/23.
  */
 
@@ -49,17 +52,13 @@ public class OKLoadCommentReplyApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
             List<OKCommentReplyBean> mOKCommentReplyBeanList = new ArrayList<>();
-
             if (isLoadMore) {
-                mOKCommentReplyBeanList = mOKBusinessApi.loadMoreCommentReplyCard(params[0]);
+                mOKCommentReplyBeanList = mOKBusinessNet.loadMoreCommentReplyCard(params[0]);
             } else {
-                mOKCommentReplyBeanList = mOKBusinessApi.getCommentReplyCard(params[0]);
+                mOKCommentReplyBeanList = mOKBusinessNet.getCommentReplyCard(params[0]);
             }
-
             return mOKCommentReplyBeanList;
         }
 
@@ -68,10 +67,8 @@ public class OKLoadCommentReplyApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-
-            super.onPostExecute(mOKCommentReplyBeanList);
-
             mOnCallBack.commentReplyApiComplete(mOKCommentReplyBeanList);
+            super.onPostExecute(mOKCommentReplyBeanList);
         }
     }
 }

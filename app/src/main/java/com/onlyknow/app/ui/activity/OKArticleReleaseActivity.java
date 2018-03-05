@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKCardBase64ListBean;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
@@ -170,7 +170,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mCardBean.setCONTENT_TITLE_TEXT(mEditTitle.getText().toString());
                     mCardBean.setCONTENT_TEXT(mEditContent.getText().toString());
                     mCardBean.setLABELLING(mEditTag.getText().toString());
-                    mCardBean.setCREATE_DATE(OKConstant.getNowDate());
+                    mCardBean.setCREATE_DATE(OKConstant.getNowDateByString());
                     if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
                         mArticleTask.cancel(true);
                     }
@@ -186,7 +186,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         mCardBean.setTITLE_IMAGE_URL("");
                         mCardBean.setCARD_TYPE(CARD_TYPE_TP);
                         mCardBean.setCONTENT_IMAGE_URL(new Gson().toJson(mOKCardBase64ListBean));
-                        mCardBean.setCREATE_DATE(OKConstant.getNowDate());
+                        mCardBean.setCREATE_DATE(OKConstant.getNowDateByString());
                         if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
                             mArticleTask.cancel(true);
                         }
@@ -434,7 +434,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     }
                 }
             }
-            return new OKBusinessApi().addUserCard(mFileMap, map);
+            return new OKBusinessNet().addUserCard(mFileMap, map);
         }
 
         @Override

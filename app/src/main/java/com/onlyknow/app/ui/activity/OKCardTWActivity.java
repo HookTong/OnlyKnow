@@ -18,7 +18,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardAndCommentBean;
 import com.onlyknow.app.database.bean.OKCardBean;
@@ -133,7 +133,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                 return null;
             }
             mCardBean.setIS_READ(true);
-            mCardBean.setREAD_DATE(OKConstant.getNowDate());
+            mCardBean.setREAD_DATE_LONG(OKConstant.getNowDateByLong());
             bean.setOKCardBean(mCardBean);
             list.set(mPosition, bean);
         } else if (mInterfaceType == INTERFACE_SEARCH) {
@@ -156,7 +156,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                 return null;
             }
             mCardBean.setIS_READ(true);
-            mCardBean.setREAD_DATE(OKConstant.getNowDate());
+            mCardBean.setREAD_DATE_LONG(OKConstant.getNowDateByLong());
             searchBean.setCardBean(mCardBean);
             list.set(mPosition, searchBean);
         } else {
@@ -173,7 +173,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                 return null;
             }
             mCardBean.setIS_READ(true);
-            mCardBean.setREAD_DATE(OKConstant.getNowDate());
+            mCardBean.setREAD_DATE_LONG(OKConstant.getNowDateByLong());
             list.set(mPosition, mCardBean);
         }
 
@@ -282,26 +282,6 @@ public class OKCardTWActivity extends OKBaseActivity {
     }
 
     private void init() {
-        if (mInterfaceType != INTERFACE_HISTORY) {
-            List<OKCardBean> mHistoryList = OKConstant.getListCache(INTERFACE_HISTORY);
-            if (mHistoryList == null || mHistoryList.size() == 0) {
-                mHistoryList = new ArrayList<>();
-                mHistoryList.add(mCardBean);
-                OKConstant.putListCache(INTERFACE_HISTORY, mHistoryList);
-            } else {
-                for (int i = 0; i < mHistoryList.size(); i++) {
-                    OKCardBean mCB = mHistoryList.get(i);
-                    if (mCardBean.getCARD_ID() == mCB.getCARD_ID()) {
-                        mHistoryList.set(i, mCardBean);
-                        break;
-                    } else if (i == mHistoryList.size() - 1) {
-                        mHistoryList.add(mCardBean);
-                        OKConstant.putListCache(INTERFACE_HISTORY, mHistoryList);
-                    }
-                }
-            }
-        }
-
         // 字体设置
         if (SETTING_SP.getString("FONT", "NORM").equals("MAX")) {
             textContent.setTextSize(25);
@@ -381,7 +361,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                     params.put("username2", mCardBean.getUSER_NAME());
                     params.put("card_id", "");
                     params.put("message", "");
-                    params.put("date", OKConstant.getNowDate());
+                    params.put("date", OKConstant.getNowDateByString());
                     params.put("type", "GUANZHU");
                     mCardTask.executeOnExecutor(exec, params);
                 } else {
@@ -428,7 +408,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                     params.put("username2", "");
                     params.put("card_id", Integer.toString(mCardBean.getCARD_ID()));
                     params.put("message", "");
-                    params.put("date", OKConstant.getNowDate());
+                    params.put("date", OKConstant.getNowDateByString());
                     params.put("type", "ZAN");
                     mCardTask.executeOnExecutor(exec, params);
                 } else {
@@ -452,7 +432,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                     params.put("username2", "");
                     params.put("card_id", Integer.toString(mCardBean.getCARD_ID()));
                     params.put("message", "");
-                    params.put("date", OKConstant.getNowDate());
+                    params.put("date", OKConstant.getNowDateByString());
                     params.put("type", "SHOUCHAN");
                     mCardTask.executeOnExecutor(exec, params);
                 } else {
@@ -524,7 +504,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                 map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
                 map.put("equipment", equipment);
                 map.put("date", dateFormat.format(now));
-                new OKBusinessApi().addCardBrowsing(map);
+                new OKBusinessNet().addCardBrowsing(map);
             }
         }.start();
     }
@@ -554,7 +534,7 @@ public class OKCardTWActivity extends OKBaseActivity {
                 return false;
             }
 
-            return new OKBusinessApi().updateCardInfo(params[0]);
+            return new OKBusinessNet().updateCardInfo(params[0]);
         }
 
         @Override
@@ -605,7 +585,7 @@ public class OKCardTWActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return null;
             }
-            return new OKBusinessApi().getCardBind(params[0]);
+            return new OKBusinessNet().getCardBind(params[0]);
         }
 
         @Override

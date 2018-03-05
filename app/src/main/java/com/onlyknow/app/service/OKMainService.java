@@ -25,7 +25,7 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.exceptions.HyphenateException;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKCarouselAndAdImageBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.utils.OKCityUtil;
@@ -185,6 +185,8 @@ public class OKMainService extends OKBaseService {
                 } else {
                     OKLogUtil.print("网络连接已断开");
                 }
+            } else if (OKConstant.ACTION_RESET_LOCATION.equals(action)) {
+                mLocationClient.startLocation();
             }
         }
     };
@@ -264,6 +266,7 @@ public class OKMainService extends OKBaseService {
         mIntentFilter.addAction(ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM);
         mIntentFilter.addAction(ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM);
         mIntentFilter.addAction(OKConstant.ACTION_SHOW_NOTICE);
+        mIntentFilter.addAction(OKConstant.ACTION_RESET_LOCATION);
         mIntentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(mServiceBroadcastReceiver, mIntentFilter);
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -331,13 +334,13 @@ public class OKMainService extends OKBaseService {
             map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
             map.put("longitude", Double.toString(LONGITUDE));
             map.put("dimension", Double.toString(DIMENSION));
-            map.put("date", OKConstant.getNowDate());
+            map.put("date", OKConstant.getNowDateByString());
 
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
-                    new OKBusinessApi().addUserLocation(map);
+                    new OKBusinessNet().addUserLocation(map);
                 }
             }.start();
         }
@@ -356,7 +359,7 @@ public class OKMainService extends OKBaseService {
             if (isCancelled()) {
                 return null;
             }
-            return new OKBusinessApi().getOKCarouselAndAdImageBean(params[0]);
+            return new OKBusinessNet().getOKCarouselAndAdImageBean(params[0]);
         }
 
         @Override

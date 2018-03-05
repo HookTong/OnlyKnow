@@ -531,7 +531,7 @@ public class OKBaseActivity extends AppCompatActivity {
         if (time.length != 5) {
             return date;
         }
-        String nowDate = OKConstant.getNowDate();
+        String nowDate = OKConstant.getNowDateByString();
         String nowTime[] = nowDate.split("/");
         if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (time[2].equals(nowTime[2]))) {
             return "今天 " + time[3] + ":" + time[4];

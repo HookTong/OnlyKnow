@@ -24,7 +24,7 @@ import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
@@ -332,7 +332,7 @@ public class OKUserEdit extends OKBaseActivity {
 
             if (this.Type.equals("UpdateEditInfo")) {
 
-                return new OKBusinessApi().updateUserInfo(params[0]);
+                return new OKBusinessNet().updateUserInfo(params[0]);
 
             } else if (this.Type.equals("UpdateHeadPortrait")) {
 
@@ -350,7 +350,7 @@ public class OKUserEdit extends OKBaseActivity {
 
                 map.put("baseimag", OKBase64Util.BitmapToBase64(bitmap));
 
-                return new OKBusinessApi().updateHeadPortrait(map);
+                return new OKBusinessNet().updateHeadPortrait(map);
             } else {
                 OKLogUtil.print("OKUserEdit 无效的执行类型");
                 return false;

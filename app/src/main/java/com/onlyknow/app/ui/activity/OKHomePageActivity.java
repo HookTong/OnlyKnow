@@ -27,7 +27,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.api.OKLoadHomeApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
@@ -572,7 +572,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                 return null;
             }
 
-            OKBusinessApi mWebApi = new OKBusinessApi();
+            OKBusinessNet mWebApi = new OKBusinessNet();
             if (isCancelled()) {
                 return null;
             }
@@ -605,7 +605,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                 return false;
             }
 
-            OKBusinessApi mWebApi = new OKBusinessApi();
+            OKBusinessNet mWebApi = new OKBusinessNet();
             return mWebApi.updateCardInfo(params[0]);
         }
     }

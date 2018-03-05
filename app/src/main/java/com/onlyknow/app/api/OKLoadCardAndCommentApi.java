@@ -4,12 +4,15 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKCardAndCommentBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 用户总评论界面数据源加载Api
+ * <p>
  * Created by Administrator on 2018/2/1.
  */
 
@@ -49,17 +52,13 @@ public class OKLoadCardAndCommentApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
             List<OKCardAndCommentBean> list = new ArrayList<>();
-
             if (isLoadMore) {
-                list = mOKBusinessApi.loadMoreCardAndComment(params[0]);
+                list = mOKBusinessNet.loadMoreCardAndComment(params[0]);
             } else {
-                list = mOKBusinessApi.getCardAndComment(params[0]);
+                list = mOKBusinessNet.getCardAndComment(params[0]);
             }
-
             return list;
         }
 
@@ -68,10 +67,8 @@ public class OKLoadCardAndCommentApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-
-            super.onPostExecute(list);
-
             mOnCallBack.cardAndCommentApiComplete(list);
+            super.onPostExecute(list);
         }
     }
 }

@@ -3,15 +3,16 @@ package com.onlyknow.app.api;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 审批界面数据源加载Api
+ * <p>
  * Created by Administrator on 2018/3/2.
  */
 
@@ -51,14 +52,12 @@ public class OKLoadApproveApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
             List<OKCardBean> dynamicCardList = new ArrayList<>();
             if (isLoadMore) {
-                dynamicCardList = mOKBusinessApi.loadMoreUserCard(params[0]);
+                dynamicCardList = mOKBusinessNet.loadMoreUserCard(params[0]);
             } else {
-                dynamicCardList = mOKBusinessApi.getApproveCard(params[0]);
+                dynamicCardList = mOKBusinessNet.getApproveCard(params[0]);
             }
             return dynamicCardList;
         }
@@ -68,10 +67,8 @@ public class OKLoadApproveApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-
-            super.onPostExecute(okCardBeen);
-
             mOnCallBack.approveApiComplete(okCardBeen);
+            super.onPostExecute(okCardBeen);
         }
     }
 }

@@ -4,11 +4,14 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKSearchBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 搜索界面数据源加载Api
+ * <p>
  * Created by Administrator on 2018/2/2.
  */
 
@@ -45,11 +48,8 @@ public class OKLoadSearchApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
-            List<OKSearchBean> list = mOKBusinessApi.getSearchBean(params[0]);
-
-            return list;
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
+            return mOKBusinessNet.getSearchBean(params[0]);
         }
 
         @Override
@@ -57,9 +57,8 @@ public class OKLoadSearchApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            super.onPostExecute(list);
-
             mOnCallBack.searchApiComplete(list);
+            super.onPostExecute(list);
         }
     }
 }

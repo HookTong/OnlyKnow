@@ -8,7 +8,7 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKSafetyInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 
@@ -91,7 +91,7 @@ public class OKContentActivity extends OKBaseActivity {
                 return null;
             }
 
-            return new OKBusinessApi().securityCheck(params[0]);
+            return new OKBusinessNet().securityCheck(params[0]);
         }
 
         @Override

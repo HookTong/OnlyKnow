@@ -24,7 +24,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.api.OKLoadCommentApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKCommentBean;
@@ -478,7 +478,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                     return false;
                 }
 
-                OKBusinessApi mWebApi = new OKBusinessApi();
+                OKBusinessNet mWebApi = new OKBusinessNet();
                 return mWebApi.editCommentPraise(params[0]);
             }
         }
@@ -491,7 +491,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
             if (isCancelled()) {
                 return false;
             }
-            return new OKBusinessApi().updateCardInfo(params[0]);
+            return new OKBusinessNet().updateCardInfo(params[0]);
         }
 
         @Override

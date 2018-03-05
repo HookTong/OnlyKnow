@@ -10,7 +10,7 @@ import android.widget.CheckBox;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 
@@ -78,7 +78,7 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("username2", mBundle.getString("JUBAO_NAME"));
                             map.put("card_id", "");
                             map.put("message", msg);
-                            map.put("date", OKConstant.getNowDate());
+                            map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_USER");
                             mRePortTask = new RePortTask();
                             mRePortTask.executeOnExecutor(exec, map);
@@ -89,7 +89,7 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("username2", "");
                             map.put("card_id", mBundle.getString("JUBAO_CARD_ID"));
                             map.put("message", msg);
-                            map.put("date", OKConstant.getNowDate());
+                            map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_CARD");
                             mRePortTask = new RePortTask();
                             mRePortTask.executeOnExecutor(exec, map);
@@ -100,7 +100,7 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("username2", "");
                             map.put("card_id", mBundle.getString("JUBAO_COM_ID"));
                             map.put("message", msg);
-                            map.put("date", OKConstant.getNowDate());
+                            map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_COMMENT");
                             mRePortTask = new RePortTask();
                             mRePortTask.executeOnExecutor(exec, map);
@@ -111,7 +111,7 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("username2", "");
                             map.put("card_id", mBundle.getString("JUBAO_COMR_ID"));
                             map.put("message", msg);
-                            map.put("date", OKConstant.getNowDate());
+                            map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_COMMENT_REPLY");
                             mRePortTask = new RePortTask();
                             mRePortTask.executeOnExecutor(exec, map);
@@ -163,7 +163,7 @@ public class OKRePortActivity extends OKBaseActivity {
                 return false;
             }
 
-            return new OKBusinessApi().updateCardInfo(params[0]);
+            return new OKBusinessNet().updateCardInfo(params[0]);
         }
 
         @Override

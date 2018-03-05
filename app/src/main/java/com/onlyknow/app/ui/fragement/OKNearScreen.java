@@ -189,7 +189,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         fabReGet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mRefreshLayout.autoRefresh();
+                sendUserBroadcast(OKConstant.ACTION_RESET_LOCATION, null);
                 showSnackbar(mRecyclerView, "重新定位我的位置", "");
             }
         });
@@ -242,7 +242,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             if (mOKLoadNearApi == null) {
                 mOKLoadNearApi = new OKLoadNearApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, this);
+            mOKLoadNearApi.requestCardBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackbar(rootView, "没有网络连接!", "");
@@ -260,7 +260,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             if (mOKLoadNearApi == null) {
                 mOKLoadNearApi = new OKLoadNearApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, this);
+            mOKLoadNearApi.requestCardBeanList(map, false, this);
         } else {
             if (mRecyclerView.getAdapter().getItemCount() == 0) {
                 mCardBeanList.addAll(OKConstant.getListCache(INTERFACE_NEAR));
@@ -306,11 +306,15 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     @Override
     public void nearApiComplete(List<OKCardBean> list) {
         if (list != null) {
-            mCardBeanList.addAll(list);
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                mCardBeanList.clear();
+                mCardBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                mCardBeanList.addAll(list);
+            }
             OKConstant.putListCache(INTERFACE_NEAR, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
-
         if (mRefreshLayout.getState() == RefreshState.Refreshing) {
             mRefreshLayout.finishRefresh();
         } else if (mRefreshLayout.getState() == RefreshState.Loading) {

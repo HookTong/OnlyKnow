@@ -21,11 +21,10 @@ import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKNoticeBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
-import com.onlyknow.app.ui.fragement.OKMeScreen;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
@@ -336,7 +335,7 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
             Map<String, String> map = new HashMap<>();// 请求参数
             map.put("username", userName);
             map.put("type", "HEAD_PORTRAIT");
-            return new OKBusinessApi().getUserInfo(map);
+            return new OKBusinessNet().getUserInfo(map);
         }
 
         @Override

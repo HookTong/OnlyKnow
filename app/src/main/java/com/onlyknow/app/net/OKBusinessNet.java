@@ -1,4 +1,4 @@
-package com.onlyknow.app.api;
+package com.onlyknow.app.net;
 
 import android.text.TextUtils;
 
@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.database.bean.OKAttentionBean;
 import com.onlyknow.app.database.bean.OKCardAndCommentBean;
 import com.onlyknow.app.database.bean.OKCardBean;
@@ -35,7 +36,7 @@ import static com.onlyknow.app.net.OKWebService.OkHttpApiPost;
  * Created by Administrator on 2017/12/10.
  */
 
-public class OKBusinessApi extends OKBaseApi {
+public class OKBusinessNet extends OKBaseApi {
     private final String IP = "101.132.168.25:8090";
     private final String ExploreCard_URL = "http://" + IP + "/WeiZhiService/ExploreCardInquiry";
     private final String NearCard_URL = "http://" + IP + "/WeiZhiService/NearCardInquiry";

@@ -3,11 +3,13 @@ package com.onlyknow.app.database.bean;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
- * 卡片bean
+ * 卡片bean,字段名不可变更,需要转Json处理
  * <p>
- * Created by Administrator on 2018/03/01.
+ * Created by Reset on 2018/03/05.
  */
 
 @DatabaseTable(tableName = "card_table")
@@ -76,15 +78,18 @@ public class OKCardBean {
     private boolean IS_READ;
     public final static String KEY_IS_READ = "IS_READ";
 
-    @DatabaseField(columnName = KEY_READ_DATE)
     private String READ_DATE = "";
     public final static String KEY_READ_DATE = "READ_DATE";
 
-    public final static String KEY_APPROVE_BY = "APPROVE_BY";
-    private int APPROVE_BY = 1; // 审批状态 -1:未通过 0:审批中 1:通过
+    @DatabaseField(columnName = KEY_READ_DATE_LONG)
+    private long READ_DATE_LONG = 0;
+    public final static String KEY_READ_DATE_LONG = "READ_DATE_LONG";
 
-    public final static String KEY_APPROVE_INFO = "APPROVE_INFO";
+    private int APPROVE_BY = 1; // 审批状态 -1:未通过 0:审批中 1:通过
+    public final static String KEY_APPROVE_BY = "APPROVE_BY";
+
     private String APPROVE_INFO = "";
+    public final static String KEY_APPROVE_INFO = "APPROVE_INFO";
 
     private OKCardUrlListBean bean;
 
@@ -208,12 +213,12 @@ public class OKCardBean {
         this.IS_READ = IS_READ;
     }
 
-    public String getREAD_DATE() {
-        return READ_DATE;
+    public long getREAD_DATE_LONG() {
+        return READ_DATE_LONG;
     }
 
-    public void setREAD_DATE(String READ_DATE) {
-        this.READ_DATE = READ_DATE;
+    public void setREAD_DATE_LONG(long READ_DATE_LONG) {
+        this.READ_DATE_LONG = READ_DATE_LONG;
     }
 
     public OKCardUrlListBean getBean() {
@@ -242,5 +247,10 @@ public class OKCardBean {
 
     public void setAPPROVE_INFO(String APPROVE_INFO) {
         this.APPROVE_INFO = APPROVE_INFO;
+    }
+
+    public String toStringReadDate() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
+        return dateFormat.format(new Date(READ_DATE_LONG));
     }
 }

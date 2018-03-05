@@ -4,12 +4,15 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKGoodsBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 商品界面数据源加载Api
+ * <p>
  * Created by Administrator on 2017/12/23.
  */
 
@@ -49,17 +52,13 @@ public class OKLoadGoodsApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
             List<OKGoodsBean> mOKGoodsBeanList = new ArrayList<>();
-
             if (isLoadMore) {
-                mOKGoodsBeanList = mOKBusinessApi.loadMoreGoodsEntry(params[0]);
+                mOKGoodsBeanList = mOKBusinessNet.loadMoreGoodsEntry(params[0]);
             } else {
-                mOKGoodsBeanList = mOKBusinessApi.getGoodsEntry(params[0]);
+                mOKGoodsBeanList = mOKBusinessNet.getGoodsEntry(params[0]);
             }
-
             return mOKGoodsBeanList;
         }
 
@@ -68,10 +67,8 @@ public class OKLoadGoodsApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-
-            super.onPostExecute(mOKGoodsBeanList);
-
             mOnCallBack.goodsApiComplete(mOKGoodsBeanList);
+            super.onPostExecute(mOKGoodsBeanList);
         }
     }
 }

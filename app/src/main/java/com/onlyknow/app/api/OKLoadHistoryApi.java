@@ -7,9 +7,12 @@ import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 历史浏览界面数据源加载Api
+ * <p>
  * Created by Administrator on 2017/12/22.
  */
 
@@ -17,6 +20,7 @@ public class OKLoadHistoryApi extends OKBaseApi {
     private onCallBack mOnCallBack;
     private Context context;
     private LoadCardListTask mLoadCardListTask;
+    private boolean isLoadMore = false;
 
     public OKLoadHistoryApi(Context con) {
         this.context = con;
@@ -26,11 +30,12 @@ public class OKLoadHistoryApi extends OKBaseApi {
         void historyApiComplete(List<OKCardBean> list);
     }
 
-    public void requestCardBeanList(boolean b, onCallBack mCallBack) {
+    public void requestCardBeanList(boolean isLoad, long minTime, onCallBack mCallBack) {
+        this.isLoadMore = isLoad;
         this.mOnCallBack = mCallBack;
         cancelTask();
         mLoadCardListTask = new LoadCardListTask();
-        mLoadCardListTask.executeOnExecutor(exec, b);
+        mLoadCardListTask.executeOnExecutor(exec, minTime);
     }
 
     public void cancelTask() {
@@ -39,15 +44,31 @@ public class OKLoadHistoryApi extends OKBaseApi {
         }
     }
 
-    private class LoadCardListTask extends AsyncTask<Boolean, Void, List<OKCardBean>> {
+    private class LoadCardListTask extends AsyncTask<Long, Void, List<OKCardBean>> {
 
         @Override
-        protected List<OKCardBean> doInBackground(Boolean... params) {
+        protected List<OKCardBean> doInBackground(Long... params) {
             if (isCancelled()) {
                 return null;
             }
-
             return getDBIsReadCard(params[0]);
+        }
+
+        private List<OKCardBean> getDBIsReadCard(long minTime) {
+            OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
+            try {
+                List<OKCardBean> dbList = new ArrayList<>();
+                if (isLoadMore) {
+                    dbList = helper.getCardDao().queryBuilder().orderBy(OKCardBean.KEY_READ_DATE_LONG, false).limit(30L).where().eq(OKCardBean.KEY_IS_READ, true).and().lt(OKCardBean.KEY_READ_DATE_LONG, minTime).query();
+                    return dbList;
+                } else {
+                    dbList = helper.getCardDao().queryBuilder().orderBy(OKCardBean.KEY_READ_DATE_LONG, false).limit(30L).where().eq(OKCardBean.KEY_IS_READ, true).query();
+                    return dbList;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
 
         @Override
@@ -55,21 +76,8 @@ public class OKLoadHistoryApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            super.onPostExecute(okCardBeen);
-
             mOnCallBack.historyApiComplete(okCardBeen);
-        }
-    }
-
-    private List<OKCardBean> getDBIsReadCard(boolean b) {
-        // 加载本地已阅读数据
-        OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
-        try {
-            List<OKCardBean> dbList = helper.getCardDao().queryBuilder().where().eq(OKCardBean.KEY_IS_READ, b).query();
-            return dbList;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+            super.onPostExecute(okCardBeen);
         }
     }
 }

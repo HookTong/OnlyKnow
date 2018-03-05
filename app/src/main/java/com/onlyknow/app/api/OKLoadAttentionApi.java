@@ -4,12 +4,15 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKAttentionBean;
+import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * 关注界面数据源加载Api
+ * <p>
  * Created by Administrator on 2017/12/22.
  */
 
@@ -49,16 +52,13 @@ public class OKLoadAttentionApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-
-            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
-
+            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
             List<OKAttentionBean> attentionEntryList = new ArrayList<>();
             if (isLoadMore) {
-                attentionEntryList = mOKBusinessApi.loadMoreAttentionEntry(params[0]);
+                attentionEntryList = mOKBusinessNet.loadMoreAttentionEntry(params[0]);
             } else {
-                attentionEntryList = mOKBusinessApi.getAttentionEntry(params[0]);
+                attentionEntryList = mOKBusinessNet.getAttentionEntry(params[0]);
             }
-
             return attentionEntryList;
         }
 
@@ -67,10 +67,8 @@ public class OKLoadAttentionApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-
-            super.onPostExecute(okAttentionBeenList);
-
             mOnCallBack.attentionApiComplete(okAttentionBeenList);
+            super.onPostExecute(okAttentionBeenList);
         }
     }
 }

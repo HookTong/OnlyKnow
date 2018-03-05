@@ -10,7 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 
@@ -100,7 +100,7 @@ public class OKLoginActivity extends OKBaseActivity {
                 return null;
             }
 
-            return new OKBusinessApi().login(params[0]);
+            return new OKBusinessNet().login(params[0]);
         }
 
         @Override

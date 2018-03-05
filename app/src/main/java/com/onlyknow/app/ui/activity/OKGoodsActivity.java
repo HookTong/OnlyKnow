@@ -20,7 +20,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.api.OKLoadGoodsApi;
 import com.onlyknow.app.database.bean.OKGoodsBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
@@ -413,7 +413,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                     return false;
                 }
 
-                OKBusinessApi mWebApi = new OKBusinessApi();
+                OKBusinessNet mWebApi = new OKBusinessNet();
                 return mWebApi.GoodsBuy(params[0]);
             }
         }
