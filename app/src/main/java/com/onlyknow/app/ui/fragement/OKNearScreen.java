@@ -53,6 +53,7 @@ import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,8 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             }
         }
     };
+
+    private long locationInterval = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -189,8 +192,14 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         fabReGet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendUserBroadcast(OKConstant.ACTION_RESET_LOCATION, null);
-                showSnackbar(mRecyclerView, "重新定位我的位置", "");
+                long nowTime = new Date().getTime();
+                if (nowTime - locationInterval > 10000) {
+                    sendUserBroadcast(OKConstant.ACTION_RESET_LOCATION, null);
+                    locationInterval = nowTime;
+                    showSnackbar(mRecyclerView, "重新定位我的位置", "");
+                } else {
+                    showSnackbar(mRecyclerView, "您定位过于频繁,请稍后再试!", "");
+                }
             }
         });
 

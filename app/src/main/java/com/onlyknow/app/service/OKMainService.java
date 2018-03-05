@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -34,6 +35,7 @@ import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,21 +183,29 @@ public class OKMainService extends OKBaseService {
                         mLoadCarouselAndAdImageTask.cancel(true);
                     }
                     mLoadCarouselAndAdImageTask = new LoadCarouselAndAdImageTask(OKMainService.this);
-                    mLoadCarouselAndAdImageTask.executeOnExecutor(exec, new OKDeviceInfoUtil(OKMainService.this).getIMIE());
+                    mLoadCarouselAndAdImageTask.executeOnExecutor(exec);
                 } else {
                     OKLogUtil.print("网络连接已断开");
                 }
             } else if (OKConstant.ACTION_RESET_LOCATION.equals(action)) {
-                mLocationClient.startLocation();
+                long nowTime = new Date().getTime();
+                if ((nowTime - locationInterval) > 10000) {
+                    mLocationClient.startLocation();
+                    locationInterval = nowTime;
+                } else {
+                    OKLogUtil.print("用户定位过于频繁!10秒之后再重新定位");
+                }
             }
         }
     };
 
     // 声明AMapLocationClient类对象
-    public AMapLocationClient mLocationClient;
+    private AMapLocationClient mLocationClient;
+
+    private long locationInterval = 0;
 
     // 声明定位回调监听器
-    public AMapLocationListener mLocationListener = new AMapLocationListener() {
+    private AMapLocationListener mLocationListener = new AMapLocationListener() {
         @Override
         public void onLocationChanged(AMapLocation amapLocation) {
             if (amapLocation != null) {
@@ -294,7 +304,7 @@ public class OKMainService extends OKBaseService {
                 mLoadCarouselAndAdImageTask.cancel(true);
             }
             mLoadCarouselAndAdImageTask = new LoadCarouselAndAdImageTask(this);
-            mLoadCarouselAndAdImageTask.executeOnExecutor(exec, new OKDeviceInfoUtil(this).getIMIE());
+            mLoadCarouselAndAdImageTask.executeOnExecutor(exec);
         }
         mLocationClient = new AMapLocationClient(getApplicationContext()); // 初始化定位
         mLocationClient.setLocationListener(mLocationListener); // 设置定位回调监听
@@ -347,7 +357,7 @@ public class OKMainService extends OKBaseService {
         OKLogUtil.print("LONGITUDE: " + String.valueOf(LONGITUDE) + "DIMENSION: " + String.valueOf(DIMENSION));
     }
 
-    private class LoadCarouselAndAdImageTask extends AsyncTask<String, Void, OKCarouselAndAdImageBean> {
+    private class LoadCarouselAndAdImageTask extends AsyncTask<Void, Void, OKCarouselAndAdImageBean> {
         private Context mContext;
 
         public LoadCarouselAndAdImageTask(Context context) {
@@ -355,11 +365,11 @@ public class OKMainService extends OKBaseService {
         }
 
         @Override
-        protected OKCarouselAndAdImageBean doInBackground(String... params) {
+        protected OKCarouselAndAdImageBean doInBackground(Void... params) {
             if (isCancelled()) {
                 return null;
             }
-            return new OKBusinessNet().getOKCarouselAndAdImageBean(params[0]);
+            return new OKBusinessNet().getOKCarouselAndAdImageBean(new OKDeviceInfoUtil(OKMainService.this).getIMIE());
         }
 
         @Override

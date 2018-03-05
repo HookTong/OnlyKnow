@@ -223,6 +223,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                     mEntryViewHolder.mTextViewContent.setText(bean.getCONTENT_TEXT());
                     mEntryViewHolder.mTextViewDate.setText(formatTime(bean.getCREATE_DATE()));
                 }
+                mEntryViewHolder.mTextViewDate.setVisibility(View.VISIBLE);
                 GlideApi(mEntryViewHolder.mImageViewTitle, R.drawable.search_card, R.drawable.search_card, R.drawable.search_card);
             } else if (okSearchBean.getType() == OKSearchBean.SEARCH_TYPE.USER) {
                 OKUserInfoBean bean = okSearchBean.getUserInfoBean();
