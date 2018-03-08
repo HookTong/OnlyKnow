@@ -52,6 +52,7 @@ import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKWeatherActivity;
 import com.onlyknow.app.ui.view.OKKenBurnsView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
+import com.onlyknow.app.utils.OKLoadBannerImage;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -295,7 +296,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         ImageView imageViewSD = (ImageView) mHeaderView.findViewById(R.id.MAIN_top_header_shudian_imag);
         ImageView imageViewFX = (ImageView) mHeaderView.findViewById(R.id.MAIN_top_header_faxian_imag);
 
-        mBanner.setImageLoader(new LoadBannerImage());
+        mBanner.setImageLoader(new OKLoadBannerImage(true));
         mBanner.setBannerAnimation(Transformer.DepthPage);
         mBanner.isAutoPlay(true);
         mBanner.setDelayTime(5000);
@@ -657,15 +658,6 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                 mTextViewContentPraise = itemView.findViewById(R.id.yuedu_zan_text);
                 mLinearLayoutContent = itemView.findViewById(R.id.yuedu_neiron_layout);
             }
-        }
-    }
-
-    private class LoadBannerImage extends ImageLoader {
-        @Override
-        public void displayImage(Context context, Object path, ImageView imageView) {
-            // 广告轮播图片加载
-            Map<String, String> map = (Map<String, String>) path;
-            GlideApi(imageView, map.get("URL"), R.drawable.topgd2, R.drawable.topgd2);
         }
     }
 }

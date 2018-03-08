@@ -20,6 +20,7 @@ import com.onlyknow.app.api.OKLoadWeatherApi;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKLoadBannerImage;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.youth.banner.Banner;
@@ -167,7 +168,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         okActivityWeatherCollapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(R.color.md_pink_200));
         okActivityWeatherCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
 
-        mBanner.setImageLoader(new LoadBannerImage());
+        mBanner.setImageLoader(new OKLoadBannerImage(true));
         mBanner.setBannerAnimation(Transformer.DepthPage);
         mBanner.isAutoPlay(true);
         mBanner.setDelayTime(5000);
@@ -391,14 +392,5 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         mOKWeatherBean = weatherBean;
         bindWeatherInfo();
         mProgressBar.setVisibility(View.GONE);
-    }
-
-    private class LoadBannerImage extends ImageLoader {
-
-        @Override
-        public void displayImage(Context context, Object path, ImageView imageView) {
-            Map<String, String> map = (Map<String, String>) path;
-            GlideApi(imageView, map.get("URL"), R.drawable.topgd1, R.drawable.topgd1);
-        }
     }
 }

@@ -35,7 +35,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * This view is overlaid on top of the camera preview. It adds the viewfinder
+ * This view is overlaid on top of the camera media_preview. It adds the viewfinder
  * rectangle and partial transparency outside it, as well as the laser scanner
  * animation and result points.
  */

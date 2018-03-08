@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -9,12 +10,9 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.ImageView;
-
-import com.caimuhao.rxpicker.RxPicker;
-import com.caimuhao.rxpicker.bean.ImageItem;
-import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
-import com.onlyknow.app.GlideApp;
+import com.dmcbig.mediapicker.PickerActivity;
+import com.dmcbig.mediapicker.PickerConfig;
+import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.net.OKBusinessNet;
@@ -24,12 +22,10 @@ import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKBase64Util;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Consumer;
 
 public class OKFeedBackActivity extends OKBaseActivity {
     private AppCompatButton mAppCompatButtonSend;
@@ -71,13 +67,32 @@ public class OKFeedBackActivity extends OKBaseActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case SELECT_MEDIA_REQUEST_CODE:
+                if (resultCode == PickerConfig.RESULT_CODE) {
+                    mSelectMediaBean = data.getParcelableArrayListExtra(PickerConfig.EXTRA_RESULT);
+                    dealWith(mSelectMediaBean);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
     private void init() {
         mImageViewAddTuPian.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                RxPicker.init(new LoadImage());
-                RxPicker.of().single(false).camera(true).limit(1, 1).start(OKFeedBackActivity.this).subscribe(new ImageSelectResult());
+                Intent intent = new Intent(OKFeedBackActivity.this, PickerActivity.class);
+                intent.putExtra(PickerConfig.SELECT_MODE, PickerConfig.PICKER_IMAGE);//default image and video (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_SIZE, 3145728L); //default 180MB (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_COUNT, 1);  //default 40 (Optional)
+                intent.putExtra(PickerConfig.DEFAULT_SELECTED_LIST, mSelectMediaBean); // (Optional)
+                startActivityForResult(intent, SELECT_MEDIA_REQUEST_CODE);
             }
         });
 
@@ -135,6 +150,24 @@ public class OKFeedBackActivity extends OKBaseActivity {
         mEditTextNeiRon = (EditText) findViewById(R.id.Feedback_input_text);
     }
 
+    private ArrayList<MediaBean> mSelectMediaBean;
+    private final int SELECT_MEDIA_REQUEST_CODE = 200;
+
+    private void dealWith(List<MediaBean> imageItems) {
+        if (imageItems == null || imageItems.size() == 0) {
+            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            return;
+        }
+        String fp = imageItems.get(0).path;
+        String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
+        if (gs.equalsIgnoreCase("gif")) {
+            showSnackbar(mAppCompatButtonSend, "您不能选择动图", "");
+            return;
+        }
+        mFilePath = imageItems.get(0).path;
+        GlideApi(mImageViewAddTuPian, mFilePath, R.drawable.add_image_black, R.drawable.add_image_black);
+    }
+
     private class FeedBackTask extends AsyncTask<Map<String, String>, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Map<String, String>... params) {
@@ -166,31 +199,6 @@ public class OKFeedBackActivity extends OKBaseActivity {
                 showSnackbar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
             }
             closeProgressDialog();
-        }
-    }
-
-    private class LoadImage implements RxPickerImageLoader {
-        @Override
-        public void display(ImageView imageView, String path, int width, int height) {
-            GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
-        }
-    }
-
-    private class ImageSelectResult implements Consumer<List<ImageItem>> {
-        @Override
-        public void accept(@NonNull List<ImageItem> imageItems) throws Exception {
-            if (imageItems == null || imageItems.size() == 0) {
-                showSnackbar(mToolbarAddImage, "未获选择图片", "");
-                return;
-            }
-            String fp = imageItems.get(0).getPath();
-            String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
-            if (gs.equalsIgnoreCase("gif")) {
-                showSnackbar(mAppCompatButtonSend, "您不能选择动图", "");
-                return;
-            }
-            mFilePath = imageItems.get(0).getPath();
-            GlideApi(mImageViewAddTuPian, mFilePath, R.drawable.add_image_black, R.drawable.add_image_black);
         }
     }
 }

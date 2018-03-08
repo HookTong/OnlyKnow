@@ -1,4 +1,4 @@
-package com.onlyknow.app.utils;
+package com.dmcbig.mediapicker.utils;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
  * translucent system UI modes.
  */
 
-public class OKBarTintUtil {
+public class BarTintUtil {
 
     static {
         // Android allows a system property to override the presence of the
@@ -70,7 +70,7 @@ public class OKBarTintUtil {
      */
     @SuppressLint("ResourceType")
     @TargetApi(19)
-    public OKBarTintUtil(Activity activity) {
+    public BarTintUtil(Activity activity) {
 
         Window win = activity.getWindow();
         ViewGroup decorViewGroup = (ViewGroup) win.getDecorView();

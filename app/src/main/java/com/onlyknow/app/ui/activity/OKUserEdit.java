@@ -13,15 +13,13 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.caimuhao.rxpicker.RxPicker;
-import com.caimuhao.rxpicker.bean.ImageItem;
-import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
-import com.onlyknow.app.GlideApp;
+import com.dmcbig.mediapicker.PickerActivity;
+import com.dmcbig.mediapicker.PickerConfig;
+import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.net.OKBusinessNet;
@@ -34,13 +32,11 @@ import com.onlyknow.app.utils.OKSDCardUtil;
 import com.yalantis.ucrop.UCrop;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Consumer;
 
 public class OKUserEdit extends OKBaseActivity {
     private AppCompatButton mButtonCommit;
@@ -171,6 +167,11 @@ public class OKUserEdit extends OKBaseActivity {
             case UCrop.RESULT_ERROR:
                 showSnackbar(mButtonCommit, "剪裁失败", "");
                 break;
+            case SELECT_MEDIA_REQUEST_CODE:
+                if (resultCode == PickerConfig.RESULT_CODE) {
+                    mSelectMediaBean = data.getParcelableArrayListExtra(PickerConfig.EXTRA_RESULT);
+                    dealWith(mSelectMediaBean);
+                }
             default:
                 break;
         }
@@ -235,8 +236,12 @@ public class OKUserEdit extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                RxPicker.init(new LoadImage());
-                RxPicker.of().single(false).camera(true).limit(1, 1).start(OKUserEdit.this).subscribe(new ImageSelectResult());
+                Intent intent = new Intent(OKUserEdit.this, PickerActivity.class);
+                intent.putExtra(PickerConfig.SELECT_MODE, PickerConfig.PICKER_IMAGE);//default image and video (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_SIZE, 3145728L); //default 180MB (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_COUNT, 1);  //default 40 (Optional)
+                intent.putExtra(PickerConfig.DEFAULT_SELECTED_LIST, mSelectMediaBean); // (Optional)
+                startActivityForResult(intent, SELECT_MEDIA_REQUEST_CODE);
             }
         });
 
@@ -316,6 +321,23 @@ public class OKUserEdit extends OKBaseActivity {
         mTextViewQrCode = (TextView) findViewById(R.id.UserEdit_link_qrcode);
     }
 
+    private ArrayList<MediaBean> mSelectMediaBean;
+    private final int SELECT_MEDIA_REQUEST_CODE = 200;
+
+    private void dealWith(List<MediaBean> imageItems) {
+        if (imageItems == null || imageItems.size() == 0) {
+            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            return;
+        }
+        String fp = imageItems.get(0).path;
+        String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
+        if (gs.equalsIgnoreCase("gif")) {
+            showSnackbar(mButtonCommit, "您不能选择动图作为头像", "");
+            return;
+        }
+        startUCrop(imageItems.get(0).path, 1, 1);
+    }
+
     private class UserEditTask extends AsyncTask<Map<String, String>, Void, Boolean> {
 
         private String Type = "";
@@ -393,30 +415,6 @@ public class OKUserEdit extends OKBaseActivity {
             }
 
             closeProgressDialog();
-        }
-    }
-
-    private class LoadImage implements RxPickerImageLoader {
-        @Override
-        public void display(ImageView imageView, String path, int width, int height) {
-            GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
-        }
-    }
-
-    private class ImageSelectResult implements Consumer<List<ImageItem>> {
-        @Override
-        public void accept(@NonNull List<ImageItem> imageItems) throws Exception {
-            if (imageItems == null || imageItems.size() == 0) {
-                showSnackbar(mToolbarAddImage, "未获选择图片", "");
-                return;
-            }
-            String fp = imageItems.get(0).getPath();
-            String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
-            if (gs.equalsIgnoreCase("gif")) {
-                showSnackbar(mButtonCommit, "您不能选择动图作为头像", "");
-                return;
-            }
-            startUCrop(imageItems.get(0).getPath(), 1, 1);
         }
     }
 }

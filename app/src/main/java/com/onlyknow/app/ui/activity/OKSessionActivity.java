@@ -3,6 +3,7 @@ package com.onlyknow.app.ui.activity;
 import android.annotation.SuppressLint;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,9 +20,9 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.caimuhao.rxpicker.RxPicker;
-import com.caimuhao.rxpicker.bean.ImageItem;
-import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
+import com.dmcbig.mediapicker.PickerActivity;
+import com.dmcbig.mediapicker.PickerConfig;
+import com.dmcbig.mediapicker.bean.MediaBean;
 import com.hyphenate.EMCallBack;
 import com.hyphenate.EMMessageListener;
 import com.hyphenate.chat.EMClient;
@@ -51,8 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.reactivex.functions.Consumer;
-
 public class OKSessionActivity extends OKBaseActivity implements OnRefreshListener {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
@@ -73,7 +72,6 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     private MessageCallBack messageCallBackReceived, messageCallBackSend;
     private List<EMMessage> EMMessageList = new ArrayList<>();
 
-    @SuppressLint("HandlerLeak")
     private Handler mMsgHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -152,6 +150,21 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         sendUserBroadcast(ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM, null);// 添加服务中的消息监听器
         if (messageCallBackReceived != null) {
             EMClient.getInstance().chatManager().removeMessageListener(messageCallBackReceived);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case SELECT_MEDIA_REQUEST_CODE:
+                if (resultCode == PickerConfig.RESULT_CODE) {
+                    mSelectMediaBean = data.getParcelableArrayListExtra(PickerConfig.EXTRA_RESULT);
+                    dealWith(mSelectMediaBean);
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -235,35 +248,12 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         sendButtonImage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                RxPicker.init(new LoadImage());
-                RxPicker.of().single(false).camera(true).limit(1, 1).start(OKSessionActivity.this).subscribe(new Consumer<List<ImageItem>>() {
-                    @Override
-                    public void accept(List<ImageItem> imageItems) throws Exception {
-                        if (imageItems == null || imageItems.size() == 0) {
-                            showSnackbar(mToolbarAddImage, "未获选择图片", "");
-                            return;
-                        }
-
-                        final ImageItem item = imageItems.get(0);
-                        final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
-                        mToolBarProgressBar.setVisibility(View.VISIBLE);
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                //imagePath为图片本地路径,false为不发送原图,默认超过100k的图片会压缩后发给对方,需要发送原图传true
-                                EMMessage sendMessage = EMMessage.createImageSendMessage(item.getPath(), false, SEND_USER_NAME);
-                                messageCallBackSend = new MessageCallBack(mMsgHandler, sendMessage);
-                                sendMessage.setMessageStatusCallback(messageCallBackSend); // 设置消息发送状态监听
-                                sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
-                                sendMessage.setTo(SEND_USER_NAME); // 设置消息的接收者
-                                sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME); // 设置FROM昵称属性
-                                sendMessage.setAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, SEND_USER_NICKNAME); // 设置TO昵称属性
-                                sendMessage.setAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, headPortraitUrl);// 设置头像属性
-                                EMClient.getInstance().chatManager().sendMessage(sendMessage);
-                            }
-                        }.start();
-                    }
-                });
+                Intent intent = new Intent(OKSessionActivity.this, PickerActivity.class);
+                intent.putExtra(PickerConfig.SELECT_MODE, PickerConfig.PICKER_IMAGE);//default image and video (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_SIZE, 3145728L); //default 180MB (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_COUNT, 1);  //default 40 (Optional)
+                intent.putExtra(PickerConfig.DEFAULT_SELECTED_LIST, mSelectMediaBean); // (Optional)
+                startActivityForResult(intent, SELECT_MEDIA_REQUEST_CODE);
             }
         });
 
@@ -289,6 +279,35 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
         mLoadSessionTask = new LoadSessionTask(SEND_USER_NAME, true);
         mLoadSessionTask.executeOnExecutor(exec, msgId);
+    }
+
+    private ArrayList<MediaBean> mSelectMediaBean;
+    private final int SELECT_MEDIA_REQUEST_CODE = 200;
+
+    private void dealWith(List<MediaBean> imageItems) {
+        if (imageItems == null || imageItems.size() == 0) {
+            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            return;
+        }
+
+        final MediaBean item = imageItems.get(0);
+        final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+        mToolBarProgressBar.setVisibility(View.VISIBLE);
+        new Thread() {
+            @Override
+            public void run() {
+                //imagePath为图片本地路径,false为不发送原图,默认超过100k的图片会压缩后发给对方,需要发送原图传true
+                EMMessage sendMessage = EMMessage.createImageSendMessage(item.path, false, SEND_USER_NAME);
+                messageCallBackSend = new MessageCallBack(mMsgHandler, sendMessage);
+                sendMessage.setMessageStatusCallback(messageCallBackSend); // 设置消息发送状态监听
+                sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
+                sendMessage.setTo(SEND_USER_NAME); // 设置消息的接收者
+                sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME); // 设置FROM昵称属性
+                sendMessage.setAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, SEND_USER_NICKNAME); // 设置TO昵称属性
+                sendMessage.setAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, headPortraitUrl);// 设置头像属性
+                EMClient.getInstance().chatManager().sendMessage(sendMessage);
+            }
+        }.start();
     }
 
     private class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionViewHolder> {
@@ -633,14 +652,6 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         @Override
         public void onMessageChanged(EMMessage emMessage, Object o) {
 
-        }
-    }
-
-    private class LoadImage implements RxPickerImageLoader {
-
-        @Override
-        public void display(ImageView imageView, String path, int width, int height) {
-            GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
         }
     }
 }

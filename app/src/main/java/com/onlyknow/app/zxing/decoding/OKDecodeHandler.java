@@ -68,11 +68,11 @@ final class OKDecodeHandler extends Handler {
 	 * the next.
 	 * 
 	 * @param data
-	 *            The YUV preview frame.
+	 *            The YUV media_preview frame.
 	 * @param width
-	 *            The width of the preview frame.
+	 *            The width of the media_preview frame.
 	 * @param height
-	 *            The height of the preview frame.
+	 *            The height of the media_preview frame.
 	 */
 	private void decode(byte[] data, int width, int height) {
 		long start = System.currentTimeMillis();

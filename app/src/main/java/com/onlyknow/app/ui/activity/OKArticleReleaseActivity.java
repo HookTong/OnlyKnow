@@ -2,6 +2,7 @@ package com.onlyknow.app.ui.activity;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -10,13 +11,11 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
-import android.widget.ImageView;
 
-import com.caimuhao.rxpicker.RxPicker;
-import com.caimuhao.rxpicker.bean.ImageItem;
-import com.caimuhao.rxpicker.utils.RxPickerImageLoader;
+import com.dmcbig.mediapicker.PickerActivity;
+import com.dmcbig.mediapicker.PickerConfig;
+import com.dmcbig.mediapicker.bean.MediaBean;
 import com.google.gson.Gson;
-import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.net.OKBusinessNet;
@@ -25,17 +24,17 @@ import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKLogUtil;
+import com.onlyknow.app.utils.compress.OKCompressHelper;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Consumer;
 
 public class OKArticleReleaseActivity extends OKBaseActivity {
     @Bind(R.id.RELEASE_input_zhengwentupian1)
@@ -140,8 +139,12 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
         mToolbarAddImage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                RxPicker.init(new LoadImage());
-                RxPicker.of().single(false).camera(true).limit(1, 5).start(OKArticleReleaseActivity.this).subscribe(new ImageSelectResult());
+                Intent intent = new Intent(OKArticleReleaseActivity.this, PickerActivity.class);
+                intent.putExtra(PickerConfig.SELECT_MODE, PickerConfig.PICKER_IMAGE_VIDEO);//default image and video (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_SIZE, 15728640L); //default 180MB (Optional)
+                intent.putExtra(PickerConfig.MAX_SELECT_COUNT, 5);  //default 40 (Optional)
+                intent.putExtra(PickerConfig.DEFAULT_SELECTED_LIST, mSelectMediaBean); // (Optional)
+                startActivityForResult(intent, SELECT_MEDIA_REQUEST_CODE);
             }
         });
 
@@ -364,6 +367,93 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
         }
     }
 
+    private ArrayList<MediaBean> mSelectMediaBean;
+    private final int SELECT_MEDIA_REQUEST_CODE = 200;
+
+    private void dealWith(ArrayList<MediaBean> listMediaBean) {
+        if (listMediaBean == null || listMediaBean.size() == 0) {
+            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            return;
+        }
+        long size = 0;
+        for (MediaBean item : listMediaBean) { // 文件大小检查
+            size += item.size;
+        }
+        if (size > 15 * 1024 * 1024) {
+            showSnackbar(mToolbarAddImage, "一次上传的文件总量不能超过15MB", "");
+            return;
+        }
+        mOKCardBase64ListBean.clear();
+        int count = 0;
+        GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+        GlideApi(mAddImage2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+        GlideApi(mAddImage3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+        GlideApi(mAddImage4, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+        GlideApi(mAddImage5, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+        mClearImage1.setVisibility(View.GONE);
+        mClearImage2.setVisibility(View.GONE);
+        mClearImage3.setVisibility(View.GONE);
+        mClearImage4.setVisibility(View.GONE);
+        mClearImage5.setVisibility(View.GONE);
+        for (int i = 0; i < listMediaBean.size(); i++) {
+            MediaBean item = listMediaBean.get(i);
+            String path = item.path; // 文件路径
+            String gs = path.substring(path.lastIndexOf(".") + 1, path.length()); // 文件格式
+
+            OKLogUtil.print("Select File Path:" + path);
+            OKLogUtil.print("Select File Format:" + gs);
+            OKLogUtil.print("Select File Size:" + item.size);
+
+            if (i == 0) {
+                mOKCardBase64ListBean.setFormatImage1(gs);
+                mOKCardBase64ListBean.setBaseImage1(path);
+                GlideApi(mAddImage1, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                mClearImage1.setVisibility(View.VISIBLE);
+            }
+            if (i == 1) {
+                mOKCardBase64ListBean.setFormatImage2(gs);
+                mOKCardBase64ListBean.setBaseImage2(path);
+                GlideApi(mAddImage2, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                mClearImage2.setVisibility(View.VISIBLE);
+            }
+            if (i == 2) {
+                mOKCardBase64ListBean.setFormatImage3(gs);
+                mOKCardBase64ListBean.setBaseImage3(path);
+                GlideApi(mAddImage3, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                mClearImage3.setVisibility(View.VISIBLE);
+            }
+            if (i == 3) {
+                mOKCardBase64ListBean.setFormatImage4(gs);
+                mOKCardBase64ListBean.setBaseImage4(path);
+                GlideApi(mAddImage4, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                mClearImage4.setVisibility(View.VISIBLE);
+            }
+            if (i == 4) {
+                mOKCardBase64ListBean.setFormatImage5(gs);
+                mOKCardBase64ListBean.setBaseImage5(path);
+                GlideApi(mAddImage5, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                mClearImage5.setVisibility(View.VISIBLE);
+            }
+            count++;
+        }
+        mOKCardBase64ListBean.setCount(count);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case SELECT_MEDIA_REQUEST_CODE:
+                if (resultCode == PickerConfig.RESULT_CODE) {
+                    mSelectMediaBean = data.getParcelableArrayListExtra(PickerConfig.EXTRA_RESULT);
+                    dealWith(mSelectMediaBean);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
     private class ArticleTask extends AsyncTask<OKCardBean, Void, Boolean> {
         private OKCardBase64ListBean imageListBean; // 选择的图片视频
 
@@ -397,40 +487,60 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                 if (!TextUtils.isEmpty(mImage1Path)) {
                     File file = new File(mImage1Path);
                     if (file.exists()) {
+                        OKLogUtil.print("old1 File Size :" + file.length());
+                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
+                        OKLogUtil.print("new1 File Size :" + fileNew.length());
+                        // 生成服务器文件名,并添加到Map参数中!
                         String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage1();
-                        mFileMap.put(newFileName, file);
+                        mFileMap.put(newFileName, fileNew);
                     }
                 }
                 String mImage2Path = imageListBean.getBaseImage2();
                 if (!TextUtils.isEmpty(mImage2Path)) {
                     File file = new File(mImage2Path);
                     if (file.exists()) {
+                        OKLogUtil.print("old2 File Size :" + file.length());
+                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
+                        OKLogUtil.print("new2 File Size :" + fileNew.length());
+                        // 生成服务器文件名,并添加到Map参数中!
                         String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage2();
-                        mFileMap.put(newFileName, file);
+                        mFileMap.put(newFileName, fileNew);
                     }
                 }
                 String mImage3Path = imageListBean.getBaseImage3();
                 if (!TextUtils.isEmpty(mImage3Path)) {
                     File file = new File(mImage3Path);
                     if (file.exists()) {
+                        OKLogUtil.print("old3 File Size :" + file.length());
+                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
+                        OKLogUtil.print("new3 File Size :" + fileNew.length());
+                        // 生成服务器文件名,并添加到Map参数中!
                         String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage3();
-                        mFileMap.put(newFileName, file);
+                        mFileMap.put(newFileName, fileNew);
                     }
                 }
                 String mImage4Path = imageListBean.getBaseImage4();
                 if (!TextUtils.isEmpty(mImage4Path)) {
                     File file = new File(mImage4Path);
                     if (file.exists()) {
+                        OKLogUtil.print("old4 File Size :" + file.length());
+                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
+                        OKLogUtil.print("new4 File Size :" + fileNew.length());
+                        // 生成服务器文件名,并添加到Map参数中!
                         String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage4();
-                        mFileMap.put(newFileName, file);
+                        mFileMap.put(newFileName, fileNew);
                     }
                 }
                 String mImage5Path = imageListBean.getBaseImage5();
                 if (!TextUtils.isEmpty(mImage5Path)) {
                     File file = new File(mImage5Path);
                     if (file.exists()) {
+                        OKLogUtil.print("old5 File Size :" + file.length());
+                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
+                        OKLogUtil.print("new5 File Size :" + fileNew.length());
+                        // 生成服务器文件名,并添加到Map参数中!
                         String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage5();
-                        mFileMap.put(newFileName, file);
+                        mFileMap.put(newFileName, fileNew);
                     }
                 }
             }
@@ -460,84 +570,6 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             }
             mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
             closeProgressDialog();
-        }
-    }
-
-    private class LoadImage implements RxPickerImageLoader {
-        @Override
-        public void display(ImageView imageView, String path, int width, int height) {
-            GlideApp.with(imageView.getContext()).load(path).error(R.drawable.add_image_black).centerCrop().override(width, height).into(imageView);
-        }
-    }
-
-    private class ImageSelectResult implements Consumer<List<ImageItem>> {
-        @Override
-        public void accept(@NonNull List<ImageItem> imageItems) throws Exception {
-            if (imageItems == null || imageItems.size() == 0) {
-                showSnackbar(mToolbarAddImage, "未获选择图片", "");
-                return;
-            }
-            long size = 0;
-            for (ImageItem item : imageItems) { // 文件大小检查
-                File file = new File(item.getPath());
-                if (file.exists()) {
-                    size += file.length();
-                }
-            }
-            if (size > 15 * 1024 * 1024) {
-                showSnackbar(mToolbarAddImage, "一次上传的文件总量不能超过15MB", "");
-                return;
-            }
-            mOKCardBase64ListBean.clear();
-            int count = 0;
-            GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-            GlideApi(mAddImage2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-            GlideApi(mAddImage3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-            GlideApi(mAddImage4, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-            GlideApi(mAddImage5, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-            mClearImage1.setVisibility(View.GONE);
-            mClearImage2.setVisibility(View.GONE);
-            mClearImage3.setVisibility(View.GONE);
-            mClearImage4.setVisibility(View.GONE);
-            mClearImage5.setVisibility(View.GONE);
-            for (int i = 0; i < imageItems.size(); i++) {
-                ImageItem item = imageItems.get(i);
-                String path = item.getPath(); // 文件路径
-                String gs = path.substring(path.lastIndexOf(".") + 1, path.length()); // 文件格式
-
-                if (i == 0) {
-                    mOKCardBase64ListBean.setFormatImage1(gs);
-                    mOKCardBase64ListBean.setBaseImage1(path);
-                    GlideApi(mAddImage1, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage1.setVisibility(View.VISIBLE);
-                }
-                if (i == 1) {
-                    mOKCardBase64ListBean.setFormatImage2(gs);
-                    mOKCardBase64ListBean.setBaseImage2(path);
-                    GlideApi(mAddImage2, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage2.setVisibility(View.VISIBLE);
-                }
-                if (i == 2) {
-                    mOKCardBase64ListBean.setFormatImage3(gs);
-                    mOKCardBase64ListBean.setBaseImage3(path);
-                    GlideApi(mAddImage3, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage3.setVisibility(View.VISIBLE);
-                }
-                if (i == 3) {
-                    mOKCardBase64ListBean.setFormatImage4(gs);
-                    mOKCardBase64ListBean.setBaseImage4(path);
-                    GlideApi(mAddImage4, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage4.setVisibility(View.VISIBLE);
-                }
-                if (i == 4) {
-                    mOKCardBase64ListBean.setFormatImage5(gs);
-                    mOKCardBase64ListBean.setBaseImage5(path);
-                    GlideApi(mAddImage5, path, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage5.setVisibility(View.VISIBLE);
-                }
-                count++;
-            }
-            mOKCardBase64ListBean.setCount(count);
         }
     }
 }

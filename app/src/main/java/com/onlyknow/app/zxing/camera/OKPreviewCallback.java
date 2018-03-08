@@ -54,7 +54,7 @@ final class OKPreviewCallback implements Camera.PreviewCallback {
 			message.sendToTarget();
 			previewHandler = null;
 		} else {
-			Log.d(TAG, "Got preview callback, but no handler for it");
+			Log.d(TAG, "Got media_preview callback, but no handler for it");
 		}
 	}
 

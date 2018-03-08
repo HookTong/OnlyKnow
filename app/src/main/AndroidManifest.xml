@@ -291,8 +291,11 @@
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity
+            android:name=".ui.activity.OKVideoActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
         <!-- 友萌分享KEY -->
         <meta-data
             android:name="UMENG_APPKEY"

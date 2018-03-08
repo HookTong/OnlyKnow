@@ -31,7 +31,7 @@ import java.io.IOException;
 /**
  * This object wraps the Camera service object and expects to be the only one
  * talking to it. The implementation encapsulates the steps needed to take
- * preview-sized images, which are used for both preview and decoding.
+ * media_preview-sized images, which are used for both media_preview and decoding.
  * 
  */
 @SuppressWarnings("deprecation")
@@ -125,7 +125,7 @@ public final class OKCameraManager {
 	 * Opens the camera driver and initializes the hardware parameters.
 	 * 
 	 * @param holder
-	 *            The surface object which the camera will draw preview frames
+	 *            The surface object which the camera will draw media_preview frames
 	 *            into.
 	 * @throws IOException
 	 *             Indicates the camera driver failed to open.
@@ -159,7 +159,7 @@ public final class OKCameraManager {
 	}
 
 	/**
-	 * Asks the camera hardware to begin drawing preview frames to the screen.
+	 * Asks the camera hardware to begin drawing media_preview frames to the screen.
 	 */
 	public void startPreview() {
 		if (camera != null && !previewing) {
@@ -169,7 +169,7 @@ public final class OKCameraManager {
 	}
 
 	/**
-	 * Tells the camera to stop drawing preview frames.
+	 * Tells the camera to stop drawing media_preview frames.
 	 */
 	public void stopPreview() {
 		if (camera != null && previewing) {
@@ -184,7 +184,7 @@ public final class OKCameraManager {
 	}
 
 	/**
-	 * A single preview frame will be returned to the handler supplied. The data
+	 * A single media_preview frame will be returned to the handler supplied. The data
 	 * will arrive as byte[] in the message.obj field, with width and height
 	 * encoded as message.arg1 and message.arg2, respectively.
 	 * 
@@ -255,7 +255,7 @@ public final class OKCameraManager {
 	}
 
 	/**
-	 * Like {@link #getFramingRect} but coordinates are in terms of the preview
+	 * Like {@link #getFramingRect} but coordinates are in terms of the media_preview
 	 * frame, not UI / screen.
 	 */
 	public Rect getFramingRectInPreview() {
@@ -300,10 +300,10 @@ public final class OKCameraManager {
 
 	/**
 	 * A factory method to build the appropriate LuminanceSource object based on
-	 * the format of the preview buffers, as described by Camera.Parameters.
+	 * the format of the media_preview buffers, as described by Camera.Parameters.
 	 * 
 	 * @param data
-	 *            A preview frame.
+	 *            A media_preview frame.
 	 * @param width
 	 *            The width of the image.
 	 * @param height

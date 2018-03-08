@@ -29,6 +29,7 @@ import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
 import com.onlyknow.app.utils.OKLogUtil;
+import com.onlyknow.app.utils.compress.OKFileUtil;
 import com.umeng.socialize.ShareAction;
 import com.umeng.socialize.UMShareAPI;
 import com.umeng.socialize.UMShareListener;
@@ -506,95 +507,135 @@ public class OKCardTPActivity extends OKBaseActivity {
         okActivityCardImageContentImage1.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                int location[] = new int[2];
-                okActivityCardImageContentImage1.getLocationOnScreen(location);
+                String name[] = mOKCardUrlListBean.getUrlImage1().split("/");
+                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("URL", mOKCardUrlListBean.getUrlImage1());
+                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    startUserActivity(bundle, OKVideoActivity.class);
+                } else {
+                    int location[] = new int[2];
+                    okActivityCardImageContentImage1.getLocationOnScreen(location);
 
-                Bundle mBundle = new Bundle();
-                mBundle.putInt("left", location[0]);
-                mBundle.putInt("top", location[1]);
-                mBundle.putInt("height", okActivityCardImageContentImage1.getHeight());
-                mBundle.putInt("width", okActivityCardImageContentImage1.getWidth());
+                    Bundle mBundle = new Bundle();
+                    mBundle.putInt("left", location[0]);
+                    mBundle.putInt("top", location[1]);
+                    mBundle.putInt("height", okActivityCardImageContentImage1.getHeight());
+                    mBundle.putInt("width", okActivityCardImageContentImage1.getWidth());
 
-                mBundle.putString("url", mOKCardUrlListBean.getUrlImage1());
+                    mBundle.putString("url", mOKCardUrlListBean.getUrlImage1());
 
-                startUserActivity(mBundle, OKDragPhotoActivity.class);
-                overridePendingTransition(0, 0);
+                    startUserActivity(mBundle, OKDragPhotoActivity.class);
+                    overridePendingTransition(0, 0);
+                }
             }
         });
 
         okActivityCardImageContentImage2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                int location[] = new int[2];
-                okActivityCardImageContentImage2.getLocationOnScreen(location);
+                String name[] = mOKCardUrlListBean.getUrlImage2().split("/");
+                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("URL", mOKCardUrlListBean.getUrlImage2());
+                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    startUserActivity(bundle, OKVideoActivity.class);
+                } else {
+                    int location[] = new int[2];
+                    okActivityCardImageContentImage2.getLocationOnScreen(location);
 
-                Bundle mBundle = new Bundle();
-                mBundle.putInt("left", location[0]);
-                mBundle.putInt("top", location[1]);
-                mBundle.putInt("height", okActivityCardImageContentImage2.getHeight());
-                mBundle.putInt("width", okActivityCardImageContentImage2.getWidth());
+                    Bundle mBundle = new Bundle();
+                    mBundle.putInt("left", location[0]);
+                    mBundle.putInt("top", location[1]);
+                    mBundle.putInt("height", okActivityCardImageContentImage2.getHeight());
+                    mBundle.putInt("width", okActivityCardImageContentImage2.getWidth());
 
-                mBundle.putString("url", mOKCardUrlListBean.getUrlImage2());
+                    mBundle.putString("url", mOKCardUrlListBean.getUrlImage2());
 
-                startUserActivity(mBundle, OKDragPhotoActivity.class);
-                overridePendingTransition(0, 0);
+                    startUserActivity(mBundle, OKDragPhotoActivity.class);
+                    overridePendingTransition(0, 0);
+                }
             }
         });
 
         okActivityCardImageContentImage3.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                int location[] = new int[2];
-                okActivityCardImageContentImage3.getLocationOnScreen(location);
+                String name[] = mOKCardUrlListBean.getUrlImage3().split("/");
+                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("URL", mOKCardUrlListBean.getUrlImage3());
+                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    startUserActivity(bundle, OKVideoActivity.class);
+                } else {
+                    int location[] = new int[2];
+                    okActivityCardImageContentImage3.getLocationOnScreen(location);
 
-                Bundle mBundle = new Bundle();
-                mBundle.putInt("left", location[0]);
-                mBundle.putInt("top", location[1]);
-                mBundle.putInt("height", okActivityCardImageContentImage3.getHeight());
-                mBundle.putInt("width", okActivityCardImageContentImage3.getWidth());
+                    Bundle mBundle = new Bundle();
+                    mBundle.putInt("left", location[0]);
+                    mBundle.putInt("top", location[1]);
+                    mBundle.putInt("height", okActivityCardImageContentImage3.getHeight());
+                    mBundle.putInt("width", okActivityCardImageContentImage3.getWidth());
 
-                mBundle.putString("url", mOKCardUrlListBean.getUrlImage3());
+                    mBundle.putString("url", mOKCardUrlListBean.getUrlImage3());
 
-                startUserActivity(mBundle, OKDragPhotoActivity.class);
-                overridePendingTransition(0, 0);
+                    startUserActivity(mBundle, OKDragPhotoActivity.class);
+                    overridePendingTransition(0, 0);
+                }
             }
         });
 
         okActivityCardImageContentImage4.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                int location[] = new int[2];
-                okActivityCardImageContentImage4.getLocationOnScreen(location);
+                String name[] = mOKCardUrlListBean.getUrlImage4().split("/");
+                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("URL", mOKCardUrlListBean.getUrlImage4());
+                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    startUserActivity(bundle, OKVideoActivity.class);
+                } else {
+                    int location[] = new int[2];
+                    okActivityCardImageContentImage4.getLocationOnScreen(location);
 
-                Bundle mBundle = new Bundle();
-                mBundle.putInt("left", location[0]);
-                mBundle.putInt("top", location[1]);
-                mBundle.putInt("height", okActivityCardImageContentImage4.getHeight());
-                mBundle.putInt("width", okActivityCardImageContentImage4.getWidth());
+                    Bundle mBundle = new Bundle();
+                    mBundle.putInt("left", location[0]);
+                    mBundle.putInt("top", location[1]);
+                    mBundle.putInt("height", okActivityCardImageContentImage4.getHeight());
+                    mBundle.putInt("width", okActivityCardImageContentImage4.getWidth());
 
-                mBundle.putString("url", mOKCardUrlListBean.getUrlImage4());
+                    mBundle.putString("url", mOKCardUrlListBean.getUrlImage4());
 
-                startUserActivity(mBundle, OKDragPhotoActivity.class);
-                overridePendingTransition(0, 0);
+                    startUserActivity(mBundle, OKDragPhotoActivity.class);
+                    overridePendingTransition(0, 0);
+                }
             }
         });
 
         okActivityCardImageContentImage5.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                int location[] = new int[2];
-                okActivityCardImageContentImage5.getLocationOnScreen(location);
+                String name[] = mOKCardUrlListBean.getUrlImage5().split("/");
+                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("URL", mOKCardUrlListBean.getUrlImage5());
+                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    startUserActivity(bundle, OKVideoActivity.class);
+                } else {
+                    int location[] = new int[2];
+                    okActivityCardImageContentImage5.getLocationOnScreen(location);
 
-                Bundle mBundle = new Bundle();
-                mBundle.putInt("left", location[0]);
-                mBundle.putInt("top", location[1]);
-                mBundle.putInt("height", okActivityCardImageContentImage5.getHeight());
-                mBundle.putInt("width", okActivityCardImageContentImage5.getWidth());
+                    Bundle mBundle = new Bundle();
+                    mBundle.putInt("left", location[0]);
+                    mBundle.putInt("top", location[1]);
+                    mBundle.putInt("height", okActivityCardImageContentImage5.getHeight());
+                    mBundle.putInt("width", okActivityCardImageContentImage5.getWidth());
 
-                mBundle.putString("url", mOKCardUrlListBean.getUrlImage5());
+                    mBundle.putString("url", mOKCardUrlListBean.getUrlImage5());
 
-                startUserActivity(mBundle, OKDragPhotoActivity.class);
-                overridePendingTransition(0, 0);
+                    startUserActivity(mBundle, OKDragPhotoActivity.class);
+                    overridePendingTransition(0, 0);
+                }
             }
         });
     }

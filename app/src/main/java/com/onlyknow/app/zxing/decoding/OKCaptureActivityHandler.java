@@ -77,7 +77,7 @@ public final class OKCaptureActivityHandler extends Handler {
                 }
                 break;
             case R.id.restart_preview:
-                Log.d(TAG, "Got restart preview message");
+                Log.d(TAG, "Got restart media_preview message");
                 restartPreviewAndDecode();
                 break;
             case R.id.decode_succeeded:

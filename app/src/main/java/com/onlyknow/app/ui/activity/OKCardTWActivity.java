@@ -30,7 +30,9 @@ import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
+import com.onlyknow.app.utils.OKLoadBannerImage;
 import com.onlyknow.app.utils.OKLogUtil;
+import com.onlyknow.app.utils.compress.OKFileUtil;
 import com.umeng.socialize.ShareAction;
 import com.umeng.socialize.UMShareAPI;
 import com.umeng.socialize.UMShareListener;
@@ -306,7 +308,7 @@ public class OKCardTWActivity extends OKBaseActivity {
             }
         }
 
-        mBanner.setImageLoader(new LoadBannerImage());
+        mBanner.setImageLoader(new OKLoadBannerImage(false));
         mBanner.setBannerAnimation(Transformer.DepthPage);
         mBanner.isAutoPlay(true);
         mBanner.setDelayTime(5000);
@@ -471,20 +473,27 @@ public class OKCardTWActivity extends OKBaseActivity {
             @Override
             public void OnBannerClick(int position) {
                 String url = mImageUrls.get(position);
+                String name[] = url.split("/");
+                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("URL", url);
+                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    startUserActivity(bundle, OKVideoActivity.class);
+                } else {
+                    int location[] = new int[2];
+                    mBanner.getLocationOnScreen(location);
 
-                int location[] = new int[2];
-                mBanner.getLocationOnScreen(location);
+                    Bundle mBundle = new Bundle();
+                    mBundle.putInt("left", location[0]);
+                    mBundle.putInt("top", location[1]);
+                    mBundle.putInt("height", mBanner.getHeight());
+                    mBundle.putInt("width", mBanner.getWidth());
 
-                Bundle mBundle = new Bundle();
-                mBundle.putInt("left", location[0]);
-                mBundle.putInt("top", location[1]);
-                mBundle.putInt("height", mBanner.getHeight());
-                mBundle.putInt("width", mBanner.getWidth());
+                    mBundle.putString("url", url);
 
-                mBundle.putString("url", url);
-
-                startUserActivity(mBundle, OKDragPhotoActivity.class);
-                overridePendingTransition(0, 0);
+                    startUserActivity(mBundle, OKDragPhotoActivity.class);
+                    overridePendingTransition(0, 0);
+                }
             }
         });
     }
@@ -628,21 +637,6 @@ public class OKCardTWActivity extends OKBaseActivity {
             textZan.setText("" + mCardBindBean.getZAN_COUNT());
             textWatch.setText("" + mCardBindBean.getWATCH_COUNT());
             textComment.setText("" + mCardBindBean.getPINLUN_COUNT());
-        }
-    }
-
-    private class LoadBannerImage extends ImageLoader {
-
-        @Override
-        public void displayImage(Context context, Object path, ImageView imageView) {
-            /**
-             注意：
-             图片加载器由自己选择，这里不限制，只是提供几种使用方法;
-             返回的图片路径为Object类型，由于不能确定你到底使用的那种图片加载器;
-             传输的到的是什么格式，那么这种就使用Object接收和返回，你只需要强转成你传输的类型就行;
-             切记不要胡乱强转
-             */
-            GlideApi(imageView, path.toString(), R.drawable.topgd1, R.drawable.topgd1);
         }
     }
 }
