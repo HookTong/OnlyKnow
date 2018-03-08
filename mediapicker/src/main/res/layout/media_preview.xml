@@ -57,7 +57,7 @@
             android:layout_width="wrap_content"
             android:layout_height="35dp"
             android:layout_gravity="center"
-            android:layout_marginRight="5dp"
+            android:layout_marginRight="10dp"
             android:background="@drawable/button_shape"
             android:text="@string/done"
             android:textColor="@color/default_text_color"
@@ -67,5 +67,6 @@
     <com.dmcbig.mediapicker.views.HackyViewPager
         android:id="@+id/viewpager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
 </LinearLayout>

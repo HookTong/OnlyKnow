@@ -14,6 +14,7 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.onlyknow.app.GlideApp;
+import com.onlyknow.app.GlideRequest;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.net.OKWebService;
@@ -34,7 +35,7 @@ import okhttp3.Request;
  * Created by Administrator on 2018/1/31.
  */
 
-public class OKDragPhotoActivity extends OKBaseActivity {
+public class OKDragPhotoActivity extends OKBaseActivity implements RequestListener {
     @Bind(R.id.ok_activity_drag_photo)
     OKDragPhotoView okActivityDragPhoto;
 
@@ -57,6 +58,7 @@ public class OKDragPhotoActivity extends OKBaseActivity {
     private OKWebService mWebService;
 
     private Bundle mBundle;
+    private String url = "";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,17 +67,19 @@ public class OKDragPhotoActivity extends OKBaseActivity {
         setContentView(R.layout.ok_activity_drag_photo);
         ButterKnife.bind(this);
         mBundle = getIntent().getExtras();
-        if (mBundle == null || TextUtils.isEmpty(mBundle.getString("url", ""))) {
+        if (mBundle == null) {
             showSnackbar(okActivityDragPhotoDown, "没有的url地址", "");
             finish();
+            return;
         }
+        url = mBundle.getString("url", "");
         init();
     }
 
     private void init() {
-        GlideApp.with(this).load(mBundle.getString("url", "")).placeholder(R.drawable.topgd1).listener(new GlideRequest()).into(okActivityDragPhoto);
+        GlideApp.with(this).load(url).placeholder(R.drawable.topgd1).listener(this).into(okActivityDragPhoto);
         okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
-        if (isFileExists(mBundle.getString("url", ""))) {
+        if (isFileExists(url)) {
             okActivityDragPhotoDown.setEnabled(false);
         } else {
             okActivityDragPhotoDown.setEnabled(true);
@@ -104,7 +108,7 @@ public class OKDragPhotoActivity extends OKBaseActivity {
                 }
                 String filePath = OKConstant.IMAGE_PATH;
                 mWebService = OKWebService.getInstance();
-                mWebService.downloadFile(mBundle.getString("url", ""), filePath, new DownloadCallback());
+                mWebService.downloadFile(url, filePath, new DownloadCallback());
                 okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.DOWNLOADING);
                 showProgressDialog("正在下载中...");
             }
@@ -304,47 +308,45 @@ public class OKDragPhotoActivity extends OKBaseActivity {
         return ss[ss.length - 1];
     }
 
-    private class GlideRequest implements RequestListener {
-        @Override
-        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
-            showSnackbar(okActivityDragPhoto, "图片加载失败", "");
-            return false;
-        }
+    @Override
+    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
+        showSnackbar(okActivityDragPhoto, "图片加载失败", "");
+        return false;
+    }
 
-        @Override
-        public boolean onResourceReady(Object resource, Object model, Target target, DataSource dataSource, boolean isFirstResource) {
-            mOriginLeft = mBundle.getInt("left", 0);
-            mOriginTop = mBundle.getInt("top", 0);
-            mOriginHeight = mBundle.getInt("height", 0);
-            mOriginWidth = mBundle.getInt("width", 0);
-            mOriginCenterX = mOriginLeft + mOriginWidth / 2;
-            mOriginCenterY = mOriginTop + mOriginHeight / 2;
+    @Override
+    public boolean onResourceReady(Object resource, Object model, Target target, DataSource dataSource, boolean isFirstResource) {
+        mOriginLeft = mBundle.getInt("left", 0);
+        mOriginTop = mBundle.getInt("top", 0);
+        mOriginHeight = mBundle.getInt("height", 0);
+        mOriginWidth = mBundle.getInt("width", 0);
+        mOriginCenterX = mOriginLeft + mOriginWidth / 2;
+        mOriginCenterY = mOriginTop + mOriginHeight / 2;
 
-            int[] location = new int[2];
-            okActivityDragPhoto.getLocationOnScreen(location);
+        int[] location = new int[2];
+        okActivityDragPhoto.getLocationOnScreen(location);
 
-            mTargetHeight = (float) okActivityDragPhoto.getHeight();
-            mTargetWidth = (float) okActivityDragPhoto.getWidth();
-            mScaleX = (float) mOriginWidth / mTargetWidth;
-            mScaleY = (float) mOriginHeight / mTargetHeight;
+        mTargetHeight = (float) okActivityDragPhoto.getHeight();
+        mTargetWidth = (float) okActivityDragPhoto.getWidth();
+        mScaleX = (float) mOriginWidth / mTargetWidth;
+        mScaleY = (float) mOriginHeight / mTargetHeight;
 
-            float targetCenterX = location[0] + mTargetWidth / 2;
-            float targetCenterY = location[1] + mTargetHeight / 2;
+        float targetCenterX = location[0] + mTargetWidth / 2;
+        float targetCenterY = location[1] + mTargetHeight / 2;
 
-            mTranslationX = mOriginCenterX - targetCenterX;
-            mTranslationY = mOriginCenterY - targetCenterY;
-            okActivityDragPhoto.setTranslationX(mTranslationX);
-            okActivityDragPhoto.setTranslationY(mTranslationY);
+        mTranslationX = mOriginCenterX - targetCenterX;
+        mTranslationY = mOriginCenterY - targetCenterY;
+        okActivityDragPhoto.setTranslationX(mTranslationX);
+        okActivityDragPhoto.setTranslationY(mTranslationY);
 
-            okActivityDragPhoto.setScaleX(mScaleX);
-            okActivityDragPhoto.setScaleY(mScaleY);
+        okActivityDragPhoto.setScaleX(mScaleX);
+        okActivityDragPhoto.setScaleY(mScaleY);
 
-            performEnterAnimation(okActivityDragPhoto);
+        performEnterAnimation(okActivityDragPhoto);
 
-            okActivityDragPhoto.setMinScale(mScaleX);
+        okActivityDragPhoto.setMinScale(mScaleX);
 
-            return false;
-        }
+        return false;
     }
 
     // 下载回调类
