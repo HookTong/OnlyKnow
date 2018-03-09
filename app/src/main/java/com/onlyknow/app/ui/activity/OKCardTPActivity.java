@@ -29,12 +29,10 @@ import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
 import com.onlyknow.app.utils.OKLogUtil;
-import com.onlyknow.app.utils.compress.OKFileUtil;
-import com.umeng.socialize.ShareAction;
+import com.onlyknow.app.utils.OKFileUtil;
 import com.umeng.socialize.UMShareAPI;
 import com.umeng.socialize.UMShareListener;
 import com.umeng.socialize.bean.SHARE_MEDIA;
-import com.umeng.socialize.media.UMImage;
 
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -130,17 +128,17 @@ public class OKCardTPActivity extends OKBaseActivity {
 
         @Override
         public void onResult(SHARE_MEDIA share_media) {
-            showSnackbar(MESSAGETopCardView, "分享成功", "");
+            showSnackBar(MESSAGETopCardView, "分享成功", "");
         }
 
         @Override
         public void onError(SHARE_MEDIA share_media, Throwable throwable) {
-            showSnackbar(MESSAGETopCardView, "分享失败", "ErrorCode: " + throwable.getMessage());
+            showSnackBar(MESSAGETopCardView, "分享失败", "ErrorCode: " + throwable.getMessage());
         }
 
         @Override
         public void onCancel(SHARE_MEDIA share_media) {
-            showSnackbar(MESSAGETopCardView, "分享取消", "");
+            showSnackBar(MESSAGETopCardView, "分享取消", "");
         }
     };
 
@@ -166,19 +164,19 @@ public class OKCardTPActivity extends OKBaseActivity {
             List<OKCardAndCommentBean> list = OKConstant.getListCache(INTERFACE_CARD_AND_COMMENT);
             if (list.size() == 0 || mPosition >= list.size()) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             OKCardAndCommentBean bean = list.get(mPosition);
             if (bean == null || bean.getOKCardBean() == null) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean = bean.getOKCardBean();
             if (mCardBean == null || mCardBean.getCARD_ID() != mCardId) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean.setIS_READ(true);
@@ -189,19 +187,19 @@ public class OKCardTPActivity extends OKBaseActivity {
             List<OKSearchBean> list = OKConstant.getListCache(INTERFACE_SEARCH);
             if (list.size() == 0 || mPosition >= list.size()) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             OKSearchBean searchBean = list.get(mPosition);
             if (searchBean == null || searchBean.getCardBean() == null) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean = searchBean.getCardBean();
             if (mCardBean == null || mCardBean.getCARD_ID() != mCardId) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean.setIS_READ(true);
@@ -212,13 +210,13 @@ public class OKCardTPActivity extends OKBaseActivity {
             List<OKCardBean> list = OKConstant.getListCache(mInterfaceType);
             if (list.size() == 0 || mPosition >= list.size()) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean = list.get(mPosition);
             if (mCardBean == null || mCardBean.getCARD_ID() != mCardId) {
                 finish();
-                showSnackbar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(MESSAGETopCardView, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean.setIS_READ(true);
@@ -320,9 +318,8 @@ public class OKCardTPActivity extends OKBaseActivity {
     }
 
     private void init() {
-        if (mCardBean.getBean() != null) {
-            mOKCardUrlListBean = mCardBean.getBean();
-        } else {
+        mOKCardUrlListBean = mCardBean.getBean();
+        if (mOKCardUrlListBean == null) {
             mOKCardUrlListBean = fromCardUrlJson(mCardBean.getCONTENT_IMAGE_URL());
             if (mOKCardUrlListBean == null) {
                 mOKCardUrlListBean = new OKCardUrlListBean();
@@ -334,7 +331,7 @@ public class OKCardTPActivity extends OKBaseActivity {
 
         int count = mOKCardUrlListBean.getCount();
 
-        if (count == 0) showSnackbar(MESSAGETopCardView, "没有图片地址", "");
+        if (count == 0) showSnackBar(MESSAGETopCardView, "没有图片地址", "");
 
         if (count == 1) {
             okActivityCardImageContentImage2.setVisibility(View.GONE);
@@ -387,14 +384,7 @@ public class OKCardTPActivity extends OKBaseActivity {
         mToolbarSharing.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                ShareAction mShareAction = new ShareAction(OKCardTPActivity.this);
-                mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
-                UMImage image = new UMImage(OKCardTPActivity.this, getFirstCardImageUrl(mCardBean));
-                UMImage thumb = new UMImage(OKCardTPActivity.this, R.drawable.ic_launcher);
-                image.setThumb(thumb);
-                image.compressStyle = UMImage.CompressStyle.SCALE;
-                image.compressStyle = UMImage.CompressStyle.QUALITY;
-                mShareAction.withText("唯知空间-图片分享").withMedia(image).setCallback(mShareListener).open();
+                shareImage(mOKCardUrlListBean, mShareListener);
             }
         });
 
@@ -447,7 +437,7 @@ public class OKCardTPActivity extends OKBaseActivity {
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.IS_ZAN()) {
-                        showSnackbar(v, "您已经点赞了", "");
+                        showSnackBar(v, "您已经点赞了", "");
                         return;
                     }
 
@@ -472,7 +462,7 @@ public class OKCardTPActivity extends OKBaseActivity {
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.IS_WATCH()) {
-                        showSnackbar(v, "您已经收藏了", "");
+                        showSnackBar(v, "您已经收藏了", "");
                         return;
                     }
 
@@ -507,8 +497,7 @@ public class OKCardTPActivity extends OKBaseActivity {
         okActivityCardImageContentImage1.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name[] = mOKCardUrlListBean.getUrlImage1().split("/");
-                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                if (OKFileUtil.isVideoUrl(mOKCardUrlListBean.getUrlImage1())) {
                     Bundle bundle = new Bundle();
                     bundle.putString("URL", mOKCardUrlListBean.getUrlImage1());
                     bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
@@ -534,8 +523,7 @@ public class OKCardTPActivity extends OKBaseActivity {
         okActivityCardImageContentImage2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name[] = mOKCardUrlListBean.getUrlImage2().split("/");
-                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                if (OKFileUtil.isVideoUrl(mOKCardUrlListBean.getUrlImage2())) {
                     Bundle bundle = new Bundle();
                     bundle.putString("URL", mOKCardUrlListBean.getUrlImage2());
                     bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
@@ -561,8 +549,7 @@ public class OKCardTPActivity extends OKBaseActivity {
         okActivityCardImageContentImage3.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name[] = mOKCardUrlListBean.getUrlImage3().split("/");
-                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                if (OKFileUtil.isVideoUrl(mOKCardUrlListBean.getUrlImage3())) {
                     Bundle bundle = new Bundle();
                     bundle.putString("URL", mOKCardUrlListBean.getUrlImage3());
                     bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
@@ -588,8 +575,7 @@ public class OKCardTPActivity extends OKBaseActivity {
         okActivityCardImageContentImage4.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name[] = mOKCardUrlListBean.getUrlImage4().split("/");
-                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                if (OKFileUtil.isVideoUrl(mOKCardUrlListBean.getUrlImage4())) {
                     Bundle bundle = new Bundle();
                     bundle.putString("URL", mOKCardUrlListBean.getUrlImage4());
                     bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
@@ -615,8 +601,7 @@ public class OKCardTPActivity extends OKBaseActivity {
         okActivityCardImageContentImage5.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name[] = mOKCardUrlListBean.getUrlImage5().split("/");
-                if (name.length != 0 && OKFileUtil.isVideoFile(name[name.length - 1])) {
+                if (OKFileUtil.isVideoUrl(mOKCardUrlListBean.getUrlImage5())) {
                     Bundle bundle = new Bundle();
                     bundle.putString("URL", mOKCardUrlListBean.getUrlImage5());
                     bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
@@ -711,7 +696,7 @@ public class OKCardTPActivity extends OKBaseActivity {
                     MESSAGETopZanText.setTextColor(getResources().getColor(R.color.fenhon));
                 }
             } else {
-                showSnackbar(MESSAGETopCardView, "操作失败,请重试", "");
+                showSnackBar(MESSAGETopCardView, "操作失败,请重试", "");
             }
         }
     }
@@ -741,7 +726,7 @@ public class OKCardTPActivity extends OKBaseActivity {
                 MESSAGETopShouchangImag.setEnabled(false);
                 MESSAGETopPinglunImag.setEnabled(false);
                 mToolbarTitle.setText("该卡片已被用户删除");
-                showSnackbar(MESSAGETopCardView, "该卡片已被用户删除", "");
+                showSnackBar(MESSAGETopCardView, "该卡片已被用户删除", "");
             }
 
             if (mCardBindBean.IS_ATTENTION()) {

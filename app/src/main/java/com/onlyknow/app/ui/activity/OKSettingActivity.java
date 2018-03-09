@@ -352,13 +352,13 @@ public class OKSettingActivity extends OKBaseActivity {
                 return;
             }
             if (bean == null) {
-                showSnackbar(layoutUserXieYi, "检查失败", "");
+                showSnackBar(layoutUserXieYi, "检查失败", "");
                 return;
             }
             if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
                 showUpdateAppDialog(bean);
             } else {
-                showSnackbar(layoutUserXieYi, "已经是最新版本!", "");
+                showSnackBar(layoutUserXieYi, "已经是最新版本!", "");
             }
         }
     }

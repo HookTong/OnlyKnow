@@ -10,6 +10,8 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.onlyknow.app.utils.OKFileUtil;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,9 +22,8 @@ import java.io.InputStream;
 /**
  * 图片处理工具类
  * <p>
- * Author: nanchen
- * Email: liushilin520@foxmail.com
- * Date: 2017-03-08  9:03
+ * Author: ReSet
+ * Date: 2018-03-09
  */
 
 public class OKBitmapUtil {

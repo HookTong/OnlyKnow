@@ -184,7 +184,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if (mCardBeanList.size() == 0) {
-                            showSnackbar(mRecyclerView, "没有历史记录", "");
+                            showSnackBar(mRecyclerView, "没有历史记录", "");
                             return;
                         }
                         new Thread() {
@@ -244,7 +244,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         OKCardBean lastBean = mEntryViewAdapter.getLastBean();
         if (lastBean == null) {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mRecyclerView, "没有历史记录!", "");
+            showSnackBar(mRecyclerView, "没有历史记录!", "");
             return;
         }
         if (mOKLoadHistoryApi == null) {

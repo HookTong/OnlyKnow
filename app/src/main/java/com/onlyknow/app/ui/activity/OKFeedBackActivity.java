@@ -112,7 +112,7 @@ public class OKFeedBackActivity extends OKBaseActivity {
                         mFeedBackTask.executeOnExecutor(exec, map);
                         showProgressDialog("正在提交信息...");
                     } else {
-                        showSnackbar(v, "反馈意见必须大于100字符", "");
+                        showSnackBar(v, "反馈意见必须大于100字符", "");
                     }
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
@@ -155,13 +155,13 @@ public class OKFeedBackActivity extends OKBaseActivity {
 
     private void dealWith(List<MediaBean> imageItems) {
         if (imageItems == null || imageItems.size() == 0) {
-            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            showSnackBar(mToolbarAddImage, "未获选择图片", "");
             return;
         }
         String fp = imageItems.get(0).path;
         String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
         if (gs.equalsIgnoreCase("gif")) {
-            showSnackbar(mAppCompatButtonSend, "您不能选择动图", "");
+            showSnackBar(mAppCompatButtonSend, "您不能选择动图", "");
             return;
         }
         mFilePath = imageItems.get(0).path;
@@ -194,9 +194,9 @@ public class OKFeedBackActivity extends OKBaseActivity {
                 return;
             }
             if (aBoolean) {
-                showSnackbar(mAppCompatButtonSend, "反馈成功", "");
+                showSnackBar(mAppCompatButtonSend, "反馈成功", "");
             } else {
-                showSnackbar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
+                showSnackBar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
             }
             closeProgressDialog();
         }

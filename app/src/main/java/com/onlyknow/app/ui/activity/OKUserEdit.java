@@ -144,12 +144,12 @@ public class OKUserEdit extends OKBaseActivity {
                 if (resultCode == RESULT_OK) {
                     Uri resultUri = UCrop.getOutput(data);
                     if (resultUri == null) {
-                        showSnackbar(mButtonCommit, "没有URI地址", "");
+                        showSnackBar(mButtonCommit, "没有URI地址", "");
                         return;
                     }
                     mFilePath = OKSDCardUtil.getFilePathByImageUri(OKUserEdit.this, resultUri);
                     if (TextUtils.isEmpty(mFilePath)) {
-                        showSnackbar(mButtonCommit, "文件路径错误", "");
+                        showSnackBar(mButtonCommit, "文件路径错误", "");
                         return;
                     }
                     if (mUserEditTask_HP != null && mUserEditTask_HP.getStatus() == AsyncTask.Status.RUNNING) {
@@ -165,7 +165,7 @@ public class OKUserEdit extends OKBaseActivity {
                 }
                 break;
             case UCrop.RESULT_ERROR:
-                showSnackbar(mButtonCommit, "剪裁失败", "");
+                showSnackBar(mButtonCommit, "剪裁失败", "");
                 break;
             case SELECT_MEDIA_REQUEST_CODE:
                 if (resultCode == PickerConfig.RESULT_CODE) {
@@ -208,7 +208,7 @@ public class OKUserEdit extends OKBaseActivity {
                         XG_BIRTHDATE = mEditNian.getText().toString() + "/" + mEditYue.getText().toString()
                                 + "/" + mEditRi.getText().toString();
                     } else {
-                        showSnackbar(mButtonCommit, "生日不能大于当前年份", "");
+                        showSnackBar(mButtonCommit, "生日不能大于当前年份", "");
                         return;
                     }
                 }
@@ -326,13 +326,13 @@ public class OKUserEdit extends OKBaseActivity {
 
     private void dealWith(List<MediaBean> imageItems) {
         if (imageItems == null || imageItems.size() == 0) {
-            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            showSnackBar(mToolbarAddImage, "未获选择图片", "");
             return;
         }
         String fp = imageItems.get(0).path;
         String gs = fp.substring(fp.lastIndexOf(".") + 1, fp.length());
         if (gs.equalsIgnoreCase("gif")) {
-            showSnackbar(mButtonCommit, "您不能选择动图作为头像", "");
+            showSnackBar(mButtonCommit, "您不能选择动图作为头像", "");
             return;
         }
         startUCrop(imageItems.get(0).path, 1, 1);
@@ -409,9 +409,9 @@ public class OKUserEdit extends OKBaseActivity {
                     GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
                 }
 
-                showSnackbar(mButtonCommit, "修改成功", "");
+                showSnackBar(mButtonCommit, "修改成功", "");
             } else {
-                showSnackbar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
+                showSnackBar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
             }
 
             closeProgressDialog();

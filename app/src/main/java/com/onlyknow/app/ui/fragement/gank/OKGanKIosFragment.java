@@ -128,7 +128,7 @@ public class OKGanKIosFragment extends OKBaseFragment implements OnRefreshListen
             mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.IOS_URL + page, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
         }
     }
 
@@ -138,7 +138,7 @@ public class OKGanKIosFragment extends OKBaseFragment implements OnRefreshListen
             mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.IOS_URL + "1", this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
         }
     }
 

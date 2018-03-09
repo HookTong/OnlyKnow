@@ -196,9 +196,9 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
                 if (nowTime - locationInterval > 10000) {
                     sendUserBroadcast(OKConstant.ACTION_RESET_LOCATION, null);
                     locationInterval = nowTime;
-                    showSnackbar(mRecyclerView, "重新定位我的位置", "");
+                    showSnackBar(mRecyclerView, "重新定位我的位置", "");
                 } else {
-                    showSnackbar(mRecyclerView, "您定位过于频繁,请稍后再试!", "");
+                    showSnackBar(mRecyclerView, "您定位过于频繁,请稍后再试!", "");
                 }
             }
         });
@@ -254,7 +254,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             mOKLoadNearApi.requestCardBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(rootView, "没有网络连接!", "");
+            showSnackBar(rootView, "没有网络连接!", "");
         }
     }
 
@@ -276,7 +276,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
                 mRecyclerView.getAdapter().notifyDataSetChanged();
             }
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(rootView, "没有网络连接!", "");
+            showSnackBar(rootView, "没有网络连接!", "");
         }
     }
 

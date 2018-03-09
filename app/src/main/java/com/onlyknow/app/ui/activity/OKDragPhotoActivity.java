@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -14,7 +13,6 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.onlyknow.app.GlideApp;
-import com.onlyknow.app.GlideRequest;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.net.OKWebService;
@@ -68,7 +66,7 @@ public class OKDragPhotoActivity extends OKBaseActivity implements RequestListen
         ButterKnife.bind(this);
         mBundle = getIntent().getExtras();
         if (mBundle == null) {
-            showSnackbar(okActivityDragPhotoDown, "没有的url地址", "");
+            showSnackBar(okActivityDragPhotoDown, "没有的url地址", "");
             finish();
             return;
         }
@@ -103,7 +101,7 @@ public class OKDragPhotoActivity extends OKBaseActivity implements RequestListen
             @Override
             public void onClick(View view) {
                 if ((int) okActivityDragPhotoDown.getTag(R.id.downButton) == OKProgressButton.DOWNLOADING) {
-                    showSnackbar(view, "您当前正在下载该图片", "");
+                    showSnackBar(view, "您当前正在下载该图片", "");
                     return;
                 }
                 String filePath = OKConstant.IMAGE_PATH;
@@ -310,7 +308,7 @@ public class OKDragPhotoActivity extends OKBaseActivity implements RequestListen
 
     @Override
     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
-        showSnackbar(okActivityDragPhoto, "图片加载失败", "");
+        showSnackBar(okActivityDragPhoto, "图片加载失败", "");
         return false;
     }
 
@@ -356,7 +354,7 @@ public class OKDragPhotoActivity extends OKBaseActivity implements RequestListen
             closeProgressDialog();
             okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
             okActivityDragPhotoDown.setEnabled(true);
-            showSnackbar(okActivityDragPhotoDown, "下载失败", "");
+            showSnackBar(okActivityDragPhotoDown, "下载失败", "");
         }
 
         @Override
@@ -364,7 +362,7 @@ public class OKDragPhotoActivity extends OKBaseActivity implements RequestListen
             closeProgressDialog();
             okActivityDragPhotoDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
             okActivityDragPhotoDown.setEnabled(false);
-            showSnackbar(okActivityDragPhotoDown, "下载完成,您可以到 " + OKConstant.IMAGE_PATH + " 下查看", "");
+            showSnackBar(okActivityDragPhotoDown, "下载完成,您可以到 " + OKConstant.IMAGE_PATH + " 下查看", "");
         }
 
         @Override

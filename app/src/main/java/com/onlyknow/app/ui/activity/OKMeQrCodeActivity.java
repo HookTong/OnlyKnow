@@ -83,7 +83,7 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
                 imageViewQrCode.buildDrawingCache();
                 OKBase64Util.saveBitmap(imageViewQrCode.getDrawingCache(), OKConstant.IMAGE_PATH,
                         bundleMe.getString(OKUserInfoBean.KEY_USERNAME) + "_qrcode.jpg");
-                showSnackbar(v, "二维码保存成功,您可以到 " + OKConstant.IMAGE_PATH + " 文件夹下查看", "");
+                showSnackBar(v, "二维码保存成功,您可以到 " + OKConstant.IMAGE_PATH + " 文件夹下查看", "");
             }
         });
 
@@ -178,7 +178,7 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         protected void onPostExecute(Bitmap bitmap) {
             super.onPostExecute(bitmap);
             if (mBitmapQrCode == null) {
-                showSnackbar(imageViewQrCode, "二维码生成失败", "");
+                showSnackBar(imageViewQrCode, "二维码生成失败", "");
                 return;
             }
             imageViewQrCode.setImageBitmap(mBitmapQrCode);

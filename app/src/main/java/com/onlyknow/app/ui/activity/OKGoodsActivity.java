@@ -163,7 +163,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             mOKRecyclerView.setEnabled(false);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
         }
     }
 
@@ -247,7 +247,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                                         mEntryTask = new EntryTask(mEntryViewHolder, position);
                                         mEntryTask.executeOnExecutor(exec, param); // 并行执行线程
                                     } else {
-                                        showSnackbar(mEntryViewHolder.mCardView, "您没有足够的积分以购买该商品!", "");
+                                        showSnackBar(mEntryViewHolder.mCardView, "您没有足够的积分以购买该商品!", "");
                                     }
                                 } else {
                                     startUserActivity(null, OKLoginActivity.class);
@@ -255,7 +255,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                             }
                         });
                     } else {
-                        showSnackbar(mEntryViewHolder.mCardView, "您已经购买过该商品了不能重复购买!", "");
+                        showSnackBar(mEntryViewHolder.mCardView, "您已经购买过该商品了不能重复购买!", "");
                     }
                 }
             });
@@ -401,7 +401,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                     mEntryViewHolder.mButtonOpt.setText("已购买");
                     mEntryViewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.fenhon));
                 } else {
-                    showSnackbar(mEntryViewHolder.mCardView, "购买失败", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
+                    showSnackBar(mEntryViewHolder.mCardView, "购买失败", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
                     mEntryViewHolder.mButtonOpt.setText("购买");
                     mEntryViewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.md_white_1000));
                 }

@@ -67,17 +67,17 @@ public class OKCardWZActivity extends OKBaseActivity {
 
         @Override
         public void onResult(SHARE_MEDIA share_media) {
-            showSnackbar(linearLayoutZY, "分享成功", "");
+            showSnackBar(linearLayoutZY, "分享成功", "");
         }
 
         @Override
         public void onError(SHARE_MEDIA share_media, Throwable throwable) {
-            showSnackbar(linearLayoutZY, "分享失败", "ErrorCode: " + throwable.getMessage());
+            showSnackBar(linearLayoutZY, "分享失败", "ErrorCode: " + throwable.getMessage());
         }
 
         @Override
         public void onCancel(SHARE_MEDIA share_media) {
-            showSnackbar(linearLayoutZY, "分享取消", "");
+            showSnackBar(linearLayoutZY, "分享取消", "");
         }
     };
 
@@ -103,19 +103,19 @@ public class OKCardWZActivity extends OKBaseActivity {
             List<OKCardAndCommentBean> list = OKConstant.getListCache(INTERFACE_CARD_AND_COMMENT);
             if (list.size() == 0 || mPosition >= list.size()) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             OKCardAndCommentBean bean = list.get(mPosition);
             if (bean == null || bean.getOKCardBean() == null) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean = bean.getOKCardBean();
             if (mCardBean == null || mCardBean.getCARD_ID() != mCardId) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean.setIS_READ(true);
@@ -126,19 +126,19 @@ public class OKCardWZActivity extends OKBaseActivity {
             List<OKSearchBean> list = OKConstant.getListCache(INTERFACE_SEARCH);
             if (list.size() == 0 || mPosition >= list.size()) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             OKSearchBean searchBean = list.get(mPosition);
             if (searchBean == null || searchBean.getCardBean() == null) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean = searchBean.getCardBean();
             if (mCardBean == null || mCardBean.getCARD_ID() != mCardId) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean.setIS_READ(true);
@@ -149,13 +149,13 @@ public class OKCardWZActivity extends OKBaseActivity {
             List<OKCardBean> list = OKConstant.getListCache(mInterfaceType);
             if (list.size() == 0 || mPosition >= list.size()) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean = list.get(mPosition);
             if (mCardBean == null || mCardBean.getCARD_ID() != mCardId) {
                 finish();
-                showSnackbar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
+                showSnackBar(linearLayoutZY, "数据源错误", "ErrorCode :" + OKConstant.DATA_SOURCE_ERROR);
                 return null;
             }
             mCardBean.setIS_READ(true);
@@ -352,7 +352,7 @@ public class OKCardWZActivity extends OKBaseActivity {
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.IS_ZAN()) {
-                        showSnackbar(v, "您已经点赞了", "");
+                        showSnackBar(v, "您已经点赞了", "");
                         return;
                     }
 
@@ -377,7 +377,7 @@ public class OKCardWZActivity extends OKBaseActivity {
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.IS_WATCH()) {
-                        showSnackbar(v, "您已经收藏了", "");
+                        showSnackBar(v, "您已经收藏了", "");
                         return;
                     }
 
@@ -493,7 +493,7 @@ public class OKCardWZActivity extends OKBaseActivity {
                     textZan.setTextColor(getResources().getColor(R.color.fenhon));
                 }
             } else {
-                showSnackbar(linearLayoutZY, "操作失败,请重试", "");
+                showSnackBar(linearLayoutZY, "操作失败,请重试", "");
             }
         }
     }
@@ -523,7 +523,7 @@ public class OKCardWZActivity extends OKBaseActivity {
                 imageViewSC.setEnabled(false);
                 imageViewPL.setEnabled(false);
                 mToolbarTitle.setText("该卡片已被用户删除");
-                showSnackbar(linearLayoutZY, "该卡片已被用户删除", "");
+                showSnackBar(linearLayoutZY, "该卡片已被用户删除", "");
             }
 
             if (mCardBindBean.IS_ATTENTION()) {

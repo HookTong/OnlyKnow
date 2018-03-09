@@ -23,22 +23,19 @@ import android.widget.TextView;
 import com.dmcbig.mediapicker.PickerActivity;
 import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
-import com.hyphenate.EMCallBack;
-import com.hyphenate.EMMessageListener;
 import com.hyphenate.chat.EMClient;
-import com.hyphenate.chat.EMConversation;
 import com.hyphenate.chat.EMImageMessageBody;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
-import com.onlyknow.app.GlideApp;
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKLoadSessionApi;
 import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKLogUtil;
+import com.onlyknow.app.utils.OKMessageReceiveCallBack;
+import com.onlyknow.app.utils.OKMessageSendCallBack;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
@@ -52,7 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKSessionActivity extends OKBaseActivity implements OnRefreshListener {
+public class OKSessionActivity extends OKBaseActivity implements OnRefreshListener, OKLoadSessionApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private SessionAdapter mSessionAdapter;
@@ -68,26 +65,28 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     private OKUserInfoBean ME_USER_INFO;
     private final int UPDATE_SESSION = 3;
 
-    private LoadSessionTask mLoadSessionTask;
-    private MessageCallBack messageCallBackReceived, messageCallBackSend;
+    private OKLoadSessionApi mOKLoadSessionApi;
+    private OKMessageReceiveCallBack mOKMessageReceiveCallBack;
+    private OKMessageSendCallBack mOKMessageSendCallBack;
     private List<EMMessage> EMMessageList = new ArrayList<>();
 
+    @SuppressLint("HandlerLeak")
     private Handler mMsgHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
-                case MessageCallBack.SEND_MESSAGE_SUCCESS:
+                case OKMessageSendCallBack.SEND_MESSAGE_SUCCESS:
                     editTextMsg.setText("");
                     mToolBarProgressBar.setVisibility(View.GONE);
                     mOKRecyclerView.getAdapter().notifyDataSetChanged();
                     mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
                     break;
-                case MessageCallBack.SEND_MESSAGE_FAILURE:
+                case OKMessageSendCallBack.SEND_MESSAGE_FAILURE:
                     mToolBarProgressBar.setVisibility(View.GONE);
-                    showSnackbar(mOKRecyclerView, "消息发送失败", "");
+                    showSnackBar(mOKRecyclerView, "消息发送失败", "");
                     break;
-                case MessageCallBack.RECEIVED_MESSAGE:
+                case OKMessageReceiveCallBack.RECEIVED_MESSAGE:
                     mOKRecyclerView.getAdapter().notifyDataSetChanged();
                     mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
                     break;
@@ -139,18 +138,20 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     @Override
     public void onPause() {
         super.onPause();
-        if (mLoadSessionTask != null && mLoadSessionTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mLoadSessionTask.cancel(true);
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        sendUserBroadcast(ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM, null);// 添加服务中的消息监听器
-        if (messageCallBackReceived != null) {
-            EMClient.getInstance().chatManager().removeMessageListener(messageCallBackReceived);
+        if (mOKLoadSessionApi != null) {
+            mOKLoadSessionApi.cancelTask();
         }
+
+        if (mOKMessageReceiveCallBack != null) {
+            EMClient.getInstance().chatManager().removeMessageListener(mOKMessageReceiveCallBack);
+        }
+
+        sendUserBroadcast(ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM, null);// 添加服务中的消息监听器
     }
 
     @Override
@@ -194,8 +195,8 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         mSessionAdapter = new SessionAdapter(this, EMMessageList);
         mOKRecyclerView.setAdapter(mSessionAdapter);
 
-        messageCallBackReceived = new MessageCallBack(mMsgHandler);
-        EMClient.getInstance().chatManager().addMessageListener(messageCallBackReceived); // 添加当前Activity的消息接收监听器
+        mOKMessageReceiveCallBack = new OKMessageReceiveCallBack(this, EMMessageList, SEND_USER_NAME, mMsgHandler);
+        EMClient.getInstance().chatManager().addMessageListener(mOKMessageReceiveCallBack); // 添加当前Activity的消息接收监听器
 
         new Thread() {
             @Override
@@ -231,8 +232,8 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                             super.run();
                             //创建一条文本消息,content为消息文字内容,toChatUsername为对方用户或者群聊的id,后文皆是如此
                             EMMessage sendMessage = EMMessage.createTxtSendMessage(content, SEND_USER_NAME);
-                            messageCallBackSend = new MessageCallBack(mMsgHandler, sendMessage);
-                            sendMessage.setMessageStatusCallback(messageCallBackSend); // 设置消息发送状态监听
+                            mOKMessageSendCallBack = new OKMessageSendCallBack(EMMessageList, sendMessage, mMsgHandler);
+                            sendMessage.setMessageStatusCallback(mOKMessageSendCallBack); // 设置消息发送状态监听
                             sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
                             sendMessage.setTo(SEND_USER_NAME); // 设置消息的接收者
                             sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME); // 设置FROM昵称属性
@@ -270,15 +271,15 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
-        if (mLoadSessionTask != null && mLoadSessionTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mLoadSessionTask.cancel(true);
+        if (mOKLoadSessionApi != null) {
+            mOKLoadSessionApi.cancelTask();
         }
-        String msgId = "";
+        String topId = "";
         if (EMMessageList.size() != 0) {
-            msgId = EMMessageList.get(EMMessageList.size() - 1).getMsgId();
+            topId = EMMessageList.get(0).getMsgId();
         }
-        mLoadSessionTask = new LoadSessionTask(SEND_USER_NAME, true);
-        mLoadSessionTask.executeOnExecutor(exec, msgId);
+        mOKLoadSessionApi = new OKLoadSessionApi(this, SEND_USER_NAME);
+        mOKLoadSessionApi.requestMessageList(SEND_USER_NAME, topId, EMMessageList, this);
     }
 
     private ArrayList<MediaBean> mSelectMediaBean;
@@ -286,7 +287,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
 
     private void dealWith(List<MediaBean> imageItems) {
         if (imageItems == null || imageItems.size() == 0) {
-            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            showSnackBar(mToolbarAddImage, "未获选择图片", "");
             return;
         }
 
@@ -298,8 +299,8 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             public void run() {
                 //imagePath为图片本地路径,false为不发送原图,默认超过100k的图片会压缩后发给对方,需要发送原图传true
                 EMMessage sendMessage = EMMessage.createImageSendMessage(item.path, false, SEND_USER_NAME);
-                messageCallBackSend = new MessageCallBack(mMsgHandler, sendMessage);
-                sendMessage.setMessageStatusCallback(messageCallBackSend); // 设置消息发送状态监听
+                mOKMessageSendCallBack = new OKMessageSendCallBack(EMMessageList, sendMessage, mMsgHandler);
+                sendMessage.setMessageStatusCallback(mOKMessageSendCallBack); // 设置消息发送状态监听
                 sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
                 sendMessage.setTo(SEND_USER_NAME); // 设置消息的接收者
                 sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME); // 设置FROM昵称属性
@@ -308,6 +309,20 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                 EMClient.getInstance().chatManager().sendMessage(sendMessage);
             }
         }.start();
+    }
+
+    @Override
+    public void sessionApiComplete(List<EMMessage> list) {
+        if (list == null || list.size() == 0) {// 判断是否加载到数据,若没有则直接返回
+            mRefreshLayout.finishRefresh();
+            showSnackBar(mOKRecyclerView, "没有新的消息了", "");
+            return;
+        }
+        list.addAll(EMMessageList);
+        EMMessageList.clear();
+        EMMessageList.addAll(list);
+        mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        mRefreshLayout.finishRefresh();
     }
 
     private class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionViewHolder> {
@@ -335,7 +350,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                     public void onClick(View v) {
                         ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                         cm.setText(viewHolder.leftTextViewContent.getText().toString());
-                        showSnackbar(v, "文本已复制!", "");
+                        showSnackBar(v, "文本已复制!", "");
                     }
                 });
             } else if (mMessage.getType() == EMMessage.Type.IMAGE) {
@@ -387,7 +402,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                     public void onClick(View v) {
                         ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                         cm.setText(viewHolder.rightTextViewContent.getText().toString());
-                        showSnackbar(v, "文本已复制!", "");
+                        showSnackBar(v, "文本已复制!", "");
                     }
                 });
             } else if (mMessage.getType() == EMMessage.Type.IMAGE) {
@@ -483,175 +498,6 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             public int getListPosition() {
                 return position;
             }
-        }
-    }
-
-    private class LoadSessionTask extends AsyncTask<String, Void, List<EMMessage>> {
-        private String mSendUserName;
-        private boolean isLoadMore;
-
-        public LoadSessionTask(String sendUserName, boolean b) {
-            this.mSendUserName = sendUserName;
-            this.isLoadMore = b;
-        }
-
-        @Override
-        protected List<EMMessage> doInBackground(String... params) {
-            if (isCancelled()) {
-                return null;
-            }
-            List<EMMessage> list = new ArrayList<>();
-            if (TextUtils.isEmpty(params[0])) {
-                EMConversation conversation = EMClient.getInstance().chatManager().getConversation(mSendUserName);
-                if (conversation == null) {
-                    return null;
-                }
-                //获取此会话的所有消息
-                list = conversation.getAllMessages();
-            } else {
-                EMConversation conversation = EMClient.getInstance().chatManager().getConversation(mSendUserName);
-                if (conversation == null) {
-                    return null;
-                }
-                list = conversation.loadMoreMsgFromDB(params[0], 20);
-            }
-            if (EMMessageList != null && list != null) { // 去重复项
-                for (int i = 0; i < EMMessageList.size(); i++) {
-                    EMMessage oldMsg = EMMessageList.get(i);
-                    for (int p = 0; p < list.size(); p++) {
-                        EMMessage newMsg = list.get(p);
-                        if (oldMsg.getMsgId().equals(newMsg.getMsgId())) {
-                            list.remove(p);
-                            break;
-                        }
-                    }
-                }
-            }
-            return list;
-        }
-
-        @Override
-        protected void onPostExecute(List<EMMessage> list) {
-            super.onPostExecute(list);
-            if (isCancelled()) {
-                return;
-            }
-            // 判断是否加载到数据,若没有则直接返回
-            if (list == null || list.size() == 0) {
-                mRefreshLayout.finishRefresh();
-                showSnackbar(mOKRecyclerView, "没有新的消息了", "");
-                return;
-            }
-
-            if (isLoadMore) {
-                list.addAll(EMMessageList);
-            }
-            EMMessageList.clear();
-            EMMessageList.addAll(list);
-            mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            mRefreshLayout.finishRefresh();
-        }
-    }
-
-    private class MessageCallBack implements EMCallBack, EMMessageListener {
-        private Handler mHandler;
-        private EMMessage mSendMsg;
-        public final static int SEND_MESSAGE_SUCCESS = 0;
-        public final static int SEND_MESSAGE_FAILURE = 1;
-        public final static int RECEIVED_MESSAGE = 2;
-
-        // 发送消息构造方法
-        public MessageCallBack(Handler handler, EMMessage sendMsg) {
-            this.mHandler = handler;
-            this.mSendMsg = sendMsg;
-        }
-
-        // 接收消息构造方法
-        public MessageCallBack(Handler handler) {
-            this.mHandler = handler;
-        }
-
-        @Override
-        public void onSuccess() {
-            List<EMMessage> saveMsg = new ArrayList<>();
-            saveMsg.add(mSendMsg);
-            EMClient.getInstance().chatManager().importMessages(saveMsg);
-
-            EMMessageList.add(mSendMsg);
-
-            mHandler.sendEmptyMessage(SEND_MESSAGE_SUCCESS);
-        }
-
-        @Override
-        public void onError(int i, String s) {
-            mHandler.sendEmptyMessage(SEND_MESSAGE_FAILURE);
-        }
-
-        @Override
-        public void onProgress(int i, String s) {
-        }
-
-        // 以下为消息接收回调
-        @Override
-        public void onMessageReceived(List<EMMessage> receivedList) {
-            EMClient.getInstance().chatManager().importMessages(receivedList);
-            List<EMMessage> addList = new ArrayList<>();
-
-            boolean isSendNotice = true;
-            for (EMMessage mEMMessage : receivedList) {
-                String username = mEMMessage.getFrom();
-                if (SEND_USER_NAME.equals(username)) {
-                    addList.add(mEMMessage);
-                } else if (isSendNotice) {
-                    if (mEMMessage.getType() == EMMessage.Type.TXT) {
-                        Bundle mBundle = new Bundle();
-                        mBundle.putInt("TYPE", 0);
-                        mBundle.putString("TITLE", username);
-                        mBundle.putString("CONTENT", ((EMTextMessageBody) mEMMessage.getBody()).getMessage());
-                        sendUserBroadcast(OKConstant.ACTION_SHOW_NOTICE, mBundle);
-                        isSendNotice = false;
-                    } else if (mEMMessage.getType() == EMMessage.Type.IMAGE) {
-                        Bundle mBundle = new Bundle();
-                        mBundle.putInt("TYPE", 0);
-                        mBundle.putString("TITLE", username);
-                        mBundle.putString("CONTENT", "给您发送了一张图片");
-                        sendUserBroadcast(OKConstant.ACTION_SHOW_NOTICE, mBundle);
-                        isSendNotice = false;
-                    }
-                }
-            }
-
-            if (addList.size() == 0) {
-                OKLogUtil.print("接收到其他会话的消息");
-                return;
-            }
-            EMMessageList.addAll(addList);
-            mHandler.sendEmptyMessage(RECEIVED_MESSAGE);
-        }
-
-        @Override
-        public void onCmdMessageReceived(List<EMMessage> list) {
-
-        }
-
-        @Override
-        public void onMessageRead(List<EMMessage> list) {
-
-        }
-
-        @Override
-        public void onMessageDelivered(List<EMMessage> list) {
-
-        }
-
-        @Override
-        public void onMessageRecalled(List<EMMessage> list) {
-
-        }
-
-        @Override
-        public void onMessageChanged(EMMessage emMessage, Object o) {
-
         }
     }
 }

@@ -21,15 +21,6 @@
             android:layout_marginLeft="15dp"
             android:background="@drawable/ic_back" />
 
-        <ImageView
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginBottom="18dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginTop="18dp"
-            android:background="@color/md_white_1000" />
-
         <TextView
             android:id="@+id/bar_title"
             android:layout_width="wrap_content"
@@ -69,6 +60,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/md_light_green_500"
+        android:elevation="5dp"
         android:orientation="horizontal">
 
         <Button

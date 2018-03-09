@@ -154,7 +154,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -173,7 +173,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
             mOKLoadWatchApi.requestCardBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "登录后加载", "");
+            showSnackBar(mOKRecyclerView, "登录后加载", "");
         }
     }
 
@@ -186,7 +186,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
                 mOKRecyclerView.getAdapter().notifyDataSetChanged();
             }
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -199,7 +199,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
             mOKLoadWatchApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(rootView, "登录后查看!", "");
+            showSnackBar(rootView, "登录后查看!", "");
         }
     }
 
@@ -423,9 +423,9 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
                 }
                 if (aBoolean) {
                     removeCardBean(mPosition);
-                    showSnackbar(mCardViewHolder.mCardView, "您已移除该卡片", "");
+                    showSnackBar(mCardViewHolder.mCardView, "您已移除该卡片", "");
                 } else {
-                    showSnackbar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
+                    showSnackBar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
                 }
             }
 

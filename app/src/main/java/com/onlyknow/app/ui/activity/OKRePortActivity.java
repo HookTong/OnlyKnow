@@ -175,9 +175,9 @@ public class OKRePortActivity extends OKBaseActivity {
             }
 
             if (aBoolean) {
-                showSnackbar(appCompatButton, "举报成功", "");
+                showSnackBar(appCompatButton, "举报成功", "");
             } else {
-                showSnackbar(appCompatButton, "举报失败,请检查网络!", "");
+                showSnackBar(appCompatButton, "举报失败,请检查网络!", "");
             }
             closeProgressDialog();
         }

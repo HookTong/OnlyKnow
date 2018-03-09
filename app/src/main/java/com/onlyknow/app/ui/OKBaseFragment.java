@@ -46,8 +46,10 @@ import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEdit;
 import com.onlyknow.app.ui.view.OKCatLoadingView;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKAddVideoIconTransformation;
 import com.onlyknow.app.utils.OKBarTintUtil;
 import com.onlyknow.app.utils.OKBlurTransformation;
+import com.onlyknow.app.utils.OKFileUtil;
 import com.onlyknow.app.utils.OKLunarUtil;
 
 import java.util.Calendar;
@@ -204,7 +206,7 @@ public class OKBaseFragment extends Fragment {
         popWindow.showAtLocation(parent, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0);
     }
 
-    public void showSnackbar(View view, String message, String mAction) {
+    public void showSnackBar(View view, String message, String mAction) {
         Snackbar.make(view, message + " " + mAction, Snackbar.LENGTH_SHORT).show();
     }
 
@@ -292,12 +294,12 @@ public class OKBaseFragment extends Fragment {
         }
     }
 
-    public void showAlertDialog(String title, String msg, String okButTitle, String closeButTitle, DialogInterface.OnClickListener mOnClickListener) {
+    public void showAlertDialog(String title, String msg, String okButTitle, String closeButTitle, DialogInterface.OnClickListener listener) {
         AlertDialog.Builder mAlertDialog = new AlertDialog.Builder(getActivity());
         mAlertDialog.setIcon(R.drawable.ic_launcher);
         mAlertDialog.setTitle(title);
         mAlertDialog.setMessage(msg);
-        mAlertDialog.setPositiveButton(okButTitle, mOnClickListener);
+        mAlertDialog.setPositiveButton(okButTitle, listener);
         mAlertDialog.setNegativeButton(closeButTitle, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface arg0, int arg1) {

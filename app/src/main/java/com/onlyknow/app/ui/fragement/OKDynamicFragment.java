@@ -153,14 +153,14 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
             OKCardBean mCardBean = mCardViewAdapter.getLastCardBean();
             if (mCardBean == null) {
                 mRefreshLayout.finishLoadMore(1500);
-                showSnackbar(mRecyclerView, "数据错误!", "");
+                showSnackBar(mRecyclerView, "数据错误!", "");
                 return;
             }
             Map<String, String> map = new HashMap<>();// 请求参数
@@ -173,7 +173,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             mOKLoadDynamicApi.requestCardBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mRecyclerView, "登录后加载", "");
+            showSnackBar(mRecyclerView, "登录后加载", "");
         }
     }
 
@@ -186,7 +186,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                 mRecyclerView.getAdapter().notifyDataSetChanged();
             }
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -199,7 +199,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             mOKLoadDynamicApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mRecyclerView, "登录后查看", "");
+            showSnackBar(mRecyclerView, "登录后查看", "");
         }
     }
 
@@ -299,7 +299,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                 @Override
                 public void onClick(View v) {
                     if (!okCardBean.getUSER_NAME().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
-                        showSnackbar(v, "这不是您的卡片", "");
+                        showSnackBar(v, "这不是您的卡片", "");
                         return;
                     }
                     showAlertDialog("动态", "是否删除该条动态 ?", "确定", "取消", new DialogInterface.OnClickListener() {
@@ -424,9 +424,9 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                 }
                 if (aBoolean) {
                     removeCardBean(mPosition);
-                    showSnackbar(mCardViewHolder.mCardView, "您已移除该卡片", "");
+                    showSnackBar(mCardViewHolder.mCardView, "您已移除该卡片", "");
                 } else {
-                    showSnackbar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
+                    showSnackBar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
                 }
             }
 

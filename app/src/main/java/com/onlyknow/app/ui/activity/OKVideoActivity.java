@@ -74,7 +74,7 @@ public class OKVideoActivity extends OKBaseActivity {
             @Override
             public void onClick(View v) {
                 if ((int) okActivityPlayerDown.getTag(R.id.downButton) == OKProgressButton.DOWNLOADING) {
-                    showSnackbar(v, "您当前正在下载该视频", "");
+                    showSnackBar(v, "您当前正在下载该视频", "");
                     return;
                 }
                 String filePath = OKConstant.IMAGE_PATH;
@@ -132,7 +132,7 @@ public class OKVideoActivity extends OKBaseActivity {
             closeProgressDialog();
             okActivityPlayerDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
             okActivityPlayerDown.setEnabled(true);
-            showSnackbar(okActivityPlayerDown, "下载失败", "");
+            showSnackBar(okActivityPlayerDown, "下载失败", "");
         }
 
         @Override
@@ -140,7 +140,7 @@ public class OKVideoActivity extends OKBaseActivity {
             closeProgressDialog();
             okActivityPlayerDown.setTag(R.id.downButton, OKProgressButton.NORMAL);
             okActivityPlayerDown.setEnabled(false);
-            showSnackbar(okActivityPlayerDown, "下载完成,您可以到 " + OKConstant.IMAGE_PATH + " 下查看", "");
+            showSnackBar(okActivityPlayerDown, "下载完成,您可以到 " + OKConstant.IMAGE_PATH + " 下查看", "");
         }
 
         @Override

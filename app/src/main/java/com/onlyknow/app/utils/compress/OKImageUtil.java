@@ -10,14 +10,8 @@ import java.io.IOException;
 
 /**
  * Bitmap 压缩相关操作工具类
- *
- *
- *
- * 原理不明白请查看我博客：http://www.cnblogs.com/liushilin/p/6116759.html
- *
- * Author: nanchen
- * Email: liushilin520@foxmail.com
- * Date: 2017-02-13  15:43
+ * Author: ReSet
+ * Date: 2018-03-09
  */
 
 public class OKImageUtil {
@@ -28,7 +22,7 @@ public class OKImageUtil {
      * @param reqWidth  目标的宽度
      * @param reqHeight 目标的高度
      * @param pathName  路径
-     * @return          计算的SampleSize
+     * @return 计算的SampleSize
      */
     private static int calculateInSampleSize(BitmapFactory.Options options, String pathName, int reqWidth, int reqHeight) {
         // 源图片的高度和宽度
@@ -64,7 +58,7 @@ public class OKImageUtil {
      * @param options   参数
      * @param reqWidth  目标的宽度
      * @param reqHeight 目标的高度
-     * @return          计算的SampleSize
+     * @return 计算的SampleSize
      */
     private static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // 源图片的高度和宽度
@@ -91,7 +85,7 @@ public class OKImageUtil {
      * @param resId     资源id
      * @param reqWidth  请求宽度
      * @param reqHeight 请求高度
-     * @return          Bitmap
+     * @return Bitmap
      */
     public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId, int reqWidth, int reqHeight) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -107,17 +101,17 @@ public class OKImageUtil {
     /**
      * 通过传入的bitmap，进行压缩，得到符合标准的bitmap
      *
-     * @param src           Bitmap源图
-     * @param dstWidth      宽度
-     * @param dstHeight     高度
-     * @return              新的Bitmap
+     * @param src       Bitmap源图
+     * @param dstWidth  宽度
+     * @param dstHeight 高度
+     * @return 新的Bitmap
      */
     private static Bitmap createScaleBitmap(Bitmap src, int dstWidth, int dstHeight, int inSampleSize) {
         //如果inSampleSize是2的倍数，也就说这个src已经是我们想要的缩略图了，直接返回即可。
         if (inSampleSize % 2 == 0) {
             return src;
         }
-        if (src == null){
+        if (src == null) {
             return null;
         }
         // 如果是放大图片，filter决定是否平滑，如果是缩小图片，filter无影响，我们这里是缩小图片，所以直接设置为false
@@ -131,16 +125,16 @@ public class OKImageUtil {
     /**
      * 从SD卡上加载图片
      *
-     * @param pathName      路径
-     * @param reqWidth      请求宽度
-     * @param reqHeight     请求高度
-     * @return              Bitmap
+     * @param pathName  路径
+     * @param reqWidth  请求宽度
+     * @param reqHeight 请求高度
+     * @return Bitmap
      */
     public static Bitmap decodeSampledBitmapFromFile(String pathName, int reqWidth, int reqHeight) {
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(pathName, options);
-        options.inSampleSize = calculateInSampleSize(options, pathName,reqWidth, reqHeight);
+        options.inSampleSize = calculateInSampleSize(options, pathName, reqWidth, reqHeight);
         options.inJustDecodeBounds = false;
         Bitmap src = BitmapFactory.decodeFile(pathName, options);
         return createScaleBitmap(src, reqWidth, reqHeight, options.inSampleSize);
@@ -148,11 +142,12 @@ public class OKImageUtil {
 
     /**
      * 删除临时图片
-     * @param path  图片路径
+     *
+     * @param path 图片路径
      */
-    public static void deleteTempFile(String path){
+    public static void deleteTempFile(String path) {
         File file = new File(path);
-        if (file.exists()){
+        if (file.exists()) {
             file.delete();
         }
     }

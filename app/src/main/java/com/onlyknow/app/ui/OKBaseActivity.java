@@ -40,18 +40,27 @@ import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKCardUrlListBean;
+import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEdit;
 import com.onlyknow.app.ui.view.OKCatLoadingView;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKAddVideoIconTransformation;
 import com.onlyknow.app.utils.OKBarTintUtil;
 import com.onlyknow.app.utils.OKBlurTransformation;
+import com.onlyknow.app.utils.OKFileUtil;
+import com.umeng.socialize.ShareAction;
+import com.umeng.socialize.UMShareListener;
+import com.umeng.socialize.bean.SHARE_MEDIA;
+import com.umeng.socialize.media.UMImage;
+import com.umeng.socialize.media.UMVideo;
 import com.yalantis.ucrop.UCrop;
 import com.yalantis.ucrop.UCropActivity;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -225,7 +234,7 @@ public class OKBaseActivity extends AppCompatActivity {
         popWindow.showAtLocation(parent, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0);
     }
 
-    public void showSnackbar(View view, String message, String errorCode) {
+    public void showSnackBar(View view, String message, String errorCode) {
         Snackbar.make(view, message + " " + errorCode, Snackbar.LENGTH_SHORT).show();
     }
 
@@ -541,6 +550,95 @@ public class OKBaseActivity extends AppCompatActivity {
             return time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
         } else {
             return time[0] + "年" + time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
+        }
+    }
+
+    public void shareImage(final OKCardUrlListBean bean, final UMShareListener mShareListener) {
+        final List<String> urlList = OKCardUrlListBean.toList(bean);
+        if (urlList == null || urlList.size() == 0) return;
+
+        if (urlList.size() == 1) {
+            if (OKFileUtil.isVideoUrl(urlList.get(0))) {
+                UMVideo video = new UMVideo(urlList.get(0));
+                UMImage thumb = new UMImage(this, R.drawable.ic_launcher);
+                video.setTitle("唯知空间-视频分享");//视频的标题
+                video.setThumb(thumb);//视频的缩略图
+
+                ShareAction mShareAction = new ShareAction(this);
+                mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
+                mShareAction.withText("唯知空间-视频分享").withMedia(video).setCallback(mShareListener).open();
+            } else {
+                UMImage image = new UMImage(this, urlList.get(0));
+                UMImage thumb = new UMImage(this, R.drawable.ic_launcher);
+                image.setTitle("唯知空间-图片分享");
+                image.setThumb(thumb);
+                image.compressStyle = UMImage.CompressStyle.SCALE;
+                image.compressStyle = UMImage.CompressStyle.QUALITY;
+
+                ShareAction mShareAction = new ShareAction(this);
+                mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
+                mShareAction.withText("唯知空间-图片分享").withMedia(image).setCallback(mShareListener).open();
+            }
+            return;
+        }
+
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(this);
+        final View dialogView = LayoutInflater.from(this).inflate(R.layout.ok_dialog_select_image, null);
+        final LinearLayout layout[] = new LinearLayout[5];
+        final ImageView image[] = new ImageView[5];
+
+        layout[0] = (LinearLayout) dialogView.findViewById(R.id.ok_dialog_select_image_layout1);
+        layout[1] = (LinearLayout) dialogView.findViewById(R.id.ok_dialog_select_image_layout2);
+        layout[2] = (LinearLayout) dialogView.findViewById(R.id.ok_dialog_select_image_layout3);
+        layout[3] = (LinearLayout) dialogView.findViewById(R.id.ok_dialog_select_image_layout4);
+        layout[4] = (LinearLayout) dialogView.findViewById(R.id.ok_dialog_select_image_layout5);
+
+        image[0] = (ImageView) dialogView.findViewById(R.id.ok_dialog_select_image1);
+        image[1] = (ImageView) dialogView.findViewById(R.id.ok_dialog_select_image2);
+        image[2] = (ImageView) dialogView.findViewById(R.id.ok_dialog_select_image3);
+        image[3] = (ImageView) dialogView.findViewById(R.id.ok_dialog_select_image4);
+        image[4] = (ImageView) dialogView.findViewById(R.id.ok_dialog_select_image5);
+
+        mBuilder.setView(dialogView);
+        final AlertDialog mAlertDialog = mBuilder.show();
+
+        for (int i = 0; i < urlList.size(); i++) {
+            GlideApi(image[i], urlList.get(i), R.drawable.topgd1, R.drawable.topgd1);
+            layout[i].setVisibility(View.VISIBLE);
+        }
+        for (int i = 0; i < 5; i++) {
+            layout[i].setTag(R.id.select_image, i);
+            layout[i].setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int i = (int) v.getTag(R.id.select_image);
+                    if (i >= urlList.size()) return;
+
+                    mAlertDialog.dismiss();
+
+                    if (OKFileUtil.isVideoUrl(urlList.get(i))) {
+                        UMVideo video = new UMVideo(urlList.get(0));
+                        UMImage thumb = new UMImage(OKBaseActivity.this, R.drawable.ic_launcher);
+                        video.setTitle("唯知空间-视频分享");//视频的标题
+                        video.setThumb(thumb);//视频的缩略图
+
+                        ShareAction mShareAction = new ShareAction(OKBaseActivity.this);
+                        mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
+                        mShareAction.withText("唯知空间-视频分享").withMedia(video).setCallback(mShareListener).open();
+                    } else {
+                        UMImage image = new UMImage(OKBaseActivity.this, urlList.get(i));
+                        UMImage thumb = new UMImage(OKBaseActivity.this, R.drawable.ic_launcher);
+                        image.setTitle("唯知空间-图片分享");
+                        image.setThumb(thumb);
+                        image.compressStyle = UMImage.CompressStyle.SCALE;
+                        image.compressStyle = UMImage.CompressStyle.QUALITY;
+
+                        ShareAction mShareAction = new ShareAction(OKBaseActivity.this);
+                        mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
+                        mShareAction.withText("唯知空间-图片分享").withMedia(image).setCallback(mShareListener).open();
+                    }
+                }
+            });
         }
     }
 }

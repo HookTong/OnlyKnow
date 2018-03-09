@@ -44,4 +44,5 @@
     <item name="reGetButton" type="id" />
     <item name="downButton" type="id" />
     <item name="uploadButton" type="id" />
+    <item name="select_image" type="id" />
 </resources>

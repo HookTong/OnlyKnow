@@ -105,7 +105,7 @@ public class OKContentActivity extends OKBaseActivity {
             }
 
             if (bean == null) {
-                showSnackbar(textViewContent, "获取失败!", "");
+                showSnackBar(textViewContent, "获取失败!", "");
                 return;
             }
 

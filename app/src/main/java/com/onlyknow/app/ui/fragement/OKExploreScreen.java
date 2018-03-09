@@ -65,7 +65,6 @@ import com.youth.banner.Banner;
 import com.youth.banner.BannerConfig;
 import com.youth.banner.Transformer;
 import com.youth.banner.listener.OnBannerListener;
-import com.youth.banner.loader.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -259,7 +258,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
             @Override
             public void onClick(View v) {
                 getWeatherInfo();
-                showSnackbar(v, "重新获取天气", "");
+                showSnackBar(v, "重新获取天气", "");
             }
         });
 
@@ -313,7 +312,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                     bundle.putString("WEB_LINK", map.get("LINK"));
                     startUserActivity(bundle, OKBrowserActivity.class);
                 } else {
-                    showSnackbar(rootView, "没有发现链接", "");
+                    showSnackBar(rootView, "没有发现链接", "");
                 }
             }
         });
@@ -338,7 +337,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
 
             @Override
             public void onClick(View v) {
-                showSnackbar(rootView, "查看书店,唯知书店暂未开放!", "");
+                showSnackBar(rootView, "查看书店,唯知书店暂未开放!", "");
             }
         });
 
@@ -499,7 +498,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     @Override
     public void weatherApiComplete(OKWeatherBean weatherBean) {
         if (weatherBean == null) {
-            showSnackbar(rootView, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
+            showSnackBar(rootView, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
             return;
         }
         mOKWeatherBean = weatherBean;

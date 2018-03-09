@@ -73,7 +73,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
         mCommentBean = OKCommentBean.fromBundle(getIntent().getExtras());
         if (mCommentBean == null) {
-            showSnackbar(mOKRecyclerView, "父评论为空", "ErrorCode: " + OKConstant.COMMENT_ERROR);
+            showSnackBar(mOKRecyclerView, "父评论为空", "ErrorCode: " + OKConstant.COMMENT_ERROR);
             finish();
         }
 
@@ -231,7 +231,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
             mOKLoadCommentReplyApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
         }
     }
 
@@ -317,7 +317,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                         mCommentReplyTask = new CommentReplyTask(mViewHolder, position);
                         mCommentReplyTask.executeOnExecutor(exec, param); // 并行执行线程
                     } else {
-                        showSnackbar(v, "您已点过赞了", "");
+                        showSnackBar(v, "您已点过赞了", "");
                     }
                 }
             });
@@ -361,7 +361,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                             // 将文本数据复制到剪贴板
                             cm.setText(mCommentReplyBeanClip.getCOMMENT_CONTENT());
-                            showSnackbar(mOKRecyclerView, "信息已复制到剪切板", "");
+                            showSnackBar(mOKRecyclerView, "信息已复制到剪切板", "");
                             popWindow.dismiss();
                             break;
                         case R.id.COMMENT_REPLY_POP_JuBao_LAYOU:
@@ -483,7 +483,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                     mCommentReplyViewHolder.mTextViewZ.setText("" + mOKCommentReplyBean.getZAN_NUM());
                     mCommentReplyViewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
                 } else {
-                    showSnackbar(mCommentReplyViewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.COMMENT_ERROR);
+                    showSnackBar(mCommentReplyViewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.COMMENT_ERROR);
                 }
             }
 
@@ -526,9 +526,9 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                 } else {
                     mRefreshLayout.autoLoadMore();
                 }
-                showSnackbar(mOKRecyclerView, "发送成功", "");
+                showSnackBar(mOKRecyclerView, "发送成功", "");
             } else {
-                showSnackbar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);
+                showSnackBar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);
             }
         }
     }

@@ -347,7 +347,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
             }
 
             if (userInfoBean == null) {
-                showSnackbar(rootView, "没有获取到用户信息", "");
+                showSnackBar(rootView, "没有获取到用户信息", "");
                 return;
             }
 

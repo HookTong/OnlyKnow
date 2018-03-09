@@ -127,7 +127,7 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
                 mCardBeanList.addAll(OKConstant.getListCache(INTERFACE_HOT));
             }
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
         }
     }
 

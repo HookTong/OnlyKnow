@@ -91,7 +91,7 @@ public class OKBrowserActivity extends OKBaseActivity {
          */
         @Override
         public void onResult(SHARE_MEDIA platform) {
-            showSnackbar(mWebToolbar, "分享成功了", "");
+            showSnackBar(mWebToolbar, "分享成功了", "");
         }
 
         /**
@@ -101,7 +101,7 @@ public class OKBrowserActivity extends OKBaseActivity {
          */
         @Override
         public void onError(SHARE_MEDIA platform, Throwable t) {
-            showSnackbar(mWebToolbar, "分享失败", "ErrorCode :" + t.getMessage());
+            showSnackBar(mWebToolbar, "分享失败", "ErrorCode :" + t.getMessage());
         }
 
         /**
@@ -110,7 +110,7 @@ public class OKBrowserActivity extends OKBaseActivity {
          */
         @Override
         public void onCancel(SHARE_MEDIA platform) {
-            showSnackbar(mWebToolbar, "分享取消了", "");
+            showSnackBar(mWebToolbar, "分享取消了", "");
         }
     };
 
@@ -237,7 +237,7 @@ public class OKBrowserActivity extends OKBaseActivity {
                         xWalkWebView.load(mBaiDuSearchUrl + url, null);
                     }
                 } else {
-                    showSnackbar(mWebToolbar, "输入为空", "");
+                    showSnackBar(mWebToolbar, "输入为空", "");
                 }
             }
         });
@@ -327,7 +327,7 @@ public class OKBrowserActivity extends OKBaseActivity {
         @Override
         public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimeType, long contentLength) {
             if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-                showSnackbar(mWebToolbar, "没有可用的存储设备", "");
+                showSnackBar(mWebToolbar, "没有可用的存储设备", "");
                 return;
             }
             OKDownloaderTask task = new OKDownloaderTask();
@@ -372,10 +372,10 @@ public class OKBrowserActivity extends OKBaseActivity {
             super.onPostExecute(result);
             closeProgressDialog();
             if (result == null) {
-                showSnackbar(mWebToolbar, "连接错误! 请稍后再试!", "");
+                showSnackBar(mWebToolbar, "连接错误! 请稍后再试!", "");
                 return;
             }
-            showSnackbar(mWebToolbar, "已保存到SD卡", "");
+            showSnackBar(mWebToolbar, "已保存到SD卡", "");
 
             File directory = Environment.getExternalStorageDirectory();
             File file = new File(directory, result);

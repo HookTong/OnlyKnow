@@ -200,7 +200,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
             mOKLoadCommentApi.requestCommentBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "没有网络连接!", "");
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
         }
     }
 
@@ -290,7 +290,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                         mCommentTask = new CommentTask(mCommentViewHolder, position);
                         mCommentTask.executeOnExecutor(exec, param); // 并行执行线程
                     } else {
-                        showSnackbar(v, "您已点过赞了", "");
+                        showSnackBar(v, "您已点过赞了", "");
                     }
                 }
             });
@@ -345,7 +345,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                             }
 
                             cm.setText(mCommentBeanClip.getCOMMENT_CONTENT());
-                            showSnackbar(mOKRecyclerView, "文本已复制到剪切板", "");
+                            showSnackBar(mOKRecyclerView, "文本已复制到剪切板", "");
                             popWindow.dismiss();
                             break;
                         case R.id.COMMENT_POP_JuBao_LAYOU:
@@ -468,7 +468,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                     mCommentViewHolder.mTextViewZ.setText("" + mCommentBean.getZAN_NUM());
                     mCommentViewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
                 } else {
-                    showSnackbar(mCommentViewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
+                    showSnackBar(mCommentViewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
                 }
             }
 
@@ -508,9 +508,9 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                 } else {
                     mRefreshLayout.autoLoadMore();
                 }
-                showSnackbar(mOKRecyclerView, "发送成功", "");
+                showSnackBar(mOKRecyclerView, "发送成功", "");
             } else {
-                showSnackbar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);
+                showSnackBar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);
             }
         }
     }

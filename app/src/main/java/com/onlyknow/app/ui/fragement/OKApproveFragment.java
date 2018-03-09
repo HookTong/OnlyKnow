@@ -153,7 +153,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -172,7 +172,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
             mLoadApproveApi.requestCardBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "登录后加载", "");
+            showSnackBar(mOKRecyclerView, "登录后加载", "");
         }
     }
 
@@ -185,7 +185,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
                 mOKRecyclerView.getAdapter().notifyDataSetChanged();
             }
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -198,7 +198,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
             mLoadApproveApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(rootView, "登录后查看!", "");
+            showSnackBar(rootView, "登录后查看!", "");
         }
     }
 
@@ -277,7 +277,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
             mCardViewHolder.mCardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showSnackbar(v, "审批中的卡片暂时不能查看", "");
+                    showSnackBar(v, "审批中的卡片暂时不能查看", "");
                 }
             });
 
@@ -297,7 +297,7 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
                 @Override
                 public void onClick(View v) {
                     if (!bean.getUSER_NAME().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
-                        showSnackbar(v, "这不是您的卡片", "");
+                        showSnackBar(v, "这不是您的卡片", "");
                         return;
                     }
                     showAlertDialog("审批卡片", "是否删除该审批卡片 ?", "确定", "取消", new DialogInterface.OnClickListener() {
@@ -416,9 +416,9 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
                 }
                 if (aBoolean) {
                     removeCardBean(mPosition);
-                    showSnackbar(mCardViewHolder.mCardView, "您已移除该卡片", "");
+                    showSnackBar(mCardViewHolder.mCardView, "您已移除该卡片", "");
                 } else {
-                    showSnackbar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
+                    showSnackBar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
                 }
             }
 

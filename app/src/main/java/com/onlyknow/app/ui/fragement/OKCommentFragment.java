@@ -153,7 +153,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -173,7 +173,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             mOKLoadCardAndCommentApi.requestCardAndCommentBeanList(map, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
-            showSnackbar(mOKRecyclerView, "登录后加载", "");
+            showSnackBar(mOKRecyclerView, "登录后加载", "");
         }
     }
 
@@ -186,7 +186,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
                 mOKRecyclerView.getAdapter().notifyDataSetChanged();
             }
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "请检查网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
         if (USER_INFO_SP.getBoolean("STATE", false)) {
@@ -199,7 +199,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             mOKLoadCardAndCommentApi.requestCardAndCommentBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(rootView, "登录后查看!", "");
+            showSnackBar(rootView, "登录后查看!", "");
         }
     }
 

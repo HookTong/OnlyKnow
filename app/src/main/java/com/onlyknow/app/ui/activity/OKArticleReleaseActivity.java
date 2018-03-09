@@ -152,7 +152,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             @Override
             public void onClick(View v) {
                 if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
-                    showSnackbar(v, "您当前有文章正在上传,请等待上传完成!", "");
+                    showSnackBar(v, "您当前有文章正在上传,请等待上传完成!", "");
                     return;
                 }
                 if (isUpload()) {
@@ -198,7 +198,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         mToolbarSend.setTag(R.id.uploadButton, TAG_UPLOAD);
                         showProgressDialog("正在上传图片...");
                     } else {
-                        showSnackbar(v, "您可以不写文章,但至少选择一张图片!", "");
+                        showSnackBar(v, "您可以不写文章,但至少选择一张图片!", "");
                     }
                 }
             }
@@ -372,7 +372,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
     private void dealWith(ArrayList<MediaBean> listMediaBean) {
         if (listMediaBean == null || listMediaBean.size() == 0) {
-            showSnackbar(mToolbarAddImage, "未获选择图片", "");
+            showSnackBar(mToolbarAddImage, "未获选择图片", "");
             return;
         }
         long size = 0;
@@ -380,7 +380,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
             size += item.size;
         }
         if (size > 15 * 1024 * 1024) {
-            showSnackbar(mToolbarAddImage, "一次上传的文件总量不能超过15MB", "");
+            showSnackBar(mToolbarAddImage, "一次上传的文件总量不能超过15MB", "");
             return;
         }
         mOKCardBase64ListBean.clear();
@@ -564,9 +564,9 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                 editor.putString("LINK", "##");
                 editor.putString("CONTENT", "##");
                 editor.commit();
-                showSnackbar(mToolbarAddImage, "上传成功", "");
+                showSnackBar(mToolbarAddImage, "上传成功", "");
             } else {
-                showSnackbar(mToolbarAddImage, "上传失败", "");
+                showSnackBar(mToolbarAddImage, "上传失败", "");
             }
             mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
             closeProgressDialog();

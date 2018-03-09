@@ -1,4 +1,4 @@
-package com.onlyknow.app.utils.compress;
+package com.onlyknow.app.utils;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -20,15 +20,14 @@ import java.net.URLConnection;
 /**
  * 文件工具类
  * <p>
- * Author: nanchen
- * Email: liushilin520@foxmail.com
- * Date: 2017-03-08  9:03
+ * Author: ReSet
+ * Date: 2018-03-09
  */
 
 public class OKFileUtil {
-    static final String FILES_PATH = "OKCompressHelper";
-    private static final int EOF = -1;
-    private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+    public static final String FILES_PATH = "OKCompressHelper";
+    public static final int EOF = -1;
+    public static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 
     private OKFileUtil() {
         throw new UnsupportedOperationException("u can't instantiate me...");
@@ -63,7 +62,6 @@ public class OKFileUtil {
     public static boolean isFileExists(File file) {
         return file != null && file.exists();
     }
-
 
     /**
      * 重命名文件
@@ -138,7 +136,6 @@ public class OKFileUtil {
         return isFileExists(file) && file.isFile();
     }
 
-
     /**
      * 重命名文件
      *
@@ -151,16 +148,15 @@ public class OKFileUtil {
         if (!newFile.equals(file)) {
             if (newFile.exists()) {
                 if (newFile.delete()) {
-                    Log.d("OKFileUtil", "Delete old " + newName + " file");
+                    OKLogUtil.print("OKFileUtil", "Delete old " + newName + " file");
                 }
             }
             if (file.renameTo(newFile)) {
-                Log.d("OKFileUtil", "Rename file to " + newName);
+                OKLogUtil.print("OKFileUtil", "Rename file to " + newName);
             }
         }
         return newFile;
     }
-
 
     /**
      * 获取临时文件
@@ -199,7 +195,7 @@ public class OKFileUtil {
      *
      * @param fileName 文件名称
      */
-    static String[] splitFileName(String fileName) {
+    public static String[] splitFileName(String fileName) {
         String name = fileName;
         String extension = "";
         int i = fileName.lastIndexOf(".");
@@ -218,7 +214,7 @@ public class OKFileUtil {
      * @param uri     uri
      * @return 文件名称
      */
-    static String getFileName(Context context, Uri uri) {
+    public static String getFileName(Context context, Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
             Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
@@ -251,7 +247,7 @@ public class OKFileUtil {
      * @param uri     uri
      * @return 文件路径
      */
-    static String getRealPathFromURI(Context context, Uri uri) {
+    public static String getRealPathFromURI(Context context, Uri uri) {
         Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
         if (cursor == null) {
             return uri.getPath();
@@ -264,7 +260,7 @@ public class OKFileUtil {
         }
     }
 
-    private final static String PREFIX_VIDEO = "video/";
+    public final static String PREFIX_VIDEO = "video/";
 
     /**
      * Get the Mime Type from a File
@@ -274,10 +270,9 @@ public class OKFileUtil {
      * thx https://www.oschina.net/question/571282_223549
      * add by fengwenhua 2017年5月3日09:55:01
      */
-    private static String getMimeType(String fileName) {
+    public static String getMimeType(String fileName) {
         FileNameMap fileNameMap = URLConnection.getFileNameMap();
-        String type = fileNameMap.getContentTypeFor(fileName);
-        return type;
+        return fileNameMap.getContentTypeFor(fileName);
     }
 
     /**
@@ -288,13 +283,24 @@ public class OKFileUtil {
      */
     public static boolean isVideoFile(String fileName) {
         String mimeType = getMimeType(fileName);
-        if (!TextUtils.isEmpty(fileName) && mimeType.contains(PREFIX_VIDEO)) {
+        if (!TextUtils.isEmpty(fileName) && !TextUtils.isEmpty(mimeType) && mimeType.contains(PREFIX_VIDEO)) {
             return true;
         }
         return false;
     }
 
-    static int copy(InputStream input, OutputStream output) throws IOException {
+    public static boolean isVideoUrl(String url) {
+        if (TextUtils.isEmpty(url)) return false;
+
+        String name[] = url.split("/");
+        if (name.length == 0) {
+            return false;
+        } else {
+            return isVideoFile(name[name.length - 1]);
+        }
+    }
+
+    public static int copy(InputStream input, OutputStream output) throws IOException {
         long count = copyLarge(input, output);
         if (count > Integer.MAX_VALUE) {
             return -1;
@@ -302,13 +308,11 @@ public class OKFileUtil {
         return (int) count;
     }
 
-    static long copyLarge(InputStream input, OutputStream output)
-            throws IOException {
+    public static long copyLarge(InputStream input, OutputStream output) throws IOException {
         return copyLarge(input, output, new byte[DEFAULT_BUFFER_SIZE]);
     }
 
-    static long copyLarge(InputStream input, OutputStream output, byte[] buffer)
-            throws IOException {
+    public static long copyLarge(InputStream input, OutputStream output, byte[] buffer) throws IOException {
         long count = 0;
         int n;
         while (EOF != (n = input.read(buffer))) {

@@ -105,7 +105,7 @@ public class OKSigNupActivity extends OKBaseActivity {
 
                     showProgressDialog("正在注册账号...");
                 } else {
-                    showSnackbar(v, "注册信息错误", "ErrorMsg :" + errorMsg);
+                    showSnackBar(v, "注册信息错误", "ErrorMsg :" + errorMsg);
                 }
             }
         });
@@ -248,14 +248,14 @@ public class OKSigNupActivity extends OKBaseActivity {
                     mBundle.putString(OKUserInfoBean.KEY_PASSWORD, ImPassWord);
                     sendUserBroadcast(ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM, mBundle);
 
-                    showSnackbar(buttonSigNup, "注册成功", "");
+                    showSnackBar(buttonSigNup, "注册成功", "");
 
                     finish();
                 } else {
-                    showSnackbar(buttonSigNup, "注册失败," + mSignupResultBean.getERROR_INFO() + "已存在!", "");
+                    showSnackBar(buttonSigNup, "注册失败," + mSignupResultBean.getERROR_INFO() + "已存在!", "");
                 }
             } else {
-                showSnackbar(buttonSigNup, "注册失败,服务器错误!", "");
+                showSnackBar(buttonSigNup, "注册失败,服务器错误!", "");
             }
         }
     }

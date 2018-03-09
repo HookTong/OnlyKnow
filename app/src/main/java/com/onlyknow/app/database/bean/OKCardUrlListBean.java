@@ -73,6 +73,8 @@ public class OKCardUrlListBean {
     }
 
     public static List<String> toList(OKCardUrlListBean bean) {
+        if (bean == null) return null;
+
         List<String> listUrl = new ArrayList<>();
 
         if (!TextUtils.isEmpty(bean.getUrlImage1())) {

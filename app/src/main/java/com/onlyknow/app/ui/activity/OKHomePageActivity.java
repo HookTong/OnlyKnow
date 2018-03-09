@@ -192,7 +192,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                         bundle.putString(OKUserInfoBean.KEY_NICKNAME, NICKNAME);
                         startUserActivity(bundle, OKSessionActivity.class);
                     } else {
-                        showSnackbar(v, "您不能与自己建立会话", "");
+                        showSnackBar(v, "您不能与自己建立会话", "");
                     }
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
@@ -220,7 +220,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             @Override
             public void onClick(View view) {
                 if (mBindUserInfoBean == null) {
-                    showSnackbar(mOKRecyclerView, "等一会再看吧!", "");
+                    showSnackBar(mOKRecyclerView, "等一会再看吧!", "");
                     return;
                 }
 
@@ -278,7 +278,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                                 map.put("type", "GUANZHU");
                                 mAttentionTask.executeOnExecutor(exec, map);
                             } else {
-                                showSnackbar(mOKRecyclerView, "您不能关注自己", "");
+                                showSnackBar(mOKRecyclerView, "您不能关注自己", "");
                             }
                         } else {
                             startUserActivity(null, OKLoginActivity.class);
@@ -292,7 +292,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                             bundle.putString("JUBAO_NAME", USERNAME);
                             startUserActivity(bundle, OKRePortActivity.class);
                         } else {
-                            showSnackbar(mOKRecyclerView, "您不能举报自己", "");
+                            showSnackBar(mOKRecyclerView, "您不能举报自己", "");
                         }
                         popWindow.dismiss();
                         break;
@@ -336,7 +336,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             mOKLoadHomeApi.requestCardBeanList(map, false, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(mOKRecyclerView, "请检查用户状态和网络设置!", "");
+            showSnackBar(mOKRecyclerView, "请检查用户状态和网络设置!", "");
         }
     }
 
@@ -551,7 +551,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                 return;
             }
             if (userInfoBean == null) {
-                showSnackbar(mOKRecyclerView, "没有获取到用户信息", "");
+                showSnackBar(mOKRecyclerView, "没有获取到用户信息", "");
                 return;
             }
             mBindUserInfoBean = userInfoBean;
@@ -593,9 +593,9 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             }
             super.onPostExecute(aBoolean);
             if (aBoolean) {
-                showSnackbar(mOKRecyclerView, "已关注该用户", "");
+                showSnackBar(mOKRecyclerView, "已关注该用户", "");
             } else {
-                showSnackbar(mOKRecyclerView, "服务器错误", "ErrorCode: " + OKConstant.SERVICE_ERROR);
+                showSnackBar(mOKRecyclerView, "服务器错误", "ErrorCode: " + OKConstant.SERVICE_ERROR);
             }
         }
 

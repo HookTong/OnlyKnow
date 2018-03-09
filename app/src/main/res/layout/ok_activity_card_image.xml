@@ -212,6 +212,7 @@
                     android:id="@+id/ok_activity_card_image_content_image1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:scaleType="centerCrop"
                     android:layout_gravity="center" />
 
                 <View
@@ -222,6 +223,7 @@
                     android:id="@+id/ok_activity_card_image_content_image2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:scaleType="centerCrop"
                     android:layout_gravity="center" />
 
                 <View
@@ -232,6 +234,7 @@
                     android:id="@+id/ok_activity_card_image_content_image3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:scaleType="centerCrop"
                     android:layout_gravity="center" />
 
                 <View
@@ -242,6 +245,7 @@
                     android:id="@+id/ok_activity_card_image_content_image4"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:scaleType="centerCrop"
                     android:layout_gravity="center" />
 
                 <View
@@ -252,6 +256,7 @@
                     android:id="@+id/ok_activity_card_image_content_image5"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:scaleType="centerCrop"
                     android:layout_gravity="center" />
             </LinearLayout>
 

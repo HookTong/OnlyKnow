@@ -4,14 +4,15 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
+import com.onlyknow.app.utils.OKFileUtil;
+
 import java.io.File;
 
 /**
  * 压缩方法工具类
  * <p>
- * Author: nanchen
- * Email: liushilin520@foxmail.com
- * Date: 2017-03-08  9:03
+ * Author: ReSet
+ * Date: 2018-03-09
  */
 
 public class OKCompressHelper {

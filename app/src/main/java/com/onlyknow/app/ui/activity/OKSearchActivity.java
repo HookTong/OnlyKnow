@@ -130,7 +130,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                 if (!TextUtils.isEmpty(searchEditText.getText().toString())) {
                     mRefreshLayout.autoRefresh();
                 } else {
-                    showSnackbar(searchEditText, "请输入要搜索的信息", "");
+                    showSnackBar(searchEditText, "请输入要搜索的信息", "");
                 }
             }
         });
@@ -173,7 +173,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
             mOKLoadSearchApi.requestSearchBeanList(map, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
-            showSnackbar(searchEditText, "没有网络连接", "");
+            showSnackBar(searchEditText, "没有网络连接", "");
         }
     }
 
@@ -191,7 +191,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
             mOKSearchBeanList.clear();
             OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            showSnackbar(searchEditText, "没有搜索到数据", "");
+            showSnackBar(searchEditText, "没有搜索到数据", "");
         }
         mRefreshLayout.finishRefresh();
     }
@@ -248,7 +248,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                     if (okSearchBean.getType() == OKSearchBean.SEARCH_TYPE.CARD) {
                         OKCardBean bean = okSearchBean.getCardBean();
                         if (bean == null) {
-                            showSnackbar(mOKRecyclerView, "数据错误,无法查看", "");
+                            showSnackBar(mOKRecyclerView, "数据错误,无法查看", "");
                             return;
                         }
                         if (bean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
@@ -273,7 +273,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                     } else if (okSearchBean.getType() == OKSearchBean.SEARCH_TYPE.USER) {
                         OKUserInfoBean bean = okSearchBean.getUserInfoBean();
                         if (bean == null) {
-                            showSnackbar(mOKRecyclerView, "数据错误,无法查看", "");
+                            showSnackBar(mOKRecyclerView, "数据错误,无法查看", "");
                             return;
                         }
                         Bundle mBundle = new Bundle();

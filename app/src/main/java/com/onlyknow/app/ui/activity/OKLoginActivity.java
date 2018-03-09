@@ -73,7 +73,7 @@ public class OKLoginActivity extends OKBaseActivity {
 
                     showProgressDialog("正在登录...");
                 } else {
-                    showSnackbar(v, "用户名和密码不能为空!", "");
+                    showSnackBar(v, "用户名和密码不能为空!", "");
                 }
             }
         });
@@ -143,11 +143,11 @@ public class OKLoginActivity extends OKBaseActivity {
                 mBundle.putString(OKUserInfoBean.KEY_PASSWORD, ImPassWord);
                 sendUserBroadcast(ACTION_MAIN_SERVICE_LOGIN_IM, mBundle);
 
-                showSnackbar(but, "登录成功", "");
+                showSnackBar(but, "登录成功", "");
 
                 finish();
             } else {
-                showSnackbar(but, "登录失败,请检查用户名和密码!", "");
+                showSnackBar(but, "登录失败,请检查用户名和密码!", "");
             }
         }
     }

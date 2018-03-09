@@ -191,7 +191,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
                     bundle.putString("WEB_LINK", map.get("LINK"));
                     startUserActivity(bundle, OKBrowserActivity.class);
                 } else {
-                    showSnackbar(okCollapsingToolbar, "没有发现链接", "");
+                    showSnackBar(okCollapsingToolbar, "没有发现链接", "");
                 }
             }
         });
@@ -357,13 +357,13 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         if (OKNetUtil.isNet(this)) {
             String city_id = USER_INFO_SP.getString("CITY_ID", "");
             if (TextUtils.isEmpty(city_id)) {
-                showSnackbar(okActivityWeatherCollapsingToolbarLayout, "未获取到城市", "");
+                showSnackBar(okActivityWeatherCollapsingToolbarLayout, "未获取到城市", "");
                 return;
             }
             OKLoadWeatherApi mWeatherApi = new OKLoadWeatherApi(this);
             mWeatherApi.requestWeather(city_id, this);
         } else {
-            showSnackbar(okActivityWeatherCollapsingToolbarLayout, "没有网络连接", "");
+            showSnackBar(okActivityWeatherCollapsingToolbarLayout, "没有网络连接", "");
         }
     }
 
@@ -371,7 +371,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
     public void weatherApiComplete(OKWeatherBean weatherBean) {
         if (weatherBean == null) {
             mProgressBar.setVisibility(View.GONE);
-            showSnackbar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
+            showSnackBar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
             return;
         }
         OKWeatherBean.Forecast forecast = weatherBean.data.forecast.get(0);
