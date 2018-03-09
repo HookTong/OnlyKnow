@@ -7,8 +7,6 @@ import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMConversation;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
-import com.onlyknow.app.OKConstant;
-import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKNoticeBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.net.OKBusinessNet;

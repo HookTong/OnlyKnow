@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -297,6 +296,17 @@ public class OKFileUtil {
             return false;
         } else {
             return isVideoFile(name[name.length - 1]);
+        }
+    }
+
+    public static boolean isGifFile(String fileName) {
+        int index = fileName.lastIndexOf(".");
+        if (index == -1) return false;
+        String gs = fileName.substring(index + 1);
+        if ("gif".equalsIgnoreCase(gs)) {
+            return true;
+        } else {
+            return false;
         }
     }
 

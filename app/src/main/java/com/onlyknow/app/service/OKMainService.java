@@ -12,7 +12,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -26,9 +25,9 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.exceptions.HyphenateException;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKCarouselAndAdImageBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.utils.OKCityUtil;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
 import com.onlyknow.app.utils.OKLogUtil;

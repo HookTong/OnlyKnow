@@ -5,10 +5,8 @@ import android.os.AsyncTask;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.net.OKBusinessNet;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 

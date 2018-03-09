@@ -29,8 +29,8 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
 import com.onlyknow.app.R;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
-import com.onlyknow.app.zxing.camera.OKCameraManager;
 import com.onlyknow.app.ui.view.OKViewfinderResultPointCallback;
+import com.onlyknow.app.zxing.camera.OKCameraManager;
 
 import java.util.Vector;
 

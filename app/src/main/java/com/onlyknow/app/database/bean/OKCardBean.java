@@ -3,6 +3,7 @@ package com.onlyknow.app.database.bean;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 

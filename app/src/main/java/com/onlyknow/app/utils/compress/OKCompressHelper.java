@@ -77,7 +77,7 @@ public class OKCompressHelper {
      * @return 压缩后的文件
      */
     public File compressToFile(File file) {
-        if (OKFileUtil.isVideoFile(file.getName())) {
+        if (OKFileUtil.isVideoFile(file.getName()) || OKFileUtil.isGifFile(file.getName())) {
             return file;
         }
 

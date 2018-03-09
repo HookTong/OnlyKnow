@@ -46,10 +46,8 @@ import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEdit;
 import com.onlyknow.app.ui.view.OKCatLoadingView;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKAddVideoIconTransformation;
 import com.onlyknow.app.utils.OKBarTintUtil;
 import com.onlyknow.app.utils.OKBlurTransformation;
-import com.onlyknow.app.utils.OKFileUtil;
 import com.onlyknow.app.utils.OKLunarUtil;
 
 import java.util.Calendar;

@@ -71,7 +71,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OnNavigationItemSelectedListener, OKLoadExploreApi.onCallBack, OKLoadWeatherApi.onCallBack {
+public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OKLoadExploreApi.onCallBack, OKLoadWeatherApi.onCallBack, OnNavigationItemSelectedListener {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fab;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;

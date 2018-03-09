@@ -28,8 +28,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
 import com.onlyknow.app.ui.activity.OKGoodsActivity;

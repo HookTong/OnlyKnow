@@ -14,20 +14,11 @@
 
         <com.dmcbig.mediapicker.views.SEImageView
             android:id="@+id/btn_back"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:layout_gravity="center"
             android:layout_marginLeft="15dp"
             android:background="@drawable/ic_back" />
-
-        <ImageView
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginBottom="20dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/md_white_1000" />
 
         <TextView
             android:id="@+id/bar_title"
@@ -37,7 +28,7 @@
             android:layout_marginLeft="15dp"
             android:text="1/1"
             android:textColor="@color/md_white_1000"
-            android:textSize="16sp" />
+            android:textSize="18sp" />
 
         <View
             android:layout_width="0dp"

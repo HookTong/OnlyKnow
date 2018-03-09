@@ -3,11 +3,9 @@ package com.onlyknow.app.api;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.net.OKBusinessNet;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

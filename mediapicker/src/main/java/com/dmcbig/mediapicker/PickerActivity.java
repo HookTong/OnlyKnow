@@ -28,13 +28,13 @@ import com.dmcbig.mediapicker.adapter.FolderAdapter;
 import com.dmcbig.mediapicker.adapter.MediaGridAdapter;
 import com.dmcbig.mediapicker.bean.FolderBean;
 import com.dmcbig.mediapicker.bean.MediaBean;
-import com.dmcbig.mediapicker.utils.SpacingDecoration;
 import com.dmcbig.mediapicker.data.DataCallback;
 import com.dmcbig.mediapicker.data.ImageLoader;
 import com.dmcbig.mediapicker.data.MediaLoader;
 import com.dmcbig.mediapicker.data.VideoLoader;
 import com.dmcbig.mediapicker.utils.BarTintUtil;
 import com.dmcbig.mediapicker.utils.ScreenUtil;
+import com.dmcbig.mediapicker.utils.SpacingDecoration;
 import com.dmcbig.mediapicker.views.SEImageView;
 
 import java.util.ArrayList;

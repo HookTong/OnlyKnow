@@ -7,7 +7,6 @@ import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.R;
 import com.youth.banner.loader.ImageLoader;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**

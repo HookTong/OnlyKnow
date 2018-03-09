@@ -15,8 +15,8 @@
 
         <com.dmcbig.mediapicker.views.SEImageView
             android:id="@+id/btn_back"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:layout_gravity="center"
             android:layout_marginLeft="15dp"
             android:background="@drawable/ic_back" />
@@ -29,7 +29,7 @@
             android:layout_marginLeft="15dp"
             android:text="@string/select_title"
             android:textColor="@color/md_white_1000"
-            android:textSize="16sp" />
+            android:textSize="18sp" />
 
         <View
             android:layout_width="0dp"
@@ -44,7 +44,7 @@
             android:layout_marginRight="10dp"
             android:text="@string/preview"
             android:textColor="@drawable/text_select"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:visibility="visible" />
     </LinearLayout>
 
@@ -72,11 +72,12 @@
             android:drawablePadding="5dp"
             android:drawableRight="@drawable/text_indicator"
             android:ellipsize="end"
+            android:maxLength="15"
             android:paddingLeft="14dp"
             android:paddingRight="14dp"
             android:text="@string/all_dir_name"
             android:textColor="@color/default_text_color"
-            android:textSize="16sp" />
+            android:textSize="18sp" />
 
         <View
             android:layout_width="0dp"

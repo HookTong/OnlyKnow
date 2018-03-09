@@ -10,12 +10,12 @@
     app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
     <!-- 左侧控件 -->
-
     <com.onlyknow.app.ui.view.OKSEImageView
         android:id="@+id/ok_common_toolbar_back_image"
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_gravity="left"
+        android:layout_marginRight="15dp"
         android:background="@drawable/abc_ic_ab_back_mtrl_am_alpha"
         android:visibility="gone" />
 
@@ -24,7 +24,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
-        android:layout_marginLeft="20dp"
         android:ellipsize="end"
         android:maxLength="15"
         android:maxLines="1"
@@ -34,7 +33,6 @@
         android:visibility="gone" />
 
     <!-- 右侧控件 -->
-
     <com.onlyknow.app.ui.view.OKSEImageView
         android:id="@+id/ok_common_toolbar_menu_image"
         android:layout_width="22dp"
@@ -49,8 +47,17 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_gravity="right"
-        android:layout_marginRight="5dp"
+        android:layout_marginRight="10dp"
         android:background="@drawable/sousuo"
+        android:visibility="gone" />
+
+    <com.onlyknow.app.ui.view.OKSEImageView
+        android:id="@+id/ok_common_toolbar_sendmessage_image"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="right"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/wenzhansend"
         android:visibility="gone" />
 
     <com.onlyknow.app.ui.view.OKSEImageView
@@ -58,7 +65,7 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_gravity="right"
-        android:layout_marginRight="5dp"
+        android:layout_marginRight="10dp"
         android:background="@drawable/bianji"
         android:visibility="gone" />
 
@@ -67,35 +74,8 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_gravity="right"
-        android:layout_marginRight="5dp"
+        android:layout_marginRight="10dp"
         android:background="@drawable/abc_ic_menu_share_mtrl_alpha"
-        android:visibility="gone" />
-
-    <com.onlyknow.app.ui.view.OKSEImageView
-        android:id="@+id/ok_common_toolbar_sendmessage_image"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:layout_gravity="right"
-        android:layout_marginRight="5dp"
-        android:background="@drawable/wenzhansend"
-        android:visibility="gone" />
-
-    <com.onlyknow.app.ui.view.OKSEImageView
-        android:id="@+id/ok_common_toolbar_logout_image"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:layout_gravity="right"
-        android:layout_marginRight="5dp"
-        android:background="@drawable/dengchu"
-        android:visibility="gone" />
-
-    <com.onlyknow.app.ui.view.OKSEImageView
-        android:id="@+id/ok_common_toolbar_addTp_image"
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:layout_gravity="right"
-        android:layout_marginRight="5dp"
-        android:background="@drawable/add_image_white"
         android:visibility="gone" />
 
     <com.onlyknow.app.ui.view.OKSEImageView
@@ -103,8 +83,26 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_gravity="right"
-        android:layout_marginRight="5dp"
+        android:layout_marginRight="10dp"
         android:background="@drawable/ok_add"
+        android:visibility="gone" />
+
+    <com.onlyknow.app.ui.view.OKSEImageView
+        android:id="@+id/ok_common_toolbar_addTp_image"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="right"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/add_image_white"
+        android:visibility="gone" />
+
+    <com.onlyknow.app.ui.view.OKSEImageView
+        android:id="@+id/ok_common_toolbar_logout_image"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="right"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/dengchu"
         android:visibility="gone" />
 
     <ProgressBar
@@ -112,7 +110,7 @@
         android:layout_width="22dp"
         android:layout_height="22dp"
         android:layout_gravity="right"
-        android:layout_marginRight="5dp"
+        android:layout_marginRight="10dp"
         android:indeterminateTint="@color/md_white_1000"
         android:indeterminateTintMode="src_atop"
         android:visibility="gone" />
