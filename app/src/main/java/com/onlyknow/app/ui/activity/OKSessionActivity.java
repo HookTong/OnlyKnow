@@ -33,6 +33,7 @@ import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKFileUtil;
 import com.onlyknow.app.utils.OKMessageReceiveCallBack;
 import com.onlyknow.app.utils.OKMessageSendCallBack;
 import com.scwang.smartrefresh.header.TaurusHeader;
@@ -297,7 +298,12 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             @Override
             public void run() {
                 //imagePath为图片本地路径,false为不发送原图,默认超过100k的图片会压缩后发给对方,需要发送原图传true
-                EMMessage sendMessage = EMMessage.createImageSendMessage(item.path, false, SEND_USER_NAME);
+                EMMessage sendMessage;
+                if (OKFileUtil.isGifFile(item.path)) {
+                    sendMessage = EMMessage.createImageSendMessage(item.path, true, SEND_USER_NAME);
+                } else {
+                    sendMessage = EMMessage.createImageSendMessage(item.path, false, SEND_USER_NAME);
+                }
                 mOKMessageSendCallBack = new OKMessageSendCallBack(EMMessageList, sendMessage, mMsgHandler);
                 sendMessage.setMessageStatusCallback(mOKMessageSendCallBack); // 设置消息发送状态监听
                 sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
