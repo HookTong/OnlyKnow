@@ -28,38 +28,12 @@
                 app:contentScrim="?attr/colorPrimaryDark"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
 
-                <FrameLayout
-                    android:id="@+id/NEAR_header"
+                <com.onlyknow.app.ui.view.OKKenBurnsView
+                    android:id="@+id/NEAR_header_picture_imag"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:fitsSystemWindows="true">
-
-                    <com.onlyknow.app.ui.view.OKKenBurnsView
-                        android:id="@+id/NEAR_header_picture_imag"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_collapseMode="parallax" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/NEAR_toplayout_ganmao_text"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="left"
-                            android:layout_marginLeft="20dp"
-                            android:layout_marginRight="20dp"
-                            android:ellipsize="end"
-                            android:lineSpacingExtra="3dp"
-                            android:lines="4"
-                            android:textColor="@color/white"
-                            android:textSize="18sp" />
-                    </LinearLayout>
-                </FrameLayout>
+                    android:fitsSystemWindows="true"
+                    app:layout_collapseMode="parallax" />
 
                 <include layout="@layout/ok_content_collapsing_toolbar" />
 

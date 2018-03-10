@@ -18,7 +18,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,7 +60,6 @@ import java.util.Map;
 public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener, OKLoadNearApi.onCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fabReGet;
-    private TextView textViewGanMao;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private OKKenBurnsView mHeaderPicture;
     private RefreshLayout mRefreshLayout;
@@ -161,7 +159,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mCollapsingToolbarLayout = (CollapsingToolbarLayout) rootView.findViewById(R.id.NEAR_Toolbar_Layout);
         fabReGet = (FloatingActionButton) rootView.findViewById(R.id.NEAR_fabtop);
         mHeaderPicture = (OKKenBurnsView) rootView.findViewById(R.id.NEAR_header_picture_imag);
-        textViewGanMao = (TextView) rootView.findViewById(R.id.NEAR_toplayout_ganmao_text);
         mRecyclerView = (OKRecyclerView) rootView.findViewById(R.id.ok_content_collapsing_RecyclerView);
         mRefreshLayout = (RefreshLayout) rootView.findViewById(R.id.ok_content_collapsing_refresh);
         mDrawerLayout = (DrawerLayout) rootView.findViewById(R.id.ok_fragment_near_drawerLayout);
@@ -184,7 +181,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
         mHeaderPicture.setUrl(this.getActivity(), OKConstant.getHeadUrls());
-        bindWeatherView();
 
         mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
         mRecyclerView.setAdapter(mCardViewAdapter);
@@ -229,15 +225,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         }));
 
         mRefreshLayout.autoRefresh();
-    }
-
-    private void bindWeatherView() {
-        String strGanMao = WEATHER_SP.getString("GAN_MAO", "");
-        if (!TextUtils.isEmpty(strGanMao)) {
-            textViewGanMao.setText("天气问候语 : \r\n" + strGanMao);
-        } else {
-            textViewGanMao.setText(getText(R.string.moRen_Title));
-        }
     }
 
     @Override

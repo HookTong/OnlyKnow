@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize"
     android:background="@color/md_light_green_500"
+    android:elevation="5dp"
     app:layout_collapseMode="pin"
     app:layout_scrollFlags="scroll|enterAlways"
     app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
@@ -19,6 +20,7 @@
         android:background="@drawable/abc_ic_ab_back_mtrl_am_alpha"
         android:visibility="gone" />
 
+    <!-- 标题 -->
     <TextView
         android:id="@+id/ok_common_toolbar_title_text"
         android:layout_width="wrap_content"

@@ -27,18 +27,12 @@
                 app:contentScrim="?attr/colorPrimaryDark"
                 app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
 
-                <FrameLayout
-                    android:id="@+id/LiShi_header"
+                <com.onlyknow.app.ui.view.OKKenBurnsView
+                    android:id="@+id/LiShi_header_picture_imag"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:fitsSystemWindows="true">
-
-                    <com.onlyknow.app.ui.view.OKKenBurnsView
-                        android:id="@+id/LiShi_header_picture_imag"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        app:layout_collapseMode="parallax" />
-                </FrameLayout>
+                    android:fitsSystemWindows="true"
+                    app:layout_collapseMode="parallax" />
 
                 <include layout="@layout/ok_content_collapsing_toolbar" />
 
