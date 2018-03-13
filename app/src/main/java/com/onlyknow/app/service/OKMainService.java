@@ -107,6 +107,7 @@ public class OKMainService extends OKBaseService {
         }
     };
 
+    // 广播接收器
     private BroadcastReceiver mServiceBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -337,6 +338,7 @@ public class OKMainService extends OKBaseService {
         editor.putString("CITY_ID", CityID);
         editor.putString("DISTRICT", District);
         editor.commit();
+
         // 更新用户地理位置
         if (!TextUtils.isEmpty(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "")) && OKNetUtil.isNet(OKMainService.this)) {
             final Map<String, String> map = new HashMap<>();

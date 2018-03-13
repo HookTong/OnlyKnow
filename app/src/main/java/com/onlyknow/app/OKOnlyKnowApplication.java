@@ -18,10 +18,13 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
+ * OnlyKnow应用基类.
+ * <p>
  * Created by Administrator on 2017/12/8.
  */
 
 public class OKOnlyKnowApplication extends Application {
+
     {
         PlatformConfig.setWeixin("wx967daebe835fbeac", "5bb696d9ccd75a38c8a0bfe0675559b3");
         PlatformConfig.setQQZone("100424468", "c7394704798a158208a74ab60104f0ba");
@@ -35,12 +38,7 @@ public class OKOnlyKnowApplication extends Application {
 
         init();
 
-        startMainService();
-
         fileMkdirs();
-
-        // OKDatabaseHelper helper = OKDatabaseHelper.getHelper(this);
-        // helper.onUpgrade(helper.getWritableDatabase(), helper.getConnectionSource(), 2, 3);
     }
 
     private void init() {
@@ -72,12 +70,6 @@ public class OKOnlyKnowApplication extends Application {
         EMClient.getInstance().setDebugMode(true);
 
         UMShareAPI.get(this);
-    }
-
-    private void startMainService() {
-        Intent intent = new Intent();
-        intent.setClass(this, OKMainService.class);
-        startService(intent);
     }
 
     private void fileMkdirs() {

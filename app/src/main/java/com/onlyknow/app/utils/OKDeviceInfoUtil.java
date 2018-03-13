@@ -1,12 +1,16 @@
 package com.onlyknow.app.utils;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
+import android.support.v4.app.ActivityCompat;
 import android.telephony.TelephonyManager;
 import android.view.WindowManager;
 
@@ -25,7 +29,7 @@ public class OKDeviceInfoUtil {
 	public String getModel() {
 		Build bd = new Build();
 		@SuppressWarnings("static-access")
-        String model = bd.MODEL;
+		String model = bd.MODEL;
 		return model;
 	}
 
@@ -41,12 +45,13 @@ public class OKDeviceInfoUtil {
 	// 获得当前系统年月日
 	public String getTime() {
 		Date now = new Date();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");// ���Է�����޸����ڸ�ʽ
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
 		String shijian = dateFormat.format(now);
 		return shijian;
 	}
 
 	// 获取本机串号imei
+	@SuppressLint("MissingPermission")
 	public String getIMIE() {
 		TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 		return telephonyManager.getDeviceId();

@@ -1,1 +1,1 @@
-include ':app', ':bottom-navigation-bar', ':mediapicker'
+include ':app', ':bottom-navigation-bar', ':mediapicker', ':HiPermission'

@@ -1,14 +1,12 @@
 package com.onlyknow.app.ui.activity;
 
+import android.Manifest;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +22,7 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.database.bean.OKSafetyInfoBean;
 import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.net.OKWebService;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKProgressButton;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -31,19 +30,20 @@ import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKMimeTypeUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import me.weyye.hipermission.HiPermission;
+import me.weyye.hipermission.PermissionCallback;
+import me.weyye.hipermission.PermissionItem;
 import okhttp3.Request;
 
-import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
-import static android.Manifest.permission.ACCESS_FINE_LOCATION;
-import static android.Manifest.permission.CAMERA;
-
-public class OKWelcomeActivity extends OKBaseActivity {
+public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallback {
     @Bind(R.id.ok_activity_welcome_image)
     ImageView okActivityWelcomeImage;
     @Bind(R.id.ok_activity_welcome_log_image)
@@ -55,8 +55,6 @@ public class OKWelcomeActivity extends OKBaseActivity {
     private Handler mHandler = new Handler();
     private long SPLASH_LENGTH = 2000;
 
-    private String mPermission[] = new String[]{CAMERA, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION};
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,40 +64,19 @@ public class OKWelcomeActivity extends OKBaseActivity {
         ButterKnife.bind(this);
         initSettingSharedPreferences();
         bindWelcomeTP();
-        if (ContextCompat.checkSelfPermission(this, mPermission[0]) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{mPermission[0]}, 1); // 请求权限
-        }
-        if (ContextCompat.checkSelfPermission(this, mPermission[1]) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{mPermission[1]}, 1); // 请求权限
-        }
-        if (ContextCompat.checkSelfPermission(this, mPermission[2]) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{mPermission[2]}, 1); // 请求权限
-        }
-        if (OKNetUtil.isNet(this)) { // 版本检查
-            if (mVersionCheckTask != null && mVersionCheckTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mVersionCheckTask.cancel(true);
-            }
-            Map<String, String> map = new HashMap<>();
-            map.put("type", "APP_VERSION_CHECK");
-            map.put("value", OKConstant.APP_VERSION);
-            mVersionCheckTask = new VersionCheckTask();
-            mVersionCheckTask.executeOnExecutor(exec, map);
-        } else { // 无网络直接启动
-            SPLASH_LENGTH += 2000;
-            startMainActivity();
-        }
+
+        checkSelfPermission();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull final String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
-            for (int i = 0; i < grantResults.length; i++) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "权限 " + permissions[i] + " 申请失败,部分功能可能无法正常运行,请在设置中手动开启该权限", Toast.LENGTH_LONG).show();
-                }
-            }
-        }
+    private void checkSelfPermission() {
+        List<PermissionItem> permissionItems = new ArrayList<PermissionItem>();
+        permissionItems.add(new PermissionItem(Manifest.permission.CAMERA, "照相机", R.drawable.permission_ic_camera));
+        permissionItems.add(new PermissionItem(Manifest.permission.ACCESS_FINE_LOCATION, "GPS定位", R.drawable.permission_ic_location));
+        permissionItems.add(new PermissionItem(Manifest.permission.ACCESS_COARSE_LOCATION, "网络定位", R.drawable.permission_ic_location));
+        permissionItems.add(new PermissionItem(Manifest.permission.WRITE_EXTERNAL_STORAGE, "存储数据", R.drawable.permission_ic_storage));
+        permissionItems.add(new PermissionItem(Manifest.permission.READ_EXTERNAL_STORAGE, "读取数据", R.drawable.permission_ic_storage));
+        permissionItems.add(new PermissionItem(Manifest.permission.READ_PHONE_STATE, "设备信息", R.drawable.permission_ic_phone));
+        HiPermission.create(this).permissions(permissionItems).checkMutiPermission(this);
     }
 
     private void bindWelcomeTP() {
@@ -108,15 +85,15 @@ public class OKWelcomeActivity extends OKBaseActivity {
         Random mRandom = new Random();
         int pos = mRandom.nextInt(5) + 1;
         if (pos == 1) {
-            GlideApi(okActivityWelcomeImage, R.drawable.welcome_01, R.drawable.welcome_01, R.drawable.welcome_01);
+            okActivityWelcomeImage.setImageResource(R.drawable.welcome_01);
         } else if (pos == 2) {
-            GlideApi(okActivityWelcomeImage, R.drawable.welcome_02, R.drawable.welcome_02, R.drawable.welcome_02);
+            okActivityWelcomeImage.setImageResource(R.drawable.welcome_02);
         } else if (pos == 3) {
-            GlideApi(okActivityWelcomeImage, R.drawable.welcome_03, R.drawable.welcome_03, R.drawable.welcome_03);
+            okActivityWelcomeImage.setImageResource(R.drawable.welcome_03);
         } else if (pos == 4) {
-            GlideApi(okActivityWelcomeImage, R.drawable.welcome_04, R.drawable.welcome_04, R.drawable.welcome_04);
+            okActivityWelcomeImage.setImageResource(R.drawable.welcome_04);
         } else if (pos == 5) {
-            GlideApi(okActivityWelcomeImage, R.drawable.welcome_05, R.drawable.welcome_05, R.drawable.welcome_05);
+            okActivityWelcomeImage.setImageResource(R.drawable.welcome_05);
         }
     }
 
@@ -127,6 +104,12 @@ public class OKWelcomeActivity extends OKBaseActivity {
                 finish();
             }
         }, SPLASH_LENGTH);
+    }
+
+    private void startMainService() {
+        Intent intent = new Intent();
+        intent.setClass(this, OKMainService.class);
+        startService(intent);
     }
 
     private void showUpdateAppDialog(final OKSafetyInfoBean bean) {
@@ -198,6 +181,48 @@ public class OKWelcomeActivity extends OKBaseActivity {
                 }
             }
         });
+    }
+
+    // 权限申请回调
+    @Override
+    public void onClose() {
+        Toast.makeText(this, "您关闭了权限申请,无法启动应用!", Toast.LENGTH_SHORT).show();
+
+        finish();
+
+        OKLogUtil.print("用户关闭权限申请");
+    }
+
+    @Override
+    public void onFinish() {
+
+        startMainService(); // 启动后台服务
+
+        if (OKNetUtil.isNet(this)) { // 版本检查
+            if (mVersionCheckTask != null && mVersionCheckTask.getStatus() == AsyncTask.Status.RUNNING) {
+                mVersionCheckTask.cancel(true);
+            }
+            Map<String, String> map = new HashMap<>();
+            map.put("type", "APP_VERSION_CHECK");
+            map.put("value", OKConstant.APP_VERSION);
+            mVersionCheckTask = new VersionCheckTask();
+            mVersionCheckTask.executeOnExecutor(exec, map);
+        } else { // 无网络直接启动
+            SPLASH_LENGTH += 2000;
+            startMainActivity();
+        }
+
+        OKLogUtil.print("所有权限申请完成");
+    }
+
+    @Override
+    public void onDeny(String permission, int position) {
+        OKLogUtil.print("HiPermission onDeny");
+    }
+
+    @Override
+    public void onGuarantee(String permission, int position) {
+        OKLogUtil.print("HiPermission onGuarantee");
     }
 
     // app 版本检查
