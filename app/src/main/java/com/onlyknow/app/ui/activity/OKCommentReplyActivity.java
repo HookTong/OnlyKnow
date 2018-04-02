@@ -162,8 +162,13 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
             @Override
             public void onClick(View v) {
-                String MESSAGE = editTextMsg.getText().toString();
-                if (!TextUtils.isEmpty(MESSAGE)) {
+                String Msg = editTextMsg.getText().toString();
+                if (!TextUtils.isEmpty(Msg)) {
+                    if (!USER_INFO_SP.getBoolean("STATE", false)) {
+                        startUserActivity(null, OKLoginActivity.class);
+                        return;
+                    }
+
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
                     String date = dateFormat.format(new Date());
 
@@ -172,7 +177,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                     map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     map.put("username2", "");
                     map.put("card_id", Integer.toString(mCommentBean.getCOM_ID()));
-                    map.put("message", MESSAGE);
+                    map.put("message", Msg);
                     map.put("date", date);
                     map.put("type", "ADD_PINLUN_REPLY");
                     if (mOKUserOperationApi != null) {
@@ -180,6 +185,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                     }
                     mOKUserOperationApi = new OKUserOperationApi(OKCommentReplyActivity.this);
                     mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_SEND_COMMENT_REPLY, OKCommentReplyActivity.this);
+                } else {
+                    showSnackBar(v, "请输入要发送的评论!", "");
                 }
             }
         });

@@ -67,6 +67,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         setContentView(R.layout.ok_activity_comment);
         initUserInfoSharedPreferences();
         initSystemBar(this);
+
         mCardId = getIntent().getExtras().getInt(OKCardBean.KEY_CARD_ID);
 
         findView();
@@ -131,8 +132,12 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
 
             @Override
             public void onClick(View v) {
-                String MESSAGE = editTextMsg.getText().toString();
-                if (!TextUtils.isEmpty(MESSAGE)) {
+                String Msg = editTextMsg.getText().toString();
+                if (!TextUtils.isEmpty(Msg)) {
+                    if (!USER_INFO_SP.getBoolean("STATE", false)) {
+                        startUserActivity(null, OKLoginActivity.class);
+                        return;
+                    }
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
                     String date = dateFormat.format(new Date());
 
@@ -141,14 +146,17 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                     map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     map.put("username2", "");
                     map.put("card_id", Integer.toString(mCardId));
-                    map.put("message", MESSAGE);
+                    map.put("message", Msg);
                     map.put("date", date);
                     map.put("type", "ADD_PINLUN");
+
                     if (mOKUserOperationApi != null) {
                         mOKUserOperationApi.cancelTask();
                     }
                     mOKUserOperationApi = new OKUserOperationApi(OKCommentActivity.this);
                     mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_SEND_COMMENT, OKCommentActivity.this);
+                } else {
+                    showSnackBar(v, "请输入要发送的评论!", "");
                 }
             }
         });
