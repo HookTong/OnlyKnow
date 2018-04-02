@@ -18,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.dmcbig.mediapicker.PickerActivity;
 import com.dmcbig.mediapicker.PickerConfig;
@@ -29,13 +30,15 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKLoadSessionApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKFileUtil;
 import com.onlyknow.app.utils.OKMessageReceiveCallBack;
 import com.onlyknow.app.utils.OKMessageSendCallBack;
+import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
@@ -105,6 +108,13 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_session);
+
+        if (!OKMainService.isEMLogIn || !OKNetUtil.isNet(this)) {
+            Toast.makeText(this, "您未登录聊天服务器,请重新登录账号!", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         initSystemBar(this);
         initUserInfoSharedPreferences();
 
@@ -205,13 +215,13 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                 Map<String, String> map = new HashMap<>();
                 map.put("username", THIS_USER_NAME);
                 map.put("type", "HEAD_PORTRAIT");
-                ME_USER_INFO = new OKBusinessNet().getUserInfo(map);
+                ME_USER_INFO = new OKBusinessApi().getUserInfo(map);
                 THIS_USER_NICKNAME = ME_USER_INFO.getNICKNAME();
 
                 Map<String, String> map2 = new HashMap<>();
                 map2.put("username", SEND_USER_NAME);
                 map2.put("type", "HEAD_PORTRAIT");
-                THE_USER_INFO = new OKBusinessNet().getUserInfo(map2);
+                THE_USER_INFO = new OKBusinessApi().getUserInfo(map2);
                 SEND_USER_NICKNAME = THE_USER_INFO.getNICKNAME();
 
                 mMsgHandler.sendEmptyMessage(UPDATE_SESSION);

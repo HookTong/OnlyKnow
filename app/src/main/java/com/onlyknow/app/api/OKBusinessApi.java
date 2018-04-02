@@ -1,4 +1,4 @@
-package com.onlyknow.app.net;
+package com.onlyknow.app.api;
 
 import android.text.TextUtils;
 
@@ -31,12 +31,12 @@ import static com.onlyknow.app.net.OKWebService.OKHttpApiPostFromFile;
 import static com.onlyknow.app.net.OKWebService.OkHttpApiPost;
 
 /**
- * 所有接口:Ver1.2
+ * 所有业务接口:Ver1.2
  * <p>
  * Created by Administrator on 2017/12/10.
  */
 
-public class OKBusinessNet extends OKBaseApi {
+public class OKBusinessApi extends OKBaseApi {
     private final String IP = "101.132.168.25:8090";
     private final String ExploreCard_URL = "http://" + IP + "/WeiZhiService/ExploreCardInquiry";
     private final String NearCard_URL = "http://" + IP + "/WeiZhiService/NearCardInquiry";

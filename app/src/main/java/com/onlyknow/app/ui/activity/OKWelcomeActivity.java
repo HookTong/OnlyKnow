@@ -19,8 +19,8 @@ import android.widget.Toast;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKSecurityApi;
 import com.onlyknow.app.database.bean.OKSafetyInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
@@ -43,7 +43,7 @@ import me.weyye.hipermission.PermissionCallback;
 import me.weyye.hipermission.PermissionItem;
 import okhttp3.Request;
 
-public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallback {
+public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallback, OKSecurityApi.onCallBack {
     @Bind(R.id.ok_activity_welcome_image)
     ImageView okActivityWelcomeImage;
     @Bind(R.id.ok_activity_welcome_log_image)
@@ -51,7 +51,7 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
     @Bind(R.id.ok_activity_welcome_fastPassLog_image)
     ImageView okActivityWelcomeFastPassLogImage;
 
-    private VersionCheckTask mVersionCheckTask;
+    private OKSecurityApi mOKSecurityApi;
     private Handler mHandler = new Handler();
     private long SPLASH_LENGTH = 2000;
 
@@ -66,6 +66,14 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         bindWelcomeTP();
 
         checkSelfPermission();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mOKSecurityApi != null) {
+            mOKSecurityApi.cancelTask();
+        }
     }
 
     private void checkSelfPermission() {
@@ -199,14 +207,14 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         startMainService(); // 启动后台服务
 
         if (OKNetUtil.isNet(this)) { // 版本检查
-            if (mVersionCheckTask != null && mVersionCheckTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mVersionCheckTask.cancel(true);
+            if (mOKSecurityApi != null) {
+                mOKSecurityApi.cancelTask();
             }
             Map<String, String> map = new HashMap<>();
             map.put("type", "APP_VERSION_CHECK");
             map.put("value", OKConstant.APP_VERSION);
-            mVersionCheckTask = new VersionCheckTask();
-            mVersionCheckTask.executeOnExecutor(exec, map);
+            mOKSecurityApi = new OKSecurityApi(this);
+            mOKSecurityApi.requestSecurityCheck(map, this);
         } else { // 无网络直接启动
             SPLASH_LENGTH += 2000;
             startMainActivity();
@@ -225,41 +233,25 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         OKLogUtil.print("HiPermission onGuarantee");
     }
 
-    // app 版本检查
-    private class VersionCheckTask extends AsyncTask<Map<String, String>, Void, OKSafetyInfoBean> {
-        @Override
-        protected OKSafetyInfoBean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return null;
-            }
-            return new OKBusinessNet().securityCheck(params[0]);
-        }
-
-        @Override
-        protected void onPostExecute(final OKSafetyInfoBean bean) {
-            super.onPostExecute(bean);
-            if (isCancelled()) {
-                startMainActivity();
-                return;
-            }
-            if (bean == null) {
-                startMainActivity();
-                return;
-            }
-            if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
-                // 有新版本
-                if (OKSafetyInfoBean.AVD_IS_MANDATORY.YES.toString().equals(bean.getAVD_IS_MANDATORY())) {
-                    showUpdateAppDialog(bean); // 强制更新
-                    return;
-                } else if (SETTING_SP.getBoolean("AUTO_UPDATE", true)) {
-                    showUpdateAppDialog(bean);
-                    return;
-                }
-            } else {
-                OKLogUtil.print("APP_VERSION_CHECK :已经是最新版本!");
-            }
+    @Override
+    public void securityApiComplete(OKSafetyInfoBean bean) {
+        if (bean == null) {
             startMainActivity();
+            return;
         }
+        if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
+            // 有新版本
+            if (OKSafetyInfoBean.AVD_IS_MANDATORY.YES.toString().equals(bean.getAVD_IS_MANDATORY())) {
+                showUpdateAppDialog(bean); // 强制更新
+                return;
+            } else if (SETTING_SP.getBoolean("AUTO_UPDATE", true)) {
+                showUpdateAppDialog(bean);
+                return;
+            }
+        } else {
+            OKLogUtil.print("APP_VERSION_CHECK :已经是最新版本!");
+        }
+        startMainActivity();
     }
 
     // 下载回调类

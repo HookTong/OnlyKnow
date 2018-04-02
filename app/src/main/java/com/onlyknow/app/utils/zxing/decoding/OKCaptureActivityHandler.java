@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.onlyknow.app.zxing.decoding;
+package com.onlyknow.app.utils.zxing.decoding;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -30,7 +30,7 @@ import com.google.zxing.Result;
 import com.onlyknow.app.R;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
 import com.onlyknow.app.ui.view.OKViewfinderResultPointCallback;
-import com.onlyknow.app.zxing.camera.OKCameraManager;
+import com.onlyknow.app.utils.zxing.camera.OKCameraManager;
 
 import java.util.Vector;
 

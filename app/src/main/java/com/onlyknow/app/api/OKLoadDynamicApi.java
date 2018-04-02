@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +51,12 @@ public class OKLoadDynamicApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
+            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
             List<OKCardBean> dynamicCardList = new ArrayList<>();
             if (isLoadMore) {
-                dynamicCardList = mOKBusinessNet.loadMoreUserCard(params[0]);
+                dynamicCardList = mOKBusinessApi.loadMoreUserCard(params[0]);
             } else {
-                dynamicCardList = mOKBusinessNet.getUserCard(params[0]);
+                dynamicCardList = mOKBusinessApi.getUserCard(params[0]);
             }
             return dynamicCardList;
         }

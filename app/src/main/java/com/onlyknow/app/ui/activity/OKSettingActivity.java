@@ -19,9 +19,10 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKSecurityApi;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKSafetyInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKProgressButton;
@@ -33,7 +34,7 @@ import java.util.Map;
 
 import okhttp3.Request;
 
-public class OKSettingActivity extends OKBaseActivity {
+public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.onCallBack {
     private LinearLayout layoutFontSet, layoutCacheQk, layoutVersionUpdate, layoutVersionJieSao, layoutUserXieYi;
     private LinearLayout layoutYiJianFanKui, layoutDiBuDaoHan, mLinearLayoutAbout;
     private SwitchCompat switchCompat;
@@ -41,7 +42,7 @@ public class OKSettingActivity extends OKBaseActivity {
 
     private int dbpos = 0;
 
-    private SettingTask mSettingTask;
+    private OKSecurityApi mOKSecurityApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +70,8 @@ public class OKSettingActivity extends OKBaseActivity {
     @Override
     public void onPause() {
         super.onPause();
-        if (mSettingTask != null && mSettingTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mSettingTask.cancel(true);
+        if (mOKSecurityApi != null) {
+            mOKSecurityApi.cancelTask();
         }
     }
 
@@ -170,11 +171,11 @@ public class OKSettingActivity extends OKBaseActivity {
                 map.put("type", "APP_VERSION_CHECK");
                 map.put("value", OKConstant.APP_VERSION);
 
-                if (mSettingTask != null && mSettingTask.getStatus() == AsyncTask.Status.RUNNING) {
-                    mSettingTask.cancel(true);
+                if (mOKSecurityApi != null) {
+                    mOKSecurityApi.cancelTask();
                 }
-                mSettingTask = new SettingTask();
-                mSettingTask.executeOnExecutor(exec, map);
+                mOKSecurityApi = new OKSecurityApi(OKSettingActivity.this);
+                mOKSecurityApi.requestSecurityCheck(map, OKSettingActivity.this);
             }
         });
 
@@ -335,6 +336,19 @@ public class OKSettingActivity extends OKBaseActivity {
         });
     }
 
+    @Override
+    public void securityApiComplete(OKSafetyInfoBean bean) {
+        if (bean == null) {
+            showSnackBar(layoutUserXieYi, "检查失败", "");
+            return;
+        }
+        if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
+            showUpdateAppDialog(bean);
+        } else {
+            showSnackBar(layoutUserXieYi, "已经是最新版本!", "");
+        }
+    }
+
     private class SettingTask extends AsyncTask<Map<String, String>, Void, OKSafetyInfoBean> {
 
         @Override
@@ -342,7 +356,7 @@ public class OKSettingActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return null;
             }
-            return new OKBusinessNet().securityCheck(params[0]);
+            return new OKBusinessApi().securityCheck(params[0]);
         }
 
         @Override
@@ -351,15 +365,7 @@ public class OKSettingActivity extends OKBaseActivity {
             if (isCancelled()) {
                 return;
             }
-            if (bean == null) {
-                showSnackBar(layoutUserXieYi, "检查失败", "");
-                return;
-            }
-            if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
-                showUpdateAppDialog(bean);
-            } else {
-                showSnackBar(layoutUserXieYi, "已经是最新版本!", "");
-            }
+
         }
     }
 

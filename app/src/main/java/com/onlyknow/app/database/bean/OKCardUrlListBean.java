@@ -2,6 +2,7 @@ package com.onlyknow.app.database.bean;
 
 import android.text.TextUtils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
  * Created by Administrator on 2018/1/31.
  */
 
-public class OKCardUrlListBean {
+public class OKCardUrlListBean implements Serializable {
 
     private int count = 0;
 

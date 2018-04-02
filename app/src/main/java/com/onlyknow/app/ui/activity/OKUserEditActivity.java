@@ -2,11 +2,8 @@ package com.onlyknow.app.ui.activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.text.TextUtils;
@@ -22,12 +19,10 @@ import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKUserEditApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
-import com.onlyknow.app.utils.OKBase64Util;
-import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKSDCardUtil;
 import com.yalantis.ucrop.UCrop;
 
@@ -38,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKUserEdit extends OKBaseActivity {
+public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.onCallBack {
     private AppCompatButton mButtonCommit;
     private EditText mEditName, mEditPhone, mEditEmail, mEditTag, mEditNian, mEditYue, mEditRi;
     private OKCircleImageView mImageViewTouXian;
@@ -50,7 +45,7 @@ public class OKUserEdit extends OKBaseActivity {
     private String XG_NICKNAME = "", XG_PHONE = "", XG_EMAIL = "", XG_QIANMIN = "", XG_BIRTHDATE = "", XG_SEX = "";
     private String mFilePath;
 
-    private UserEditTask mUserEditTask_HP, mUserEditTask_INFO;
+    private OKUserEditApi mOKUserEditApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,23 +103,13 @@ public class OKUserEdit extends OKBaseActivity {
     @Override
     public void onPause() {
         super.onPause();
-        if (mUserEditTask_INFO != null && mUserEditTask_INFO.getStatus() == AsyncTask.Status.RUNNING) {
-            mUserEditTask_INFO.cancel(true); // 如果线程已经在执行则取消执行
-        }
-
-        if (mUserEditTask_HP != null && mUserEditTask_HP.getStatus() == AsyncTask.Status.RUNNING) {
-            mUserEditTask_HP.cancel(true); // 如果线程已经在执行则取消执行
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mUserEditTask_INFO != null && mUserEditTask_INFO.getStatus() == AsyncTask.Status.RUNNING) {
-            mUserEditTask_INFO.cancel(true);
-        }
-        if (mUserEditTask_HP != null && mUserEditTask_HP.getStatus() == AsyncTask.Status.RUNNING) {
-            mUserEditTask_HP.cancel(true);
+        if (mOKUserEditApi != null) {
+            mOKUserEditApi.cancelTask();
         }
     }
 
@@ -147,20 +132,20 @@ public class OKUserEdit extends OKBaseActivity {
                         showSnackBar(mButtonCommit, "没有URI地址", "");
                         return;
                     }
-                    mFilePath = OKSDCardUtil.getFilePathByImageUri(OKUserEdit.this, resultUri);
+                    mFilePath = OKSDCardUtil.getFilePathByImageUri(OKUserEditActivity.this, resultUri);
                     if (TextUtils.isEmpty(mFilePath)) {
                         showSnackBar(mButtonCommit, "文件路径错误", "");
                         return;
                     }
-                    if (mUserEditTask_HP != null && mUserEditTask_HP.getStatus() == AsyncTask.Status.RUNNING) {
-                        mUserEditTask_HP.cancel(true);
+                    if (mOKUserEditApi != null) {
+                        mOKUserEditApi.cancelTask();
                     }
-                    mUserEditTask_HP = new UserEditTask("UpdateHeadPortrait");
+                    mOKUserEditApi = new OKUserEditApi(this);
                     Map<String, String> params = new HashMap<>();
                     params.put("username", USERNAME);
                     params.put("baseimag", mFilePath);
                     params.put("type", "TOUXIAN");
-                    mUserEditTask_HP.executeOnExecutor(exec, params);
+                    mOKUserEditApi.requestUserEdit(params, OKUserEditApi.TYPE_UPDATE_HEAD_PORTRAIT, this);
                     showProgressDialog("正在上传头像...");
                 }
                 break;
@@ -215,9 +200,6 @@ public class OKUserEdit extends OKBaseActivity {
                 if (TextUtils.isEmpty(XG_SEX)) {
                     XG_SEX = SEX;
                 }
-                if (mUserEditTask_INFO != null && mUserEditTask_INFO.getStatus() == AsyncTask.Status.RUNNING) {
-                    mUserEditTask_INFO.cancel(true);
-                }
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("username", USERNAME);
                 params.put("nickname", XG_NICKNAME);
@@ -226,8 +208,11 @@ public class OKUserEdit extends OKBaseActivity {
                 params.put("qianmin", XG_QIANMIN);
                 params.put("birth", XG_BIRTHDATE);
                 params.put("sex", XG_SEX);
-                mUserEditTask_INFO = new UserEditTask("UpdateEditInfo");
-                mUserEditTask_INFO.executeOnExecutor(exec, params);
+                if (mOKUserEditApi != null) {
+                    mOKUserEditApi.cancelTask();
+                }
+                mOKUserEditApi = new OKUserEditApi(OKUserEditActivity.this);
+                mOKUserEditApi.requestUserEdit(params, OKUserEditApi.TYPE_UPDATE_USER_INFO, OKUserEditActivity.this);
                 showProgressDialog("正在修改资料...");
             }
         });
@@ -236,7 +221,7 @@ public class OKUserEdit extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(OKUserEdit.this, PickerActivity.class);
+                Intent intent = new Intent(OKUserEditActivity.this, PickerActivity.class);
                 intent.putExtra(PickerConfig.SELECT_MODE, PickerConfig.PICKER_IMAGE);//default image and video (Optional)
                 intent.putExtra(PickerConfig.MAX_SELECT_SIZE, 3145728L); //default 180MB (Optional)
                 intent.putExtra(PickerConfig.MAX_SELECT_COUNT, 1);  //default 40 (Optional)
@@ -253,11 +238,6 @@ public class OKUserEdit extends OKBaseActivity {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         USER_INFO_SP.edit().putBoolean("STATE", false).commit();
                         USER_INFO_SP.edit().putBoolean("STATE_CHANGE", true).commit();
-                        OKConstant.clearListCache(INTERFACE_NOTICE);
-                        OKConstant.clearListCache(INTERFACE_DYNAMIC);
-                        OKConstant.clearListCache(INTERFACE_ATTENTION);
-                        OKConstant.clearListCache(INTERFACE_COLLECTION);
-                        OKConstant.clearListCache(INTERFACE_CARD_AND_COMMENT);
                         sendUserBroadcast(ACTION_MAIN_SERVICE_LOGOUT_IM, null);
                         finish();
                     }
@@ -338,83 +318,34 @@ public class OKUserEdit extends OKBaseActivity {
         startUCrop(imageItems.get(0).path, 1, 1);
     }
 
-    private class UserEditTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-
-        private String Type = "";
-
-        public UserEditTask(String type) {
-            this.Type = type;
-        }
-
-        @Override
-        protected Boolean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return false;
-            }
-
-            if (this.Type.equals("UpdateEditInfo")) {
-
-                return new OKBusinessNet().updateUserInfo(params[0]);
-
-            } else if (this.Type.equals("UpdateHeadPortrait")) {
-
-                Map<String, String> map = params[0];
-
-                String filePath = map.get("baseimag");
-
-                BitmapFactory.Options options = new BitmapFactory.Options();
-
-                options.inPurgeable = true;
-
-                options.inSampleSize = 1; // 表示不压缩
-
-                Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
-
-                map.put("baseimag", OKBase64Util.BitmapToBase64(bitmap));
-
-                return new OKBusinessNet().updateHeadPortrait(map);
-            } else {
-                OKLogUtil.print("OKUserEdit 无效的执行类型");
-                return false;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            if (isCancelled()) {
-                return;
-            }
-
-            if (aBoolean) {
-                if (this.Type.equals("UpdateEditInfo")) {
-                    Editor editor = USER_INFO_SP.edit();
-                    editor.putString(OKUserInfoBean.KEY_NICKNAME, XG_NICKNAME);
-                    editor.putString(OKUserInfoBean.KEY_PHONE, XG_PHONE);
-                    editor.putString(OKUserInfoBean.KEY_EMAIL, XG_EMAIL);
-                    editor.putString(OKUserInfoBean.KEY_QIANMIN, XG_QIANMIN);
-                    editor.putString(OKUserInfoBean.KEY_SEX, XG_SEX);
-                    editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, XG_BIRTHDATE);
-                    int age = 0;
-                    if (!TextUtils.isEmpty(XG_BIRTHDATE)) {
-                        String[] items = XG_BIRTHDATE.split("/");
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
-                        age = Integer.parseInt(dateFormat.format(new Date())) - Integer.parseInt(items[0]);
-                    }
-                    editor.putInt(OKUserInfoBean.KEY_AGE, age);
-                    editor.commit();
-
-                    loadData();
-                } else if (this.Type.equals("UpdateHeadPortrait")) {
-                    GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+    @Override
+    public void userEditApiComplete(boolean b, String type) {
+        if (b) {
+            if (type.equals(OKUserEditApi.TYPE_UPDATE_USER_INFO)) {
+                SharedPreferences.Editor editor = USER_INFO_SP.edit();
+                editor.putString(OKUserInfoBean.KEY_NICKNAME, XG_NICKNAME);
+                editor.putString(OKUserInfoBean.KEY_PHONE, XG_PHONE);
+                editor.putString(OKUserInfoBean.KEY_EMAIL, XG_EMAIL);
+                editor.putString(OKUserInfoBean.KEY_QIANMIN, XG_QIANMIN);
+                editor.putString(OKUserInfoBean.KEY_SEX, XG_SEX);
+                editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, XG_BIRTHDATE);
+                int age = 0;
+                if (!TextUtils.isEmpty(XG_BIRTHDATE)) {
+                    String[] items = XG_BIRTHDATE.split("/");
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
+                    age = Integer.parseInt(dateFormat.format(new Date())) - Integer.parseInt(items[0]);
                 }
+                editor.putInt(OKUserInfoBean.KEY_AGE, age);
+                editor.commit();
 
-                showSnackBar(mButtonCommit, "修改成功", "");
-            } else {
-                showSnackBar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
+                loadData();
+            } else if (type.equals(OKUserEditApi.TYPE_UPDATE_HEAD_PORTRAIT)) {
+                GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
             }
-
-            closeProgressDialog();
+            showSnackBar(mButtonCommit, "修改成功", "");
+        } else {
+            showSnackBar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
         }
+        closeProgressDialog();
     }
 }

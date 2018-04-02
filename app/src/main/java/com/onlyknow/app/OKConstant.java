@@ -16,7 +16,7 @@ import java.util.Map;
 * */
 
 public class OKConstant {
-    public final static String APP_VERSION = "2.0.8"; // app版本号
+    public final static String APP_VERSION = "2.0.9"; // app版本号
 
     // 广播动作
     public final static String ACTION_UPDATE_CAROUSE_AND_AD_IMAGE = "com.onlyknow.app.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE";
@@ -157,49 +157,6 @@ public class OKConstant {
             AD_IMAGE_AND_LINK_LIST_URL.addAll(list);
             EXPLORE_AD_DATA_CHANGED = true;
         }
-    }
-
-    // 数据副本
-    private final static LruCache<String, List> BEAN_LIST_CACHE = new LruCache<>((int) (Runtime.getRuntime().maxMemory() / 1024) / 6);
-
-    public final static List getListCache(int interfaceType) {
-        String key = Integer.toString(interfaceType);
-        if (BEAN_LIST_CACHE.get(key) == null) {
-            return new ArrayList();
-        }
-        return BEAN_LIST_CACHE.get(key);
-    }
-
-    public final static void putListCache(int interfaceType, List list) {
-        if (list == null) {
-            return;
-        }
-        String key = Integer.toString(interfaceType);
-        List sourceList = BEAN_LIST_CACHE.get(key);
-        if (sourceList == null) {
-            sourceList = new ArrayList();
-        }
-        sourceList.clear();
-        sourceList.addAll(list);
-        BEAN_LIST_CACHE.put(key, sourceList);
-    }
-
-    public final static void removeListCache(int interfaceType, int position) {
-        String key = Integer.toString(interfaceType);
-        List sourceList = BEAN_LIST_CACHE.get(key);
-        if (sourceList == null || position >= sourceList.size()) {
-            return;
-        }
-        sourceList.remove(position);
-    }
-
-    public final static void clearListCache(int interfaceType) {
-        String key = Integer.toString(interfaceType);
-        List sourceList = BEAN_LIST_CACHE.get(key);
-        if (sourceList == null) {
-            return;
-        }
-        sourceList.clear();
     }
 
     public final static String getNowDateByString() {

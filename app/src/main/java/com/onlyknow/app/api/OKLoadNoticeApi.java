@@ -9,7 +9,6 @@ import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.database.bean.OKNoticeBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -107,7 +106,7 @@ public class OKLoadNoticeApi extends OKBaseApi {
             Map<String, String> map = new HashMap<>();// 请求参数
             map.put("username", userName);
             map.put("type", "HEAD_PORTRAIT");
-            return new OKBusinessNet().getUserInfo(map);
+            return new OKBusinessApi().getUserInfo(map);
         }
 
         @Override

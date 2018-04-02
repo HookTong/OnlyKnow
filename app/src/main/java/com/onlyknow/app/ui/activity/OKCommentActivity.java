@@ -4,7 +4,6 @@ import android.app.ActionBar.LayoutParams;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,11 +23,12 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKCommentPraiseApi;
 import com.onlyknow.app.api.OKLoadCommentApi;
+import com.onlyknow.app.api.OKUserOperationApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKCommentBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -48,7 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKCommentActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadCommentApi.onCallBack {
+public class OKCommentActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadCommentApi.onCallBack, OKUserOperationApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private CommentCardViewAdapter mCommentCardViewAdapter;
@@ -57,7 +57,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
 
     private OKLoadCommentApi mOKLoadCommentApi;
     private List<OKCommentBean> mCommentBeanList = new ArrayList<>();
-    private SendCommentTask mSendCommentTask;
+    private OKUserOperationApi mOKUserOperationApi;
 
     private int mCardId;
 
@@ -94,8 +94,8 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         if (mOKLoadCommentApi != null) {
             mOKLoadCommentApi.cancelTask();
         }
-        if (mSendCommentTask != null && mSendCommentTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mSendCommentTask.cancel(true); // 如果线程已经在执行则取消执行
+        if (mOKUserOperationApi != null) {
+            mOKUserOperationApi.cancelTask(); // 如果线程已经在执行则取消执行
         }
         if (mCommentCardViewAdapter != null) {
             mCommentCardViewAdapter.cancelTask();
@@ -137,8 +137,6 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                     String date = dateFormat.format(new Date());
 
                     mToolBarProgressBar.setVisibility(View.VISIBLE);
-
-                    mSendCommentTask = new SendCommentTask();
                     Map<String, String> map = new HashMap<>();// 请求参数
                     map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     map.put("username2", "");
@@ -146,7 +144,11 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                     map.put("message", MESSAGE);
                     map.put("date", date);
                     map.put("type", "ADD_PINLUN");
-                    mSendCommentTask.executeOnExecutor(exec, map);
+                    if (mOKUserOperationApi != null) {
+                        mOKUserOperationApi.cancelTask();
+                    }
+                    mOKUserOperationApi = new OKUserOperationApi(OKCommentActivity.this);
+                    mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_SEND_COMMENT, OKCommentActivity.this);
                 }
             }
         });
@@ -224,10 +226,27 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         }
     }
 
-    private class CommentCardViewAdapter extends RecyclerView.Adapter<CommentCardViewAdapter.CommentViewHolder> {
+    @Override
+    public void userOperationApiComplete(boolean isSuccess, String type) {
+        mToolBarProgressBar.setVisibility(View.GONE);
+        if (isSuccess) {
+            editTextMsg.setText("");
+            if (mCommentBeanList.size() == 0) {
+                mRefreshLayout.autoRefresh();
+            } else {
+                mRefreshLayout.autoLoadMore();
+            }
+            showSnackBar(mOKRecyclerView, "发送成功", "");
+        } else {
+            showSnackBar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);
+        }
+    }
+
+    private class CommentCardViewAdapter extends RecyclerView.Adapter<CommentCardViewAdapter.CommentViewHolder> implements OKCommentPraiseApi.onCallBack {
         private Context mContext;
         private List<OKCommentBean> mBeanList;
-        private CommentTask mCommentTask;
+        private OKCommentPraiseApi mOKCommentPraiseApi;
+        private CommentViewHolder viewHolder;
 
         public CommentCardViewAdapter(Context context, List<OKCommentBean> list) {
             this.mContext = context;
@@ -279,6 +298,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                     }
 
                     if (!bean.IS_ZAN()) {
+                        viewHolder = mCommentViewHolder;
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
                         String date = dateFormat.format(new Date());
 
@@ -287,8 +307,10 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
                         param.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                         param.put("type", "COMMENT_EDIT");
                         param.put("date", date);
-                        mCommentTask = new CommentTask(mCommentViewHolder, position);
-                        mCommentTask.executeOnExecutor(exec, param); // 并行执行线程
+
+                        cancelTask();
+                        mOKCommentPraiseApi = new OKCommentPraiseApi(OKCommentActivity.this);
+                        mOKCommentPraiseApi.requestCommentPraiseApi(param, position, CommentCardViewAdapter.this); // 并行执行线程
                     } else {
                         showSnackBar(v, "您已点过赞了", "");
                     }
@@ -390,8 +412,8 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         public void cancelTask() {
-            if (mCommentTask != null && mCommentTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mCommentTask.cancel(true); // 如果线程已经在执行则取消执行
+            if (mOKCommentPraiseApi != null) {
+                mOKCommentPraiseApi.cancelTask(); // 如果线程已经在执行则取消执行
             }
         }
 
@@ -409,6 +431,28 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         @Override
         public int getItemCount() {
             return mBeanList.size();
+        }
+
+        @Override
+        public void commentPraiseApiComplete(boolean isSuccess, int pos) {
+            if (viewHolder == null || viewHolder.getListPosition() != pos) return;
+
+            if (isSuccess) {
+                OKCommentBean mCommentBean = getCommentBean(pos);
+                if (mCommentBean == null) {
+                    return;
+                }
+
+                mCommentBean.setZAN_NUM(mCommentBean.getZAN_NUM() + 1);
+                mCommentBean.setIS_ZAN(true);
+                mBeanList.set(pos, mCommentBean);
+
+                GlideApi(viewHolder.mImageViewZ, R.drawable.comment_red_zan, R.drawable.comment_red_zan, R.drawable.comment_red_zan);
+                viewHolder.mTextViewZ.setText("" + mCommentBean.getZAN_NUM());
+                viewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
+            } else {
+                showSnackBar(viewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
+            }
         }
 
         class CommentViewHolder extends RecyclerView.ViewHolder {
@@ -436,81 +480,6 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
 
             public int getListPosition() {
                 return position;
-            }
-        }
-
-        class CommentTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-            private CommentViewHolder mCommentViewHolder;
-            private int mPosition;
-
-            public CommentTask(CommentViewHolder viewHolder, int pos) {
-                mCommentViewHolder = viewHolder;
-                mPosition = pos;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                super.onPostExecute(aBoolean);
-                if (isCancelled() || (mCommentViewHolder.getListPosition() != mPosition)) {
-                    return;
-                }
-                if (aBoolean) {
-                    OKCommentBean mCommentBean = getCommentBean(mPosition);
-                    if (mCommentBean == null) {
-                        return;
-                    }
-
-                    mCommentBean.setZAN_NUM(mCommentBean.getZAN_NUM() + 1);
-                    mCommentBean.setIS_ZAN(true);
-                    mBeanList.set(mPosition, mCommentBean);
-
-                    GlideApi(mCommentViewHolder.mImageViewZ, R.drawable.comment_red_zan, R.drawable.comment_red_zan, R.drawable.comment_red_zan);
-                    mCommentViewHolder.mTextViewZ.setText("" + mCommentBean.getZAN_NUM());
-                    mCommentViewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
-                } else {
-                    showSnackBar(mCommentViewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
-                }
-            }
-
-            @Override
-            protected Boolean doInBackground(Map<String, String>... params) {
-                if (isCancelled()) {
-                    return false;
-                }
-
-                OKBusinessNet mWebApi = new OKBusinessNet();
-                return mWebApi.editCommentPraise(params[0]);
-            }
-        }
-    }
-
-    private class SendCommentTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-
-        @Override
-        protected Boolean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return false;
-            }
-            return new OKBusinessNet().updateCardInfo(params[0]);
-        }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            if (isCancelled()) {
-                return;
-            }
-            mToolBarProgressBar.setVisibility(View.GONE);
-            if (aBoolean) {
-                editTextMsg.setText("");
-                if (mCommentBeanList.size() == 0) {
-                    mRefreshLayout.autoRefresh();
-                } else {
-                    mRefreshLayout.autoLoadMore();
-                }
-                showSnackBar(mOKRecyclerView, "发送成功", "");
-            } else {
-                showSnackBar(mOKRecyclerView, "发送失败", "ErrorCode :" + OKConstant.COMMENT_ERROR);
             }
         }
     }

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.hyphenate.chat.EMClient;
 import com.onlyknow.app.OKConstant;
@@ -20,6 +21,7 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKLoadNoticeApi;
 import com.onlyknow.app.database.bean.OKNoticeBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.utils.OKNetUtil;
@@ -44,6 +46,13 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_notice);
+
+        if (!OKMainService.isEMLogIn || !OKNetUtil.isNet(this)) {
+            Toast.makeText(this, "您未登录聊天服务器,请重新登录账号!", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         initSystemBar(this);
         initUserInfoSharedPreferences();
 
@@ -147,7 +156,6 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
         if (list != null && list.size() != 0) {
             mNoticeBeanList.clear();
             mNoticeBeanList.addAll(list);
-            OKConstant.putListCache(INTERFACE_NOTICE, mNoticeBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
             mRefreshLayout.finishRefresh();
         } else {
@@ -210,7 +218,6 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
                                     }.start();
 
                                     mBeanList.remove(position);
-                                    OKConstant.removeListCache(INTERFACE_NOTICE, position);
                                     mOKRecyclerView.getAdapter().notifyDataSetChanged();
                                 }
                             });

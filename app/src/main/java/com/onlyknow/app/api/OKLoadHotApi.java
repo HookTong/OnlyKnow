@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.List;
 import java.util.Map;
@@ -48,8 +47,8 @@ public class OKLoadHotApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
-            return mOKBusinessNet.getHotCard(params[0]);
+            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
+            return mOKBusinessApi.getHotCard(params[0]);
         }
 
         @Override

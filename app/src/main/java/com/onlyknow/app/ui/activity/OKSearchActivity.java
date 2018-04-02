@@ -182,14 +182,12 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
         if (list != null) {
             mOKSearchBeanList.clear();
             mOKSearchBeanList.addAll(list);
-            OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
 
             mSearchMsg = "";
             searchEditText.setText("");
         } else {
             mOKSearchBeanList.clear();
-            OKConstant.putListCache(INTERFACE_SEARCH, mOKSearchBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
             showSnackBar(searchEditText, "没有搜索到数据", "");
         }
@@ -254,20 +252,17 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                         if (bean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                             Bundle bundle = new Bundle();
                             bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_SEARCH);
-                            bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                            bundle.putInt(INTENT_KEY_LIST_CARD_ID, bean.getCARD_ID());
+                            bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, bean);
                             startUserActivity(bundle, OKCardTWActivity.class);
                         } else if (bean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                             Bundle bundle = new Bundle();
                             bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_SEARCH);
-                            bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                            bundle.putInt(INTENT_KEY_LIST_CARD_ID, bean.getCARD_ID());
+                            bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, bean);
                             startUserActivity(bundle, OKCardTPActivity.class);
                         } else if (bean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                             Bundle bundle = new Bundle();
                             bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_SEARCH);
-                            bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                            bundle.putInt(INTENT_KEY_LIST_CARD_ID, bean.getCARD_ID());
+                            bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, bean);
                             startUserActivity(bundle, OKCardWZActivity.class);
                         }
                     } else if (okSearchBean.getType() == OKSearchBean.SEARCH_TYPE.USER) {

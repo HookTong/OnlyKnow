@@ -29,7 +29,7 @@ import android.view.View;
 
 import com.google.zxing.ResultPoint;
 import com.onlyknow.app.R;
-import com.onlyknow.app.zxing.camera.OKCameraManager;
+import com.onlyknow.app.utils.zxing.camera.OKCameraManager;
 
 import java.util.Collection;
 import java.util.HashSet;

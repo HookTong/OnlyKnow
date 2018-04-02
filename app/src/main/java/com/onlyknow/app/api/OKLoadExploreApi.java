@@ -6,7 +6,6 @@ import android.os.AsyncTask;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.sql.SQLException;
@@ -24,7 +23,6 @@ public class OKLoadExploreApi extends OKBaseApi {
     private onCallBack mOnCallBack;
     private Context context;
     private LoadCardListTask mLoadCardListTask;
-    private boolean isLoadMore = false;
 
     public OKLoadExploreApi(Context con) {
         this.context = con;
@@ -34,12 +32,15 @@ public class OKLoadExploreApi extends OKBaseApi {
         void exploreApiComplete(List<OKCardBean> list);
     }
 
-    public void requestCardBeanList(Map<String, String> param, boolean isLoad, onCallBack mCallBack) {
-        this.isLoadMore = isLoad;
+    public void requestCardBeanList(Map<String, String> param, List<OKCardBean> source, boolean isLoadMore, onCallBack mCallBack) {
         this.mOnCallBack = mCallBack;
+        Params mParams = new Params();
+        mParams.setReqMap(param);
+        mParams.setSource(source);
+        mParams.setLoadMore(isLoadMore);
         cancelTask();
         mLoadCardListTask = new LoadCardListTask();
-        mLoadCardListTask.executeOnExecutor(exec, param);
+        mLoadCardListTask.executeOnExecutor(exec, mParams);
     }
 
     public void cancelTask() {
@@ -48,32 +49,31 @@ public class OKLoadExploreApi extends OKBaseApi {
         }
     }
 
-    private class LoadCardListTask extends AsyncTask<Map<String, String>, Void, List<OKCardBean>> {
+    private class LoadCardListTask extends AsyncTask<Params, Void, List<OKCardBean>> {
 
         @Override
-        protected List<OKCardBean> doInBackground(Map<String, String>... params) {
+        protected List<OKCardBean> doInBackground(Params... params) {
             if (isCancelled()) {
                 return null;
             }
+            Params mParams = params[0];
             List<OKCardBean> exploreCardList = new ArrayList<>();
             if (OKNetUtil.isNet(context)) {
-                OKBusinessNet mOKBusinessNet = new OKBusinessNet();
-                exploreCardList = mOKBusinessNet.getExploreCard(params[0]);
+                OKBusinessApi mOKBusinessApi = new OKBusinessApi();
+                exploreCardList = mOKBusinessApi.getExploreCard(mParams.getReqMap());
             } else {
                 exploreCardList = getDBCard(OKConstant.EXPLORE_COUNT);
             }
-            if (!isLoadMore) {
-                return exploreCardList;
-            } else {
-                return cardBeanListSorting(exploreCardList);// 去重复
+            if (mParams.isLoadMore()) {
+                return cardBeanListSorting(exploreCardList, mParams.getSource());
             }
+            return exploreCardList;
         }
 
-        private List<OKCardBean> cardBeanListSorting(List<OKCardBean> aims) {
-            if (OKConstant.getListCache(INTERFACE_EXPLORE) == null) {
+        private List<OKCardBean> cardBeanListSorting(List<OKCardBean> aims, List<OKCardBean> source) {
+            if (source == null) {
                 return aims;
             }
-            List<OKCardBean> source = OKConstant.getListCache(INTERFACE_EXPLORE);
             for (int i = 0; i < source.size(); i++) {
                 OKCardBean sourceBean = source.get(i);
                 for (int p = 0; p < aims.size(); p++) {
@@ -108,6 +108,36 @@ public class OKLoadExploreApi extends OKBaseApi {
 
             super.onPostExecute(okCardBeen);
             mOnCallBack.exploreApiComplete(okCardBeen);
+        }
+    }
+
+    private class Params {
+        Map<String, String> reqMap;
+        List<OKCardBean> source;
+        boolean isLoadMore = false;
+
+        public Map<String, String> getReqMap() {
+            return reqMap;
+        }
+
+        public void setReqMap(Map<String, String> reqMap) {
+            this.reqMap = reqMap;
+        }
+
+        public List<OKCardBean> getSource() {
+            return source;
+        }
+
+        public void setSource(List<OKCardBean> source) {
+            this.source = source;
+        }
+
+        public boolean isLoadMore() {
+            return isLoadMore;
+        }
+
+        public void setLoadMore(boolean loadMore) {
+            isLoadMore = loadMore;
         }
     }
 }

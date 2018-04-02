@@ -3,6 +3,7 @@ package com.onlyknow.app.ui.activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,25 +19,20 @@ import com.dmcbig.mediapicker.bean.MediaBean;
 import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKArticleApi;
 import com.onlyknow.app.database.bean.OKCardBase64ListBean;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKLogUtil;
-import com.onlyknow.app.utils.compress.OKCompressHelper;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class OKArticleReleaseActivity extends OKBaseActivity {
+public class OKArticleReleaseActivity extends OKBaseActivity implements OKArticleApi.onCallBack {
     @Bind(R.id.RELEASE_input_zhengwentupian1)
     OKSEImageView mAddImage1;
     @Bind(R.id.RELEASE_clear1_imag)
@@ -66,7 +62,7 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
 
     private OKCardBase64ListBean mOKCardBase64ListBean = new OKCardBase64ListBean();
 
-    private ArticleTask mArticleTask;
+    private OKArticleApi mOKArticleApi;
 
     private final int TAG_UPLOAD = 1010;
     private final int TAG_NORMAL = 1011;
@@ -97,8 +93,8 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mArticleTask.cancel(true);
+        if (mOKArticleApi != null) {
+            mOKArticleApi.cancelTask();
         }
     }
 
@@ -174,11 +170,11 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                     mCardBean.setCONTENT_TEXT(mEditContent.getText().toString());
                     mCardBean.setLABELLING(mEditTag.getText().toString());
                     mCardBean.setCREATE_DATE(OKConstant.getNowDateByString());
-                    if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
-                        mArticleTask.cancel(true);
+                    if (mOKArticleApi != null) {
+                        mOKArticleApi.cancelTask();
                     }
-                    mArticleTask = new ArticleTask(mOKCardBase64ListBean);
-                    mArticleTask.executeOnExecutor(exec, mCardBean);
+                    mOKArticleApi = new OKArticleApi(OKArticleReleaseActivity.this);
+                    mOKArticleApi.requestPublishArticle(mCardBean, mOKCardBase64ListBean, OKArticleReleaseActivity.this);
                     mToolbarSend.setTag(R.id.uploadButton, TAG_UPLOAD);
                     showProgressDialog("正在上传文章...");
                 } else {
@@ -190,11 +186,11 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
                         mCardBean.setCARD_TYPE(CARD_TYPE_TP);
                         mCardBean.setCONTENT_IMAGE_URL(new Gson().toJson(mOKCardBase64ListBean));
                         mCardBean.setCREATE_DATE(OKConstant.getNowDateByString());
-                        if (mArticleTask != null && mArticleTask.getStatus() == AsyncTask.Status.RUNNING) {
-                            mArticleTask.cancel(true);
+                        if (mOKArticleApi != null) {
+                            mOKArticleApi.cancelTask();
                         }
-                        mArticleTask = new ArticleTask(mOKCardBase64ListBean);
-                        mArticleTask.executeOnExecutor(exec, mCardBean);
+                        mOKArticleApi = new OKArticleApi(OKArticleReleaseActivity.this);
+                        mOKArticleApi.requestPublishArticle(mCardBean, mOKCardBase64ListBean, OKArticleReleaseActivity.this);
                         mToolbarSend.setTag(R.id.uploadButton, TAG_UPLOAD);
                         showProgressDialog("正在上传图片...");
                     } else {
@@ -454,122 +450,24 @@ public class OKArticleReleaseActivity extends OKBaseActivity {
         }
     }
 
-    private class ArticleTask extends AsyncTask<OKCardBean, Void, Boolean> {
-        private OKCardBase64ListBean imageListBean; // 选择的图片视频
-
-        public ArticleTask(OKCardBase64ListBean bean) {
-            this.imageListBean = bean;
+    @Override
+    public void articleApiComplete(boolean isSuccess) {
+        if (isSuccess) {
+            mEditTitle.setText("##");
+            mEditTag.setText("##");
+            mEditLink.setText("##");
+            mEditContent.setText("##");
+            SharedPreferences.Editor editor = ARTICLE_SP.edit();
+            editor.putString("TAG", "##");
+            editor.putString("TITLE", "##");
+            editor.putString("LINK", "##");
+            editor.putString("CONTENT", "##");
+            editor.commit();
+            showSnackBar(mToolbarAddImage, "上传成功", "");
+        } else {
+            showSnackBar(mToolbarAddImage, "上传失败", "");
         }
-
-        @Override
-        protected Boolean doInBackground(OKCardBean... params) {
-            if (isCancelled()) {
-                return false;
-            }
-
-            OKCardBean mCardBean = params[0]; // 文章文字内容Bean
-            Map<String, String> map = new HashMap<>(); // 文章文字内容参数
-
-            map.put("username", mCardBean.getUSER_NAME());
-            map.put("title", mCardBean.getTITLE_TEXT()); // 弃用参数,用户昵称
-            map.put("title_image_url", mCardBean.getTITLE_IMAGE_URL()); // 弃用参数,用户头像url
-            map.put("type", mCardBean.getCARD_TYPE());
-            map.put("content_title", mCardBean.getCONTENT_TITLE_TEXT());
-            map.put("labelling", mCardBean.getLABELLING());
-            map.put("content_text", mCardBean.getCONTENT_TEXT());
-            map.put("link", mCardBean.getMESSAGE_LINK());
-            map.put("date", mCardBean.getCREATE_DATE());
-            map.put("content_image", ""); // 弃用参数,用户选择的图片
-
-            Map<String, File> mFileMap = new HashMap<>(); // 文章图片视频参数
-            if (imageListBean.getCount() != 0) {
-                String mImage1Path = imageListBean.getBaseImage1();
-                if (!TextUtils.isEmpty(mImage1Path)) {
-                    File file = new File(mImage1Path);
-                    if (file.exists()) {
-                        OKLogUtil.print("old1 File Size :" + file.length());
-                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
-                        OKLogUtil.print("new1 File Size :" + fileNew.length());
-                        // 生成服务器文件名,并添加到Map参数中!
-                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage1();
-                        mFileMap.put(newFileName, fileNew);
-                    }
-                }
-                String mImage2Path = imageListBean.getBaseImage2();
-                if (!TextUtils.isEmpty(mImage2Path)) {
-                    File file = new File(mImage2Path);
-                    if (file.exists()) {
-                        OKLogUtil.print("old2 File Size :" + file.length());
-                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
-                        OKLogUtil.print("new2 File Size :" + fileNew.length());
-                        // 生成服务器文件名,并添加到Map参数中!
-                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage2();
-                        mFileMap.put(newFileName, fileNew);
-                    }
-                }
-                String mImage3Path = imageListBean.getBaseImage3();
-                if (!TextUtils.isEmpty(mImage3Path)) {
-                    File file = new File(mImage3Path);
-                    if (file.exists()) {
-                        OKLogUtil.print("old3 File Size :" + file.length());
-                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
-                        OKLogUtil.print("new3 File Size :" + fileNew.length());
-                        // 生成服务器文件名,并添加到Map参数中!
-                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage3();
-                        mFileMap.put(newFileName, fileNew);
-                    }
-                }
-                String mImage4Path = imageListBean.getBaseImage4();
-                if (!TextUtils.isEmpty(mImage4Path)) {
-                    File file = new File(mImage4Path);
-                    if (file.exists()) {
-                        OKLogUtil.print("old4 File Size :" + file.length());
-                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
-                        OKLogUtil.print("new4 File Size :" + fileNew.length());
-                        // 生成服务器文件名,并添加到Map参数中!
-                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage4();
-                        mFileMap.put(newFileName, fileNew);
-                    }
-                }
-                String mImage5Path = imageListBean.getBaseImage5();
-                if (!TextUtils.isEmpty(mImage5Path)) {
-                    File file = new File(mImage5Path);
-                    if (file.exists()) {
-                        OKLogUtil.print("old5 File Size :" + file.length());
-                        File fileNew = new OKCompressHelper.Builder(OKArticleReleaseActivity.this).setQuality(80).build().compressToFile(file);
-                        OKLogUtil.print("new5 File Size :" + fileNew.length());
-                        // 生成服务器文件名,并添加到Map参数中!
-                        String newFileName = mCardBean.getUSER_NAME() + "_" + UUID.randomUUID().toString().replaceAll("-", "") + "." + imageListBean.getFormatImage5();
-                        mFileMap.put(newFileName, fileNew);
-                    }
-                }
-            }
-            return new OKBusinessNet().addUserCard(mFileMap, map);
-        }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            if (isCancelled()) {
-                return;
-            }
-            if (aBoolean) {
-                mEditTitle.setText("##");
-                mEditTag.setText("##");
-                mEditLink.setText("##");
-                mEditContent.setText("##");
-                Editor editor = ARTICLE_SP.edit();
-                editor.putString("TAG", "##");
-                editor.putString("TITLE", "##");
-                editor.putString("LINK", "##");
-                editor.putString("CONTENT", "##");
-                editor.commit();
-                showSnackBar(mToolbarAddImage, "上传成功", "");
-            } else {
-                showSnackBar(mToolbarAddImage, "上传失败", "");
-            }
-            mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
-            closeProgressDialog();
-        }
+        mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
+        closeProgressDialog();
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.onlyknow.app.zxing.decoding;
+package com.onlyknow.app.utils.zxing.decoding;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,8 +30,8 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.onlyknow.app.R;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
-import com.onlyknow.app.zxing.camera.OKCameraManager;
-import com.onlyknow.app.zxing.camera.OKPlanarYUVLuminanceSource;
+import com.onlyknow.app.utils.zxing.camera.OKCameraManager;
+import com.onlyknow.app.utils.zxing.camera.OKPlanarYUVLuminanceSource;
 
 import java.util.Hashtable;
 

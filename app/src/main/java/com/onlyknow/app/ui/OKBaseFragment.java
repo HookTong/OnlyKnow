@@ -43,7 +43,7 @@ import com.onlyknow.app.ui.activity.OKGanKActivity;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
-import com.onlyknow.app.ui.activity.OKUserEdit;
+import com.onlyknow.app.ui.activity.OKUserEditActivity;
 import com.onlyknow.app.ui.view.OKCatLoadingView;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKBarTintUtil;
@@ -95,8 +95,6 @@ public class OKBaseFragment extends Fragment {
     public final String CARD_TYPE_WZ = OKCardBean.CardType.TEXT.toString();
 
     public SharedPreferences USER_INFO_SP, SETTING_SP, WEATHER_SP, ARTICLE_SP;
-
-    public final ExecutorService exec = Executors.newFixedThreadPool(100);
 
     // toolbar控件
     public Toolbar mToolbar;
@@ -171,7 +169,7 @@ public class OKBaseFragment extends Fragment {
                     case R.id.POP_LOGIN_LAYOU:
                         if (initUserInfoSharedPreferences().getBoolean("STATE", false)) {
                             Intent intent = new Intent();
-                            intent.setClass(activity, OKUserEdit.class);
+                            intent.setClass(activity, OKUserEditActivity.class);
                             activity.startActivity(intent);
                         } else {
                             Intent intent = new Intent();

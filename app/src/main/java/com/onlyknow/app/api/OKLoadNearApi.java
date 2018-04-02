@@ -5,7 +5,6 @@ import android.os.AsyncTask;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ public class OKLoadNearApi extends OKBaseApi {
     private onCallBack mOnCallBack;
     private Context context;
     private LoadCardListTask mLoadCardListTask;
-    private boolean isLoadMore = false;
 
     public OKLoadNearApi(Context con) {
         this.context = con;
@@ -30,12 +28,15 @@ public class OKLoadNearApi extends OKBaseApi {
         void nearApiComplete(List<OKCardBean> list);
     }
 
-    public void requestCardBeanList(Map<String, String> param, boolean isLoad, onCallBack mCallBack) {
-        this.isLoadMore = isLoad;
+    public void requestCardBeanList(Map<String, String> param, List<OKCardBean> source, boolean isLoad, onCallBack mCallBack) {
         this.mOnCallBack = mCallBack;
+        Params mParams = new Params();
+        mParams.setReqMap(param);
+        mParams.setSource(source);
+        mParams.setLoadMore(isLoad);
         cancelTask();
         mLoadCardListTask = new LoadCardListTask();
-        mLoadCardListTask.executeOnExecutor(exec, param);
+        mLoadCardListTask.executeOnExecutor(exec, mParams);
     }
 
     public void cancelTask() {
@@ -44,27 +45,26 @@ public class OKLoadNearApi extends OKBaseApi {
         }
     }
 
-    private class LoadCardListTask extends AsyncTask<Map<String, String>, Void, List<OKCardBean>> {
+    private class LoadCardListTask extends AsyncTask<Params, Void, List<OKCardBean>> {
 
         @Override
-        protected List<OKCardBean> doInBackground(Map<String, String>... params) {
+        protected List<OKCardBean> doInBackground(Params... params) {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
-            List<OKCardBean> nearCardList = mOKBusinessNet.getNearCard(params[0]);
-            if (!isLoadMore) {
-                return nearCardList;
-            } else {
-                return cardBeanListSorting(nearCardList);
+            Params mParams = params[0];
+            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
+            List<OKCardBean> nearCardList = mOKBusinessApi.getNearCard(mParams.getReqMap());
+            if (mParams.isLoadMore()) {
+                return cardBeanListSorting(nearCardList, mParams.getSource());
             }
+            return nearCardList;
         }
 
-        private List<OKCardBean> cardBeanListSorting(List<OKCardBean> aims) {
-            if (OKConstant.getListCache(INTERFACE_NEAR) == null) {
+        private List<OKCardBean> cardBeanListSorting(List<OKCardBean> aims, List<OKCardBean> source) {
+            if (source == null) {
                 return aims;
             }
-            List<OKCardBean> source = OKConstant.getListCache(INTERFACE_NEAR);
             for (int i = 0; i < source.size(); i++) {
                 OKCardBean sourceBean = source.get(i);
                 for (int p = 0; p < aims.size(); p++) {
@@ -87,6 +87,36 @@ public class OKLoadNearApi extends OKBaseApi {
 
             super.onPostExecute(okCardBeen);
             mOnCallBack.nearApiComplete(okCardBeen);
+        }
+    }
+
+    private class Params {
+        Map<String, String> reqMap;
+        List<OKCardBean> source;
+        boolean isLoadMore = false;
+
+        public Map<String, String> getReqMap() {
+            return reqMap;
+        }
+
+        public void setReqMap(Map<String, String> reqMap) {
+            this.reqMap = reqMap;
+        }
+
+        public List<OKCardBean> getSource() {
+            return source;
+        }
+
+        public void setSource(List<OKCardBean> source) {
+            this.source = source;
+        }
+
+        public boolean isLoadMore() {
+            return isLoadMore;
+        }
+
+        public void setLoadMore(boolean loadMore) {
+            isLoadMore = loadMore;
         }
     }
 }

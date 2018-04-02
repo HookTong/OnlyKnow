@@ -17,9 +17,9 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKLoadApproveApi;
+import com.onlyknow.app.api.OKRemoveApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKHomePageActivity;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
@@ -98,6 +98,9 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
         mRefreshLayout.finishLoadMore();
         if (mLoadApproveApi != null) {
             mLoadApproveApi.cancelTask();
+        }
+        if (mCardViewAdapter != null) {
+            mCardViewAdapter.cancelTask();
         }
         isPause = true;
     }
@@ -179,11 +182,6 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
-            if (USER_INFO_SP.getBoolean("STATE", false) && mOKRecyclerView.getAdapter().getItemCount() == 0) {
-                mOKCardBeanList.clear();
-                mOKCardBeanList.addAll(OKConstant.getListCache(INTERFACE_APPROVE));
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            }
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
@@ -211,7 +209,6 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mOKCardBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_APPROVE, mOKCardBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -223,10 +220,11 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
         isInitLoad = false;
     }
 
-    private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {
+    private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> implements OKRemoveApi.onCallBack {
         private Context mContext;
         private List<OKCardBean> mBeanList;
-        private CardTask mCardTask;
+        private OKRemoveApi mOKRemoveApi;
+        private CardViewHolder viewHolder;
 
         public CardViewAdapter(Context context, List<OKCardBean> list) {
             this.mContext = context;
@@ -304,12 +302,17 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
                         @Override
                         public void onClick(DialogInterface arg0, int arg1) {
                             if (USER_INFO_SP.getBoolean("STATE", false)) {
+
+                                viewHolder = mCardViewHolder;
+
                                 Map<String, String> param = new HashMap<String, String>();// 请求参数
                                 param.put("username_main", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                                 param.put("card_id", Integer.toString(bean.getCARD_ID()));
                                 param.put("type", "CANCEL_APPROVE");
-                                mCardTask = new CardTask(mCardViewHolder, position);
-                                mCardTask.executeOnExecutor(exec, param); // 并行执行线程
+
+                                cancelTask();
+                                mOKRemoveApi = new OKRemoveApi(getActivity());
+                                mOKRemoveApi.requestRemove(param, position, CardViewAdapter.this); // 并行执行线程
                             } else {
                                 startUserActivity(null, OKLoginActivity.class);
                             }
@@ -333,8 +336,13 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
                 return;
             }
             mBeanList.remove(i);
-            OKConstant.removeListCache(INTERFACE_APPROVE, i);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        public void cancelTask() {
+            if (mOKRemoveApi != null) {
+                mOKRemoveApi.cancelTask(); // 如果线程已经在执行则取消执行
+            }
         }
 
         @Override
@@ -351,6 +359,18 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
         @Override
         public int getItemCount() {
             return mBeanList.size();
+        }
+
+        @Override
+        public void removeApiComplete(boolean isSuccess, int pos) {
+            if (viewHolder == null || viewHolder.getListPosition() != pos) return;
+
+            if (isSuccess) {
+                removeCardBean(pos);
+                showSnackBar(viewHolder.mCardView, "您已移除该卡片", "");
+            } else {
+                showSnackBar(viewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
+            }
         }
 
         class CardViewHolder extends RecyclerView.ViewHolder {
@@ -396,39 +416,6 @@ public class OKApproveFragment extends OKBaseFragment implements OnRefreshListen
 
             public int getListPosition() {
                 return position;
-            }
-        }
-
-        class CardTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-            private CardViewHolder mCardViewHolder;
-            private int mPosition;
-
-            public CardTask(CardViewHolder viewHolder, int pos) {
-                this.mCardViewHolder = viewHolder;
-                this.mPosition = pos;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                super.onPostExecute(aBoolean);
-                if (isCancelled() || (mCardViewHolder.getListPosition() != mPosition)) {
-                    return;
-                }
-                if (aBoolean) {
-                    removeCardBean(mPosition);
-                    showSnackBar(mCardViewHolder.mCardView, "您已移除该卡片", "");
-                } else {
-                    showSnackBar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
-                }
-            }
-
-            @Override
-            protected Boolean doInBackground(Map<String, String>... params) {
-                if (isCancelled()) {
-                    return false;
-                }
-                OKBusinessNet mWebApi = new OKBusinessNet();
-                return mWebApi.RemoveCard(params[0]);
             }
         }
     }

@@ -4,7 +4,6 @@ import android.app.ActionBar.LayoutParams;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.AppBarLayout.OnOffsetChangedListener;
@@ -27,10 +26,12 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKUserOperationApi;
 import com.onlyknow.app.api.OKLoadHomeApi;
+import com.onlyknow.app.api.OKLoadUserInfoApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -50,7 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OKLoadHomeApi.onCallBack {
+public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OKLoadHomeApi.onCallBack, OKLoadUserInfoApi.onCallBack, OKUserOperationApi.onCallBack {
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private RefreshLayout mRefreshLayout;
@@ -71,9 +72,9 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
     private OKLoadHomeApi mOKLoadHomeApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
-    private LoadUserTask mLoadUserTask;
+    private OKLoadUserInfoApi mOKLoadUserInfoApi;
     private OKUserInfoBean mBindUserInfoBean;
-    private AttentionTask mAttentionTask;
+    private OKUserOperationApi mOKUserOperationApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,21 +109,18 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             mOKLoadHomeApi.cancelTask();
         }
 
-        if (mLoadUserTask != null && mLoadUserTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mLoadUserTask.cancel(true); // 如果线程已经在执行则取消执行
+        if (mOKLoadUserInfoApi != null) {
+            mOKLoadUserInfoApi.cancelTask(); // 如果线程已经在执行则取消执行
         }
 
-        if (mAttentionTask != null && mAttentionTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mAttentionTask.cancel(true); // 如果线程已经在执行则取消执行
+        if (mOKUserOperationApi != null) {
+            mOKUserOperationApi.cancelTask(); // 如果线程已经在执行则取消执行
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (OKConstant.getListCache(INTERFACE_HOME) != null) {
-            OKConstant.getListCache(INTERFACE_HOME).clear();
-        }
     }
 
     @Override
@@ -165,11 +163,14 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
         mCardViewAdapter = new CardViewAdapter(this, mCardBeanList);
         mOKRecyclerView.setAdapter(mCardViewAdapter);
 
-        mLoadUserTask = new LoadUserTask(); // 获取用户信息
         Map<String, String> map = new HashMap<>();// 请求参数
         map.put("username", USERNAME);
         map.put("type", "ALL");
-        mLoadUserTask.executeOnExecutor(exec, map);
+        if (mOKLoadUserInfoApi != null) {
+            mOKLoadUserInfoApi.cancelTask();
+        }
+        mOKLoadUserInfoApi = new OKLoadUserInfoApi(this); // 获取用户信息
+        mOKLoadUserInfoApi.requestUserInfo(map, this);
 
         mCollapsingToolbarLayout.setTitle(" ");
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
@@ -187,10 +188,14 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     if (!WhetherThis) {
-                        Bundle bundle = new Bundle();
-                        bundle.putString(OKUserInfoBean.KEY_USERNAME, USERNAME);
-                        bundle.putString(OKUserInfoBean.KEY_NICKNAME, NICKNAME);
-                        startUserActivity(bundle, OKSessionActivity.class);
+                        if (OKMainService.isEMLogIn && OKNetUtil.isNet(OKHomePageActivity.this)) {
+                            Bundle bundle = new Bundle();
+                            bundle.putString(OKUserInfoBean.KEY_USERNAME, USERNAME);
+                            bundle.putString(OKUserInfoBean.KEY_NICKNAME, NICKNAME);
+                            startUserActivity(bundle, OKSessionActivity.class);
+                        } else {
+                            showSnackBar(v, "您未登录聊天服务器,请重新登录账号!", "");
+                        }
                     } else {
                         showSnackBar(v, "您不能与自己建立会话", "");
                     }
@@ -268,7 +273,6 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
                                 String date = dateFormat.format(now);
 
-                                mAttentionTask = new AttentionTask();
                                 Map<String, String> map = new HashMap<>();// 请求参数
                                 map.put("username", usernameThis);
                                 map.put("username2", USERNAME);
@@ -276,7 +280,11 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                                 map.put("message", "");
                                 map.put("date", date);
                                 map.put("type", "GUANZHU");
-                                mAttentionTask.executeOnExecutor(exec, map);
+                                if (mOKUserOperationApi != null) {
+                                    mOKUserOperationApi.cancelTask();
+                                }
+                                mOKUserOperationApi = new OKUserOperationApi(OKHomePageActivity.this);
+                                mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_ATTENTION, OKHomePageActivity.this);
                             } else {
                                 showSnackBar(mOKRecyclerView, "您不能关注自己", "");
                             }
@@ -385,7 +393,6 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mCardBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_HOME, mCardBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -393,6 +400,33 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             mRefreshLayout.finishRefresh();
         } else if (mRefreshLayout.getState() == RefreshState.Loading) {
             mRefreshLayout.finishLoadMore();
+        }
+    }
+
+    @Override
+    public void userInfoApiComplete(OKUserInfoBean userInfoBean) {
+        if (userInfoBean == null) {
+            showSnackBar(mOKRecyclerView, "没有获取到用户信息", "");
+            return;
+        }
+        mBindUserInfoBean = userInfoBean;
+        GlideRoundApi(ImageViewTouXian, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+        GlideBlurApi(mImageViewHead, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.topgd3, R.drawable.topgd3);
+        mToolbarTitle.setText(userInfoBean.getNICKNAME());
+        if (!TextUtils.isEmpty(userInfoBean.getQIANMIN()) && !userInfoBean.getQIANMIN().equals("NULL")) {
+            textViewTAG.setText(userInfoBean.getQIANMIN());
+        } else {
+            textViewTAG.setText("这个人很懒,什么都没有留下!");
+        }
+        bindHeaderView(userInfoBean);
+    }
+
+    @Override
+    public void userOperationApiComplete(boolean isSuccess, String type) {
+        if (isSuccess) {
+            showSnackBar(mOKRecyclerView, "已关注该用户", "");
+        } else {
+            showSnackBar(mOKRecyclerView, "服务器错误", "ErrorCode: " + OKConstant.SERVICE_ERROR);
         }
     }
 
@@ -449,20 +483,17 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                     if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HOME);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HOME);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HOME);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardWZActivity.class);
                     }
                 }
@@ -540,73 +571,6 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             public int getListPosition() {
                 return position;
             }
-        }
-    }
-
-    private class LoadUserTask extends AsyncTask<Map<String, String>, Void, OKUserInfoBean> {
-
-        @Override
-        protected void onPostExecute(OKUserInfoBean userInfoBean) {
-            if (isCancelled()) {
-                return;
-            }
-            if (userInfoBean == null) {
-                showSnackBar(mOKRecyclerView, "没有获取到用户信息", "");
-                return;
-            }
-            mBindUserInfoBean = userInfoBean;
-            GlideRoundApi(ImageViewTouXian, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
-            GlideBlurApi(mImageViewHead, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.topgd3, R.drawable.topgd3);
-            mToolbarTitle.setText(userInfoBean.getNICKNAME());
-            if (!TextUtils.isEmpty(userInfoBean.getQIANMIN()) && !userInfoBean.getQIANMIN().equals("NULL")) {
-                textViewTAG.setText(userInfoBean.getQIANMIN());
-            } else {
-                textViewTAG.setText("这个人很懒,什么都没有留下!");
-            }
-            bindHeaderView(userInfoBean);
-        }
-
-        @Override
-        protected OKUserInfoBean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return null;
-            }
-
-            OKBusinessNet mWebApi = new OKBusinessNet();
-            if (isCancelled()) {
-                return null;
-            }
-            OKUserInfoBean mUserInfoBean = mWebApi.getUserInfo(params[0]);
-            if (mUserInfoBean != null) {
-                return mUserInfoBean;
-            }
-            return null;
-        }
-    }
-
-    private class AttentionTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            if (isCancelled()) {
-                return;
-            }
-            super.onPostExecute(aBoolean);
-            if (aBoolean) {
-                showSnackBar(mOKRecyclerView, "已关注该用户", "");
-            } else {
-                showSnackBar(mOKRecyclerView, "服务器错误", "ErrorCode: " + OKConstant.SERVICE_ERROR);
-            }
-        }
-
-        @Override
-        protected Boolean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return false;
-            }
-
-            OKBusinessNet mWebApi = new OKBusinessNet();
-            return mWebApi.updateCardInfo(params[0]);
         }
     }
 }

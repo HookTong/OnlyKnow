@@ -19,9 +19,10 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKLoadAttentionApi;
+import com.onlyknow.app.api.OKRemoveApi;
 import com.onlyknow.app.database.bean.OKAttentionBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
 import com.onlyknow.app.ui.activity.OKHomePageActivity;
@@ -179,11 +180,6 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
-            if (USER_INFO_SP.getBoolean("STATE", false) && mRecyclerView.getAdapter().getItemCount() == 0) {
-                mAttentionBeanList.clear();
-                mAttentionBeanList.addAll(OKConstant.getListCache(INTERFACE_ATTENTION));
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mRecyclerView, "请检查网络设置!", "");
             return;
@@ -211,7 +207,6 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mAttentionBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_ATTENTION, mAttentionBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -223,10 +218,11 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
         isInitLoad = false;
     }
 
-    private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {
+    private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> implements OKRemoveApi.onCallBack {
         private Context mContext;
         private List<OKAttentionBean> mBeanList;
-        private EntryTask mEntryTask;
+        private OKRemoveApi mOKRemoveApi;
+        private EntryViewHolder viewHolder;
 
         public EntryViewAdapter(Context context, List<OKAttentionBean> list) {
             this.mContext = context;
@@ -263,17 +259,22 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
 
             mEntryViewHolder.mButtonOpt.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onClick(View v) {
+                public void onClick(final View v) {
                     showAlertDialog("取消关注", "是否取消关注该用户 ?", "取消关注", "继续关注", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface arg0, int arg1) {
                             if (USER_INFO_SP.getBoolean("STATE", false)) {
+
+                                viewHolder = mEntryViewHolder;
+
                                 Map<String, String> param = new HashMap<String, String>();// 请求参数
                                 param.put("username_main", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                                 param.put("username_rete", okAttentionBean.getUSER_NAME());
                                 param.put("type", "CANCEL_ATTENTION");
-                                mEntryTask = new EntryTask(mEntryViewHolder, position);
-                                mEntryTask.executeOnExecutor(exec, param); // 并行执行线程
+
+                                cancelTask();
+                                mOKRemoveApi = new OKRemoveApi(getActivity());
+                                mOKRemoveApi.requestRemove(param, position, EntryViewAdapter.this); // 并行执行线程
                             } else {
                                 startUserActivity(null, OKLoginActivity.class);
                             }
@@ -295,7 +296,6 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
 
         public void removeAttentionBean(int i) {
             mBeanList.remove(i);
-            OKConstant.removeListCache(INTERFACE_ATTENTION, i);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -308,8 +308,8 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
         }
 
         public void cancelTask() {
-            if (mEntryTask != null && mEntryTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mEntryTask.cancel(true); // 如果线程已经在执行则取消执行
+            if (mOKRemoveApi != null) {
+                mOKRemoveApi.cancelTask(); // 如果线程已经在执行则取消执行
             }
         }
 
@@ -327,6 +327,19 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
         @Override
         public int getItemCount() {
             return mBeanList.size();
+        }
+
+        @Override
+        public void removeApiComplete(boolean isSuccess, int pos) {
+            if (viewHolder == null || viewHolder.getListPosition() != pos) return;
+
+            if (isSuccess) {
+                removeAttentionBean(pos);
+                showSnackBar(viewHolder.mCardView, "已取消关注", "");
+            } else {
+                showSnackBar(viewHolder.mCardView, "取消关注失败", "ErrorCode: " + OKConstant.ATTENTION_CANCEL_ERROR);
+                viewHolder.mButtonOpt.setText("取消关注");
+            }
         }
 
         class EntryViewHolder extends RecyclerView.ViewHolder {
@@ -357,40 +370,6 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
 
             public int getListPosition() {
                 return position;
-            }
-        }
-
-        class EntryTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-            private EntryViewHolder mEntryViewHolder;
-            private int mPosition;
-
-            public EntryTask(EntryViewHolder viewHolder, int pos) {
-                mEntryViewHolder = viewHolder;
-                mPosition = pos;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                super.onPostExecute(aBoolean);
-                if (isCancelled() || (mEntryViewHolder.getListPosition() != mPosition)) {
-                    return;
-                }
-                if (aBoolean) {
-                    removeAttentionBean(mPosition);
-                    showSnackBar(mEntryViewHolder.mCardView, "已取消关注", "");
-                } else {
-                    showSnackBar(mEntryViewHolder.mCardView, "取消关注失败", "ErrorCode: " + OKConstant.ATTENTION_CANCEL_ERROR);
-                    mEntryViewHolder.mButtonOpt.setText("取消关注");
-                }
-            }
-
-            @Override
-            protected Boolean doInBackground(Map<String, String>... params) {
-                if (isCancelled()) {
-                    return false;
-                }
-                OKBusinessNet mWebApi = new OKBusinessNet();
-                return mWebApi.RemoveCard(params[0]);
             }
         }
     }

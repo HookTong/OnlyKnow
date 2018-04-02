@@ -1,12 +1,9 @@
 package com.onlyknow.app.ui.activity;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
@@ -16,11 +13,10 @@ import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKFeedBackApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKBase64Util;
 import com.onlyknow.app.utils.OKDeviceInfoUtil;
 
 import java.util.ArrayList;
@@ -28,14 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKFeedBackActivity extends OKBaseActivity {
+public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.onCallBack {
     private AppCompatButton mAppCompatButtonSend;
     private OKSEImageView mImageViewAddTuPian, mImageViewClear;
     private EditText mEditTextNeiRon;
 
     private String mFilePath = "";
 
-    private FeedBackTask mFeedBackTask;
+    private OKFeedBackApi mOKFeedBackApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +51,8 @@ public class OKFeedBackActivity extends OKBaseActivity {
     @Override
     public void onPause() {
         super.onPause();
-        if (mFeedBackTask != null && mFeedBackTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mFeedBackTask.cancel(true);
+        if (mOKFeedBackApi != null) {
+            mOKFeedBackApi.cancelTask();
         }
     }
 
@@ -109,9 +105,12 @@ public class OKFeedBackActivity extends OKBaseActivity {
                         map.put("message", mEditTextNeiRon.getText().toString());
                         map.put("baseimag", mFilePath);
                         map.put("date", OKConstant.getNowDateByString());
-                        mFeedBackTask = new FeedBackTask();
-                        mFeedBackTask.executeOnExecutor(exec, map);
                         showProgressDialog("正在提交信息...");
+                        if (mOKFeedBackApi != null) {
+                            mOKFeedBackApi.cancelTask();
+                        }
+                        mOKFeedBackApi = new OKFeedBackApi(OKFeedBackActivity.this);
+                        mOKFeedBackApi.requestFeedBack(map, OKFeedBackActivity.this);
                     } else {
                         showSnackBar(v, "反馈意见必须大于100字符", "");
                     }
@@ -169,37 +168,13 @@ public class OKFeedBackActivity extends OKBaseActivity {
         GlideApi(mImageViewAddTuPian, mFilePath, R.drawable.add_image_black, R.drawable.add_image_black);
     }
 
-    private class FeedBackTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return false;
-            }
-
-            Map<String, String> map = params[0];
-            String filePath = map.get("baseimag");
-            if (!TextUtils.isEmpty(filePath)) {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inPurgeable = true;
-                options.inSampleSize = 1;
-                Bitmap bitmap = BitmapFactory.decodeFile(filePath, options);
-                map.put("baseimag", OKBase64Util.BitmapToBase64(bitmap));
-            }
-            return new OKBusinessNet().feedBack(map);
+    @Override
+    public void feedBackApiComplete(boolean isSuccess) {
+        if (isSuccess) {
+            showSnackBar(mAppCompatButtonSend, "反馈成功", "");
+        } else {
+            showSnackBar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
         }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            if (isCancelled()) {
-                return;
-            }
-            if (aBoolean) {
-                showSnackBar(mAppCompatButtonSend, "反馈成功", "");
-            } else {
-                showSnackBar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
-            }
-            closeProgressDialog();
-        }
+        closeProgressDialog();
     }
 }

@@ -37,6 +37,7 @@ import com.onlyknow.app.api.OKLoadWeatherApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.database.bean.OKWeatherBean;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKBrowserActivity;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
@@ -54,6 +55,7 @@ import com.onlyknow.app.ui.view.OKKenBurnsView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.utils.OKLoadBannerImage;
 import com.onlyknow.app.utils.OKLogUtil;
+import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
@@ -229,7 +231,11 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
             @Override
             public void onClick(View view) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                    startUserActivity(null, OKNoticeActivity.class);
+                    if (OKMainService.isEMLogIn && OKNetUtil.isNet(getActivity())) {
+                        startUserActivity(null, OKNoticeActivity.class);
+                    } else {
+                        showSnackBar(view, "您未登录聊天服务器,请重新登录账号!", "");
+                    }
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
                 }
@@ -450,7 +456,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadExploreApi == null) {
             mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, true, this);
+        mOKLoadExploreApi.requestCardBeanList(map, mCardBeanList, true, this);
     }
 
     @Override
@@ -460,7 +466,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mOKLoadExploreApi == null) {
             mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, false, this);
+        mOKLoadExploreApi.requestCardBeanList(map, mCardBeanList, false, this);
     }
 
     @Override
@@ -516,7 +522,6 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mCardBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_EXPLORE, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
         if (mRefreshLayout.getState() == RefreshState.Refreshing) {
@@ -577,20 +582,17 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                     if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_EXPLORE);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_EXPLORE);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_EXPLORE);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardWZActivity.class);
                     }
                 }
@@ -600,7 +602,6 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                 @Override
                 public void onClick(View v) {
                     mBeanList.remove(position);
-                    OKConstant.removeListCache(INTERFACE_EXPLORE, position);
                     mRecyclerView.getAdapter().notifyDataSetChanged();
                 }
             });

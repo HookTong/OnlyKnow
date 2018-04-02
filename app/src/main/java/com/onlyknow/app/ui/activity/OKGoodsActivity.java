@@ -20,10 +20,10 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKGoodsBuyApi;
 import com.onlyknow.app.api.OKLoadGoodsApi;
 import com.onlyknow.app.database.bean.OKGoodsBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -176,7 +176,6 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mOKGoodsBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_GOODS, mOKGoodsBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -187,10 +186,11 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         }
     }
 
-    private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {
+    private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> implements OKGoodsBuyApi.onCallBack {
         private Context mContext;
         private List<OKGoodsBean> mBeanList;
-        private EntryTask mEntryTask;
+        private OKGoodsBuyApi mOKGoodsBuyApi;
+        private EntryViewHolder viewHolder;
 
         public EntryViewAdapter(Context context, List<OKGoodsBean> list) {
             this.mContext = context;
@@ -238,14 +238,19 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                             public void onClick(DialogInterface arg0, int arg1) {
                                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                                     if (USER_INFO_SP.getInt(OKUserInfoBean.KEY_JIFENG, 0) >= okGoodsBean.getGD_PRICE()) {
+
+                                        viewHolder = mEntryViewHolder;
+
                                         SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
                                         String date = df.format(new Date());
                                         Map<String, String> param = new HashMap<String, String>();// 请求参数
                                         param.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                                         param.put("gdid", Integer.toString(okGoodsBean.getGD_ID()));
                                         param.put("date", date);
-                                        mEntryTask = new EntryTask(mEntryViewHolder, position);
-                                        mEntryTask.executeOnExecutor(exec, param); // 并行执行线程
+
+                                        cancelTask();
+                                        mOKGoodsBuyApi = new OKGoodsBuyApi(OKGoodsActivity.this);
+                                        mOKGoodsBuyApi.requestGoodsBuyApi(param, position, EntryViewAdapter.this); // 并行执行线程
                                     } else {
                                         showSnackBar(mEntryViewHolder.mCardView, "您没有足够的积分以购买该商品!", "");
                                     }
@@ -285,8 +290,8 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         }
 
         public void cancelTask() {
-            if (mEntryTask != null && mEntryTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mEntryTask.cancel(true); // 如果线程已经在执行则取消执行
+            if (mOKGoodsBuyApi != null) {
+                mOKGoodsBuyApi.cancelTask(); // 如果线程已经在执行则取消执行
             }
         }
 
@@ -344,6 +349,27 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             return mBeanList.size();
         }
 
+        @Override
+        public void goodsBuyApiComplete(boolean isSuccess, int pos) {
+            if (viewHolder == null || viewHolder.getListPosition() != pos) return;
+
+            if (isSuccess) {
+                OKGoodsBean mGoodsBean = getGoodsBean(pos);
+                if (mGoodsBean == null) {
+                    return;
+                }
+
+                mGoodsBean.setIS_BUY(true);
+                mBeanList.set(pos, mGoodsBean);
+                viewHolder.mButtonOpt.setText("已购买");
+                viewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.fenhon));
+            } else {
+                showSnackBar(viewHolder.mCardView, "购买失败", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
+                viewHolder.mButtonOpt.setText("购买");
+                viewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.md_white_1000));
+            }
+        }
+
         class EntryViewHolder extends RecyclerView.ViewHolder {
             public CardView mCardView;
             public ImageView mImageViewTitle;
@@ -371,50 +397,6 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
 
             public int getListPosition() {
                 return position;
-            }
-        }
-
-        class EntryTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-            private EntryViewHolder mEntryViewHolder;
-            private int mPosition;
-
-            public EntryTask(EntryViewHolder viewHolder, int pos) {
-                mEntryViewHolder = viewHolder;
-                mPosition = pos;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                super.onPostExecute(aBoolean);
-                if (isCancelled() || (mEntryViewHolder.getListPosition() != mPosition)) {
-                    return;
-                }
-
-                if (aBoolean) {
-                    OKGoodsBean mGoodsBean = getGoodsBean(mPosition);
-                    if (mGoodsBean == null) {
-                        return;
-                    }
-
-                    mGoodsBean.setIS_BUY(true);
-                    mBeanList.set(mPosition, mGoodsBean);
-                    mEntryViewHolder.mButtonOpt.setText("已购买");
-                    mEntryViewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.fenhon));
-                } else {
-                    showSnackBar(mEntryViewHolder.mCardView, "购买失败", "ErrorCode: " + OKConstant.GOODS_BUY_ERROR);
-                    mEntryViewHolder.mButtonOpt.setText("购买");
-                    mEntryViewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.md_white_1000));
-                }
-            }
-
-            @Override
-            protected Boolean doInBackground(Map<String, String>... params) {
-                if (isCancelled()) {
-                    return false;
-                }
-
-                OKBusinessNet mWebApi = new OKBusinessNet();
-                return mWebApi.GoodsBuy(params[0]);
             }
         }
     }

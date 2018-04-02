@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.onlyknow.app.zxing.camera;
+package com.onlyknow.app.utils.zxing.camera;
 
 import android.content.Context;
 import android.graphics.Point;

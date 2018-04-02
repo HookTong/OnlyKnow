@@ -1,6 +1,5 @@
 package com.onlyknow.app.ui.activity;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.text.TextUtils;
@@ -10,21 +9,21 @@ import android.widget.CheckBox;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKUserOperationApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class OKRePortActivity extends OKBaseActivity {
+public class OKRePortActivity extends OKBaseActivity implements OKUserOperationApi.onCallBack {
     private CheckBox checkBox1, checkBox2, checkBox3, checkBox4;
     private AppCompatButton appCompatButton;
 
     private Bundle mBundle;
     private String RePortType = "";
 
-    private RePortTask mRePortTask;
+    private OKUserOperationApi mOKUserOperationApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +45,8 @@ public class OKRePortActivity extends OKBaseActivity {
     @Override
     public void onPause() {
         super.onPause();
-        if (mRePortTask != null && mRePortTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mRePortTask.cancel(true);
+        if (mOKUserOperationApi != null) {
+            mOKUserOperationApi.cancelTask();
         }
     }
 
@@ -80,8 +79,11 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("message", msg);
                             map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_USER");
-                            mRePortTask = new RePortTask();
-                            mRePortTask.executeOnExecutor(exec, map);
+                            if (mOKUserOperationApi != null) {
+                                mOKUserOperationApi.cancelTask();
+                            }
+                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
+                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
                             showProgressDialog("正在提交举报信息");
                         } else if (RePortType.equals("CARD")) {
                             Map<String, String> map = new HashMap<String, String>();
@@ -91,8 +93,11 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("message", msg);
                             map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_CARD");
-                            mRePortTask = new RePortTask();
-                            mRePortTask.executeOnExecutor(exec, map);
+                            if (mOKUserOperationApi != null) {
+                                mOKUserOperationApi.cancelTask();
+                            }
+                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
+                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
                             showProgressDialog("正在提交举报信息");
                         } else if (RePortType.equals("COMMENT")) {
                             Map<String, String> map = new HashMap<String, String>();
@@ -102,8 +107,11 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("message", msg);
                             map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_COMMENT");
-                            mRePortTask = new RePortTask();
-                            mRePortTask.executeOnExecutor(exec, map);
+                            if (mOKUserOperationApi != null) {
+                                mOKUserOperationApi.cancelTask();
+                            }
+                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
+                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
                             showProgressDialog("正在提交举报信息");
                         } else if (RePortType.equals("COMMENT_REPLY")) {
                             Map<String, String> map = new HashMap<String, String>();
@@ -113,8 +121,11 @@ public class OKRePortActivity extends OKBaseActivity {
                             map.put("message", msg);
                             map.put("date", OKConstant.getNowDateByString());
                             map.put("type", "JUBAO_COMMENT_REPLY");
-                            mRePortTask = new RePortTask();
-                            mRePortTask.executeOnExecutor(exec, map);
+                            if (mOKUserOperationApi != null) {
+                                mOKUserOperationApi.cancelTask();
+                            }
+                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
+                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
                             showProgressDialog("正在提交举报信息");
                         } else {
                             startUserActivity(null, OKLoginActivity.class);
@@ -156,30 +167,13 @@ public class OKRePortActivity extends OKBaseActivity {
         }
     }
 
-    private class RePortTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return false;
-            }
-
-            return new OKBusinessNet().updateCardInfo(params[0]);
+    @Override
+    public void userOperationApiComplete(boolean isSuccess, String type) {
+        if (isSuccess) {
+            showSnackBar(appCompatButton, "举报成功", "");
+        } else {
+            showSnackBar(appCompatButton, "举报失败,请检查网络!", "");
         }
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-
-            if (isCancelled()) {
-                return;
-            }
-
-            if (aBoolean) {
-                showSnackBar(appCompatButton, "举报成功", "");
-            } else {
-                showSnackBar(appCompatButton, "举报失败,请检查网络!", "");
-            }
-            closeProgressDialog();
-        }
+        closeProgressDialog();
     }
 }

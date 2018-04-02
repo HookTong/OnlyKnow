@@ -1,7 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -17,18 +16,18 @@ import com.bumptech.glide.request.transition.Transition;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKGenerateQrCodeApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.utils.OKBase64Util;
-import com.onlyknow.app.utils.OKQRUtil;
 
 
 /*
  * 该类用于生成包含用户信息的二维码
  * 需要传入的值包括用户名,昵称,签名
  * */
-public class OKMeQrCodeActivity extends OKBaseActivity {
+public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCodeApi.onCallBack {
     private ImageView imageViewQrCode;
     private OKCircleImageView circleImageViewTouXian;
     private TextView textViewNiChen, textViewQianMin;
@@ -59,8 +58,8 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         if (mBitmapQrCode != null) {
             mBitmapQrCode.recycle();
         }
-        if (mQrCodeTask != null && mQrCodeTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mQrCodeTask.cancel(true);
+        if (mOKGenerateQrCodeApi != null) {
+            mOKGenerateQrCodeApi.cancelTask();
         }
     }
 
@@ -107,32 +106,24 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         });
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
     private Bitmap mBitmapQrCode;
 
-    private QrCodeTask mQrCodeTask;
+    private OKGenerateQrCodeApi mOKGenerateQrCodeApi;
 
     private void initQeCode(Bitmap mBitmapTx, String str) {
         DisplayMetrics outMetrics = new DisplayMetrics();
         this.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
         int w = outMetrics.widthPixels * 8 / 11;// 设置宽度
+
         ViewGroup.LayoutParams layoutParams = imageViewQrCode.getLayoutParams();
         layoutParams.height = layoutParams.width = w;// 设置高度
         imageViewQrCode.setLayoutParams(layoutParams);
-        if (mQrCodeTask != null && mQrCodeTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mQrCodeTask.cancel(true);
+
+        if (mOKGenerateQrCodeApi != null) {
+            mOKGenerateQrCodeApi.cancelTask();
         }
-        mQrCodeTask = new QrCodeTask(mBitmapTx, w);
-        mQrCodeTask.executeOnExecutor(exec, str);
+        mOKGenerateQrCodeApi = new OKGenerateQrCodeApi(this);
+        mOKGenerateQrCodeApi.requestGenerateQrCodeApi(mBitmapTx, w, str, this);
     }
 
     private void findView() {
@@ -149,39 +140,13 @@ public class OKMeQrCodeActivity extends OKBaseActivity {
         buttonSave = (Button) findViewById(R.id.me_qrcode_baocun);
     }
 
-    private class QrCodeTask extends AsyncTask<String, Void, Bitmap> {
-        private Bitmap mBitmapTx;
-        private int mWidth;
-
-        public QrCodeTask(Bitmap mTx, int w) {
-            this.mBitmapTx = mTx;
-            this.mWidth = w;
+    @Override
+    public void generateQrCodeApiComplete(Bitmap bitmap) {
+        if (bitmap == null) {
+            showSnackBar(imageViewQrCode, "二维码生成失败", "");
+            return;
         }
-
-        @Override
-        protected Bitmap doInBackground(String... strings) {
-            try {
-                mBitmapQrCode = OKQRUtil.encodeToQRWidth(strings[0], mWidth);
-                if (mBitmapTx != null) {
-                    mBitmapTx = OKBase64Util.toRoundBitmap(mBitmapTx);
-                    mBitmapQrCode = OKQRUtil.addLogo(mBitmapQrCode, mBitmapTx);
-                    mBitmapTx.recycle();
-                    mBitmapTx = null;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return mBitmapQrCode;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            if (mBitmapQrCode == null) {
-                showSnackBar(imageViewQrCode, "二维码生成失败", "");
-                return;
-            }
-            imageViewQrCode.setImageBitmap(mBitmapQrCode);
-        }
+        mBitmapQrCode = bitmap;
+        imageViewQrCode.setImageBitmap(mBitmapQrCode);
     }
 }

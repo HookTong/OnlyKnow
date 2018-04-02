@@ -8,19 +8,20 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKSecurityApi;
 import com.onlyknow.app.database.bean.OKSafetyInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class OKContentActivity extends OKBaseActivity {
+public class OKContentActivity extends OKBaseActivity implements OKSecurityApi.onCallBack {
     private TextView textViewContent;
 
     private Bundle mBundle;
 
-    private ContentTask mContentTask;
+    private OKSecurityApi mOKSecurityApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +48,8 @@ public class OKContentActivity extends OKBaseActivity {
         map.put("type", mBundle.getString("TYPE"));
         map.put("value", mBundle.getString("VALUE"));
 
-        mContentTask = new ContentTask();
-        mContentTask.executeOnExecutor(exec, map);
+        mOKSecurityApi = new OKSecurityApi(this);
+        mOKSecurityApi.requestSecurityCheck(map, this);
 
         showProgressDialog("正在获取内容...");
     }
@@ -57,8 +58,8 @@ public class OKContentActivity extends OKBaseActivity {
     public void onPause() {
         super.onPause();
 
-        if (mContentTask != null && mContentTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mContentTask.cancel(true);
+        if (mOKSecurityApi != null) {
+            mOKSecurityApi.cancelTask();
         }
     }
 
@@ -83,37 +84,19 @@ public class OKContentActivity extends OKBaseActivity {
         textViewContent = (TextView) findViewById(R.id.content_text_message);
     }
 
-    private class ContentTask extends AsyncTask<Map<String, String>, Void, OKSafetyInfoBean> {
+    @Override
+    public void securityApiComplete(OKSafetyInfoBean bean) {
+        closeProgressDialog();
 
-        @Override
-        protected OKSafetyInfoBean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return null;
-            }
-
-            return new OKBusinessNet().securityCheck(params[0]);
+        if (bean == null) {
+            showSnackBar(textViewContent, "获取失败!", "");
+            return;
         }
 
-        @Override
-        protected void onPostExecute(OKSafetyInfoBean bean) {
-            super.onPostExecute(bean);
-
-            closeProgressDialog();
-
-            if (isCancelled()) {
-                return;
-            }
-
-            if (bean == null) {
-                showSnackBar(textViewContent, "获取失败!", "");
-                return;
-            }
-
-            if (!TextUtils.isEmpty(bean.getAVU_DESCRIBE())) {
-                textViewContent.setText(bean.getAVU_DESCRIBE());
-            } else if (!TextUtils.isEmpty(bean.getUA_CONTENT())) {
-                textViewContent.setText(bean.getUA_CONTENT());
-            }
+        if (!TextUtils.isEmpty(bean.getAVU_DESCRIBE())) {
+            textViewContent.setText(bean.getAVU_DESCRIBE());
+        } else if (!TextUtils.isEmpty(bean.getUA_CONTENT())) {
+            textViewContent.setText(bean.getUA_CONTENT());
         }
     }
 }

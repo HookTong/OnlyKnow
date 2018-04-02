@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKCardAndCommentBean;
-import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +51,12 @@ public class OKLoadCardAndCommentApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
+            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
             List<OKCardAndCommentBean> list = new ArrayList<>();
             if (isLoadMore) {
-                list = mOKBusinessNet.loadMoreCardAndComment(params[0]);
+                list = mOKBusinessApi.loadMoreCardAndComment(params[0]);
             } else {
-                list = mOKBusinessNet.getCardAndComment(params[0]);
+                list = mOKBusinessApi.getCardAndComment(params[0]);
             }
             return list;
         }

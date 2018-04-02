@@ -204,7 +204,6 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                             }
                         }.start();
                         mCardBeanList.clear();
-                        OKConstant.clearListCache(INTERFACE_HISTORY);
                         mRecyclerView.getAdapter().notifyDataSetChanged();
                     }
                 });
@@ -302,7 +301,6 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mCardBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_HISTORY, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
         if (mRefreshLayout.getState() == RefreshState.Refreshing) {
@@ -339,20 +337,17 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                     if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HISTORY);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HISTORY);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HISTORY);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardWZActivity.class);
                     }
                 }

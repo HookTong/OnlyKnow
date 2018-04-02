@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.database.bean.OKAttentionBean;
-import com.onlyknow.app.net.OKBusinessNet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +51,12 @@ public class OKLoadAttentionApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            OKBusinessNet mOKBusinessNet = new OKBusinessNet();
+            OKBusinessApi mOKBusinessApi = new OKBusinessApi();
             List<OKAttentionBean> attentionEntryList = new ArrayList<>();
             if (isLoadMore) {
-                attentionEntryList = mOKBusinessNet.loadMoreAttentionEntry(params[0]);
+                attentionEntryList = mOKBusinessApi.loadMoreAttentionEntry(params[0]);
             } else {
-                attentionEntryList = mOKBusinessNet.getAttentionEntry(params[0]);
+                attentionEntryList = mOKBusinessApi.getAttentionEntry(params[0]);
             }
             return attentionEntryList;
         }

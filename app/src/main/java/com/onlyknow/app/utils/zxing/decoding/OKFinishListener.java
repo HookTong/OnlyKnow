@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.onlyknow.app.zxing.decoding;
+package com.onlyknow.app.utils.zxing.decoding;
 
 import android.app.Activity;
 import android.content.DialogInterface;

@@ -18,9 +18,10 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKLoadDynamicApi;
+import com.onlyknow.app.api.OKRemoveApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -180,11 +181,6 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
-            if (USER_INFO_SP.getBoolean("STATE", false) && mRecyclerView.getAdapter().getItemCount() == 0) {
-                mCardBeanList.clear();
-                mCardBeanList.addAll(OKConstant.getListCache(INTERFACE_DYNAMIC));
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mRecyclerView, "请检查网络设置!", "");
             return;
@@ -212,7 +208,6 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mCardBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_DYNAMIC, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -224,10 +219,11 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
         isInitLoad = false;
     }
 
-    private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {
+    private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> implements OKRemoveApi.onCallBack {
         private Context mContext;
         private List<OKCardBean> mBeanList;
-        private CardTask mCardTask;
+        private OKRemoveApi mOKRemoveApi;
+        private CardViewHolder viewHolder;
 
         public CardViewAdapter(Context context, List<OKCardBean> list) {
             this.mContext = context;
@@ -276,20 +272,17 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                     if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_DYNAMIC);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_DYNAMIC);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_DYNAMIC);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardWZActivity.class);
                     }
                 }
@@ -306,12 +299,17 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                         @Override
                         public void onClick(DialogInterface arg0, int arg1) {
                             if (USER_INFO_SP.getBoolean("STATE", false)) {
+
+                                viewHolder = mCardViewHolder;
+
                                 Map<String, String> param = new HashMap<String, String>();// 请求参数
                                 param.put("username_main", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                                 param.put("card_id", Integer.toString(okCardBean.getCARD_ID()));
                                 param.put("type", "CANCEL_DYNAMIC");
-                                mCardTask = new CardTask(mCardViewHolder, position);
-                                mCardTask.executeOnExecutor(exec, param); // 并行执行线程
+
+                                cancelTask();
+                                mOKRemoveApi = new OKRemoveApi(getActivity());
+                                mOKRemoveApi.requestRemove(param, position, CardViewAdapter.this); // 并行执行线程
                             } else {
                                 startUserActivity(null, OKLoginActivity.class);
                             }
@@ -338,7 +336,6 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
                 return;
             }
             mBeanList.remove(i);
-            OKConstant.removeListCache(INTERFACE_DYNAMIC, i);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -351,8 +348,8 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
         }
 
         public void cancelTask() {
-            if (mCardTask != null && mCardTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mCardTask.cancel(true); // 如果线程已经在执行则取消执行
+            if (mOKRemoveApi != null) {
+                mOKRemoveApi.cancelTask(); // 如果线程已经在执行则取消执行
             }
         }
 
@@ -370,6 +367,18 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
         @Override
         public int getItemCount() {
             return mBeanList.size();
+        }
+
+        @Override
+        public void removeApiComplete(boolean isSuccess, int pos) {
+            if (viewHolder == null || viewHolder.getListPosition() != pos) return;
+
+            if (isSuccess) {
+                removeCardBean(pos);
+                showSnackBar(viewHolder.mCardView, "您已移除该卡片", "");
+            } else {
+                showSnackBar(viewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
+            }
         }
 
         class CardViewHolder extends RecyclerView.ViewHolder {
@@ -404,39 +413,6 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
 
             public int getListPosition() {
                 return position;
-            }
-        }
-
-        class CardTask extends AsyncTask<Map<String, String>, Void, Boolean> {
-            private CardViewHolder mCardViewHolder;
-            private int mPosition;
-
-            public CardTask(CardViewHolder viewHolder, int pos) {
-                this.mCardViewHolder = viewHolder;
-                this.mPosition = pos;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                super.onPostExecute(aBoolean);
-                if (isCancelled() || (mCardViewHolder.getListPosition() != mPosition)) {
-                    return;
-                }
-                if (aBoolean) {
-                    removeCardBean(mPosition);
-                    showSnackBar(mCardViewHolder.mCardView, "您已移除该卡片", "");
-                } else {
-                    showSnackBar(mCardViewHolder.mCardView, "卡片移除失败", "ErrorCode: " + OKConstant.ARTICLE_CANCEL_ERROR);
-                }
-            }
-
-            @Override
-            protected Boolean doInBackground(Map<String, String>... params) {
-                if (isCancelled()) {
-                    return false;
-                }
-                OKBusinessNet mWebApi = new OKBusinessNet();
-                return mWebApi.RemoveCard(params[0]);
             }
         }
     }

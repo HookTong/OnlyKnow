@@ -180,11 +180,6 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (!OKNetUtil.isNet(getActivity())) {
-            if (USER_INFO_SP.getBoolean("STATE", false) && mOKRecyclerView.getAdapter().getItemCount() == 0) {
-                mOKCardAndCommentBeanList.clear();
-                mOKCardAndCommentBeanList.addAll(OKConstant.getListCache(INTERFACE_CARD_AND_COMMENT));
-                mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            }
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
@@ -212,7 +207,6 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mOKCardAndCommentBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_CARD_AND_COMMENT, mOKCardAndCommentBeanList);
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
         }
 
@@ -285,20 +279,17 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
                     if (mOKCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_CARD_AND_COMMENT);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, mOKCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, mOKCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
                     } else if (mOKCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_CARD_AND_COMMENT);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, mOKCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, mOKCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
                     } else if (mOKCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_CARD_AND_COMMENT);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, mOKCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, mOKCardBean);
                         startUserActivity(bundle, OKCardWZActivity.class);
                     }
                 }

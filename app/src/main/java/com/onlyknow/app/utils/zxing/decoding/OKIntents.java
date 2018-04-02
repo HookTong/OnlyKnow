@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.onlyknow.app.zxing.decoding;
+package com.onlyknow.app.utils.zxing.decoding;
 
 /**
  * This class provides the constants to use when sending an Intent to Barcode

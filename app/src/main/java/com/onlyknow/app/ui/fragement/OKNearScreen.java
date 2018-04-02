@@ -238,7 +238,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             if (mOKLoadNearApi == null) {
                 mOKLoadNearApi = new OKLoadNearApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, true, this);
+            mOKLoadNearApi.requestCardBeanList(map, mCardBeanList, true, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackBar(rootView, "没有网络连接!", "");
@@ -256,12 +256,8 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             if (mOKLoadNearApi == null) {
                 mOKLoadNearApi = new OKLoadNearApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, false, this);
+            mOKLoadNearApi.requestCardBeanList(map, mCardBeanList, false, this);
         } else {
-            if (mRecyclerView.getAdapter().getItemCount() == 0) {
-                mCardBeanList.addAll(OKConstant.getListCache(INTERFACE_NEAR));
-                mRecyclerView.getAdapter().notifyDataSetChanged();
-            }
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(rootView, "没有网络连接!", "");
         }
@@ -308,7 +304,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
                 mCardBeanList.addAll(list);
             }
-            OKConstant.putListCache(INTERFACE_NEAR, mCardBeanList);
             mRecyclerView.getAdapter().notifyDataSetChanged();
         }
         if (mRefreshLayout.getState() == RefreshState.Refreshing) {
@@ -369,20 +364,17 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
                     if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_NEAR);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_NEAR);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
                     } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_NEAR);
-                        bundle.putInt(INTENT_KEY_LIST_POSITION, position);
-                        bundle.putInt(INTENT_KEY_LIST_CARD_ID, okCardBean.getCARD_ID());
+                        bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardWZActivity.class);
                     }
                 }
@@ -393,7 +385,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
                 @Override
                 public void onClick(View v) {
                     mBeanList.remove(position);
-                    OKConstant.removeListCache(INTERFACE_NEAR, position);
                     mRecyclerView.getAdapter().notifyDataSetChanged();
                 }
             });

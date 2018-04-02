@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -25,11 +26,11 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.exceptions.HyphenateException;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKLoadCarouselAndAdImageApi;
 import com.onlyknow.app.database.bean.OKCarouselAndAdImageBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
+import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.utils.OKCityUtil;
-import com.onlyknow.app.utils.OKDeviceInfoUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 
@@ -39,11 +40,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKMainService extends OKBaseService {
+public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdImageApi.onCallBack {
+    public static boolean isEMLogIn = false;
+
     // 环信登录结果回调
     private EMCallBack mEMCallBackLogIn = new EMCallBack() {
         @Override
         public void onSuccess() {
+            isEMLogIn = true;
+
             EMClient.getInstance().groupManager().loadAllGroups();
             EMClient.getInstance().chatManager().loadAllConversations();
             EMClient.getInstance().chatManager().addMessageListener(mMsgListener);
@@ -52,6 +57,7 @@ public class OKMainService extends OKBaseService {
 
         @Override
         public void onError(int i, String s) {
+            isEMLogIn = false;
             OKLogUtil.print("登录聊天服务器失败！");
         }
 
@@ -179,11 +185,11 @@ public class OKMainService extends OKBaseService {
                         createIm(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""), USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                     }
                     // 获取轮播图片和广告
-                    if (mLoadCarouselAndAdImageTask != null && mLoadCarouselAndAdImageTask.getStatus() == AsyncTask.Status.RUNNING) {
-                        mLoadCarouselAndAdImageTask.cancel(true);
+                    if (mOKLoadCarouselAndAdImageApi != null) {
+                        mOKLoadCarouselAndAdImageApi.cancelTask();
                     }
-                    mLoadCarouselAndAdImageTask = new LoadCarouselAndAdImageTask(OKMainService.this);
-                    mLoadCarouselAndAdImageTask.executeOnExecutor(exec);
+                    mOKLoadCarouselAndAdImageApi = new OKLoadCarouselAndAdImageApi(OKMainService.this);
+                    mOKLoadCarouselAndAdImageApi.requestCarouselAndAdImage(OKMainService.this);
                 } else {
                     OKLogUtil.print("网络连接已断开");
                 }
@@ -219,7 +225,7 @@ public class OKMainService extends OKBaseService {
         }
     };
 
-    private LoadCarouselAndAdImageTask mLoadCarouselAndAdImageTask;
+    private OKLoadCarouselAndAdImageApi mOKLoadCarouselAndAdImageApi;
 
     // IM 方法
     private void createIm(final String username, final String password) {
@@ -287,8 +293,8 @@ public class OKMainService extends OKBaseService {
         super.onDestroy();
         unregisterReceiver(mServiceBroadcastReceiver);
         EMClient.getInstance().chatManager().removeMessageListener(mMsgListener);
-        if (mLoadCarouselAndAdImageTask != null && mLoadCarouselAndAdImageTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mLoadCarouselAndAdImageTask.cancel(true);
+        if (mOKLoadCarouselAndAdImageApi != null) {
+            mOKLoadCarouselAndAdImageApi.cancelTask();
         }
         mLocationClient.stopLocation();
         mLocationClient.onDestroy();
@@ -300,11 +306,11 @@ public class OKMainService extends OKBaseService {
                 createIm(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""), USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
             }
             // 获取轮播图片和广告
-            if (mLoadCarouselAndAdImageTask != null && mLoadCarouselAndAdImageTask.getStatus() == AsyncTask.Status.RUNNING) {
-                mLoadCarouselAndAdImageTask.cancel(true);
+            if (mOKLoadCarouselAndAdImageApi != null) {
+                mOKLoadCarouselAndAdImageApi.cancelTask();
             }
-            mLoadCarouselAndAdImageTask = new LoadCarouselAndAdImageTask(this);
-            mLoadCarouselAndAdImageTask.executeOnExecutor(exec);
+            mOKLoadCarouselAndAdImageApi = new OKLoadCarouselAndAdImageApi(this);
+            mOKLoadCarouselAndAdImageApi.requestCarouselAndAdImage(this);
         }
         mLocationClient = new AMapLocationClient(getApplicationContext()); // 初始化定位
         mLocationClient.setLocationListener(mLocationListener); // 设置定位回调监听
@@ -351,81 +357,62 @@ public class OKMainService extends OKBaseService {
                 @Override
                 public void run() {
                     super.run();
-                    new OKBusinessNet().addUserLocation(map);
+                    new OKBusinessApi().addUserLocation(map);
                 }
             }.start();
         }
         OKLogUtil.print("LONGITUDE: " + String.valueOf(LONGITUDE) + "DIMENSION: " + String.valueOf(DIMENSION));
     }
 
-    private class LoadCarouselAndAdImageTask extends AsyncTask<Void, Void, OKCarouselAndAdImageBean> {
-        private Context mContext;
-
-        public LoadCarouselAndAdImageTask(Context context) {
-            this.mContext = context;
+    @Override
+    public void carouselAndAdImageApiComplete(OKCarouselAndAdImageBean bean) {
+        if (bean == null) {
+            OKLogUtil.print("获取轮播图片和广告图片失败");
+            return;
         }
+        // 更新轮播图片,RES_ID为错图替代
+        List<Map<String, Object>> headList = new ArrayList<>();
+        Map<String, Object> map1 = new HashMap<>();
+        map1.put("URL", bean.getHP_IMAGE_URL1());
+        map1.put("RES_ID", R.drawable.topgd1);
+        Map<String, Object> map2 = new HashMap<>();
+        map2.put("URL", bean.getHP_IMAGE_URL2());
+        map2.put("RES_ID", R.drawable.topgd2);
+        Map<String, Object> map3 = new HashMap<>();
+        map3.put("URL", bean.getHP_IMAGE_URL3());
+        map3.put("RES_ID", R.drawable.topgd3);
+        Map<String, Object> map4 = new HashMap<>();
+        map4.put("URL", bean.getHP_IMAGE_URL4());
+        map4.put("RES_ID", R.drawable.topgd4);
+        Map<String, Object> map5 = new HashMap<>();
+        map5.put("URL", bean.getHP_IMAGE_URL5());
+        map5.put("RES_ID", R.drawable.topgd5);
+        headList.add(map1);
+        headList.add(map2);
+        headList.add(map3);
+        headList.add(map4);
+        headList.add(map5);
+        OKConstant.setHeadUrls(headList);
 
-        @Override
-        protected OKCarouselAndAdImageBean doInBackground(Void... params) {
-            if (isCancelled()) {
-                return null;
-            }
-            return new OKBusinessNet().getOKCarouselAndAdImageBean(new OKDeviceInfoUtil(OKMainService.this).getIMIE());
-        }
+        // 更新广告URL
+        List<Map<String, String>> adList = new ArrayList<>();
+        Map<String, String> adMap1 = new HashMap<>();
+        adMap1.put("URL", bean.getAD_IMAGE_URL1());
+        adMap1.put("LINK", bean.getAD_LINK_URL1());
+        Map<String, String> adMap2 = new HashMap<>();
+        adMap2.put("URL", bean.getAD_IMAGE_URL2());
+        adMap2.put("LINK", bean.getAD_LINK_URL2());
+        Map<String, String> adMap3 = new HashMap<>();
+        adMap3.put("URL", bean.getAD_IMAGE_URL3());
+        adMap3.put("LINK", bean.getAD_LINK_URL3());
+        adList.add(adMap1);
+        adList.add(adMap2);
+        adList.add(adMap3);
+        OKConstant.setAdUrls(adList);
 
-        @Override
-        protected void onPostExecute(OKCarouselAndAdImageBean bean) {
-            super.onPostExecute(bean);
-            if (isCancelled()) {
-                OKLogUtil.print("获取轮播图片和广告图片的线程意外结束");
-                return;
-            }
-            if (bean == null) {
-                OKLogUtil.print("获取轮播图片和广告图片失败");
-                return;
-            }
-            // 更新轮播图片,RES_ID为错图替代
-            List<Map<String, Object>> headList = new ArrayList<>();
-            Map<String, Object> map1 = new HashMap<>();
-            map1.put("URL", bean.getHP_IMAGE_URL1());
-            map1.put("RES_ID", R.drawable.topgd1);
-            Map<String, Object> map2 = new HashMap<>();
-            map2.put("URL", bean.getHP_IMAGE_URL2());
-            map2.put("RES_ID", R.drawable.topgd2);
-            Map<String, Object> map3 = new HashMap<>();
-            map3.put("URL", bean.getHP_IMAGE_URL3());
-            map3.put("RES_ID", R.drawable.topgd3);
-            Map<String, Object> map4 = new HashMap<>();
-            map4.put("URL", bean.getHP_IMAGE_URL4());
-            map4.put("RES_ID", R.drawable.topgd4);
-            Map<String, Object> map5 = new HashMap<>();
-            map5.put("URL", bean.getHP_IMAGE_URL5());
-            map5.put("RES_ID", R.drawable.topgd5);
-            headList.add(map1);
-            headList.add(map2);
-            headList.add(map3);
-            headList.add(map4);
-            headList.add(map5);
-            OKConstant.setHeadUrls(headList);
+        Intent mIntent = new Intent(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE);
+        sendBroadcast(mIntent);
 
-            // 更新广告URL
-            List<Map<String, String>> adList = new ArrayList<>();
-            Map<String, String> adMap1 = new HashMap<>();
-            adMap1.put("URL", bean.getAD_IMAGE_URL1());
-            adMap1.put("LINK", bean.getAD_LINK_URL1());
-            Map<String, String> adMap2 = new HashMap<>();
-            adMap2.put("URL", bean.getAD_IMAGE_URL2());
-            adMap2.put("LINK", bean.getAD_LINK_URL2());
-            Map<String, String> adMap3 = new HashMap<>();
-            adMap3.put("URL", bean.getAD_IMAGE_URL3());
-            adMap3.put("LINK", bean.getAD_LINK_URL3());
-            adList.add(adMap1);
-            adList.add(adMap2);
-            adList.add(adMap3);
-            OKConstant.setAdUrls(adList);
-
-            Intent mIntent = new Intent(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE);
-            mContext.sendBroadcast(mIntent);
-        }
+        OKLogUtil.print("OKMainService", "轮播和广告图片加载完成 !");
     }
 }

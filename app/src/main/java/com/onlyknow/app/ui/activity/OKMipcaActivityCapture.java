@@ -1,8 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.media.AudioManager;
@@ -11,8 +9,6 @@ import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -26,9 +22,9 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.ui.view.OKViewfinderView;
-import com.onlyknow.app.zxing.camera.OKCameraManager;
-import com.onlyknow.app.zxing.decoding.OKCaptureActivityHandler;
-import com.onlyknow.app.zxing.decoding.OKInactivityTimer;
+import com.onlyknow.app.utils.zxing.camera.OKCameraManager;
+import com.onlyknow.app.utils.zxing.decoding.OKCaptureActivityHandler;
+import com.onlyknow.app.utils.zxing.decoding.OKInactivityTimer;
 
 import java.io.IOException;
 import java.util.Vector;
@@ -59,13 +55,10 @@ public class OKMipcaActivityCapture extends OKBaseActivity implements Callback {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_capture);
+
         initSystemBar(this);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1);
-        }
-
-        OKCameraManager.init(getApplication());
+        OKCameraManager.init(this);
         findView();
         SetListener();
         hasSurface = false;

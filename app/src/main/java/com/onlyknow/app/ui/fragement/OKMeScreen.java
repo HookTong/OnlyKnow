@@ -3,7 +3,6 @@ package com.onlyknow.app.ui.fragement;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.AppBarLayout;
@@ -28,14 +27,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKLoadUserInfoApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
 import com.onlyknow.app.ui.activity.OKGoodsActivity;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
-import com.onlyknow.app.ui.activity.OKUserEdit;
+import com.onlyknow.app.ui.activity.OKUserEditActivity;
 import com.onlyknow.app.ui.adapter.OKFragmentPagerAdapter;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -45,7 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetChangedListener, NavigationView.OnNavigationItemSelectedListener {
+public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetChangedListener, NavigationView.OnNavigationItemSelectedListener, OKLoadUserInfoApi.onCallBack {
     private AppBarLayout appBarLayout;
     private Toolbar toolbar;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -74,7 +73,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
 
     private View rootView;
 
-    private LoadUserTask mLoadUserTask;
+    private OKLoadUserInfoApi mOKLoadUserInfoApi;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -103,11 +102,11 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         }
 
         if (USER_INFO_SP.getBoolean("STATE", false) && !TextUtils.isEmpty(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
-            mLoadUserTask = new LoadUserTask();
+            mOKLoadUserInfoApi = new OKLoadUserInfoApi(getActivity());
             Map<String, String> map = new HashMap<>();// 请求参数
             map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
             map.put("type", "ALL");
-            mLoadUserTask.executeOnExecutor(exec, map);
+            mOKLoadUserInfoApi.requestUserInfo(map, this);
         }
     }
 
@@ -115,8 +114,8 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     public void onPause() {
         super.onPause();
         //如果异步任务不为空并且状态是运行时,就把他取消这个加载任务
-        if (mLoadUserTask != null && mLoadUserTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mLoadUserTask.cancel(true);
+        if (mOKLoadUserInfoApi != null) {
+            mOKLoadUserInfoApi.cancelTask();
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         appBarLayout.removeOnOffsetChangedListener(this);
@@ -245,7 +244,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     Intent intent = new Intent();
-                    intent.setClass(getActivity(), OKUserEdit.class);
+                    intent.setClass(getActivity(), OKUserEditActivity.class);
                     getActivity().startActivity(intent);
                 } else {
                     Intent intent = new Intent();
@@ -338,72 +337,57 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         return true;
     }
 
-    private class LoadUserTask extends AsyncTask<Map<String, String>, Void, OKUserInfoBean> {
+    @Override
+    public void userInfoApiComplete(OKUserInfoBean userInfoBean) {
 
-        @Override
-        protected void onPostExecute(OKUserInfoBean userInfoBean) {
-            if (isCancelled()) {
-                return;
-            }
-
-            if (userInfoBean == null) {
-                showSnackBar(rootView, "没有获取到用户信息", "");
-                return;
-            }
-
-            if (!userInfoBean.getHEADPORTRAIT_URL().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""))) {
-                GlideRoundApi(imageViewTX, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
-                GlideBlurApi(mImageViewHead, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.topgd3, R.drawable.topgd3);
-            }
-
-            textViewName.setText(userInfoBean.getNICKNAME());
-
-            if (!TextUtils.isEmpty(userInfoBean.getQIANMIN()) && !userInfoBean.getQIANMIN().equals("NULL")) {
-                textViewQianMin.setText(userInfoBean.getQIANMIN());
-            } else {
-                textViewQianMin.setText("这个人很懒，什么都没有留下 !");
-            }
-
-            imageViewSex.setVisibility(View.VISIBLE);
-            if (userInfoBean.getSEX().equals("NAN")) {
-                GlideApi(imageViewSex, R.drawable.nan, R.drawable.nan, R.drawable.nan);
-            } else {
-                GlideApi(imageViewSex, R.drawable.nv, R.drawable.nv, R.drawable.nv);
-            }
-
-            textViewShouChan.setText("" + userInfoBean.getSHOUCHAN());
-            textViewGuanZhu.setText("" + userInfoBean.getGUANZHU());
-            textViewJiFeng.setText("" + userInfoBean.getJIFENG());
-
-            // 保存用户信息
-            SharedPreferences.Editor editor = USER_INFO_SP.edit();
-            editor.putInt(OKUserInfoBean.KEY_USERID, userInfoBean.getUSERID());
-            editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUSERNAME());
-            editor.putString(OKUserInfoBean.KEY_NICKNAME, userInfoBean.getNICKNAME());
-            editor.putString(OKUserInfoBean.KEY_PHONE, userInfoBean.getPHONE());
-            editor.putString(OKUserInfoBean.KEY_EMAIL, userInfoBean.getEMAIL());
-            editor.putString(OKUserInfoBean.KEY_QIANMIN, userInfoBean.getQIANMIN());
-            editor.putString(OKUserInfoBean.KEY_SEX, userInfoBean.getSEX());
-            editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, userInfoBean.getBIRTH_DATE());
-            editor.putInt(OKUserInfoBean.KEY_AGE, userInfoBean.getAGE());
-            editor.putString(OKUserInfoBean.KEY_RE_DATE, userInfoBean.getRE_DATE());
-            editor.putInt(OKUserInfoBean.KEY_SHOUCHAN, userInfoBean.getSHOUCHAN());
-            editor.putInt(OKUserInfoBean.KEY_GUANZHU, userInfoBean.getGUANZHU());
-            editor.putInt(OKUserInfoBean.KEY_JIFENG, userInfoBean.getJIFENG());
-            editor.putInt(OKUserInfoBean.KEY_WENZHAN, userInfoBean.getWENZHAN());
-            editor.putString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, userInfoBean.getHEADPORTRAIT_URL());
-            editor.putString(OKUserInfoBean.KEY_HEAD_URL, userInfoBean.getHEAD_URL());
-            editor.putString(OKUserInfoBean.KEY_EDIT_DATE, userInfoBean.getEDIT_DATE());
-            editor.commit();
+        if (userInfoBean == null) {
+            showSnackBar(rootView, "没有获取到用户信息", "");
+            return;
         }
 
-        @Override
-        protected OKUserInfoBean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return null;
-            }
-
-            return new OKBusinessNet().getUserInfo(params[0]);
+        if (!userInfoBean.getHEADPORTRAIT_URL().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""))) {
+            GlideRoundApi(imageViewTX, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+            GlideBlurApi(mImageViewHead, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.topgd3, R.drawable.topgd3);
         }
+
+        textViewName.setText(userInfoBean.getNICKNAME());
+
+        if (!TextUtils.isEmpty(userInfoBean.getQIANMIN()) && !userInfoBean.getQIANMIN().equals("NULL")) {
+            textViewQianMin.setText(userInfoBean.getQIANMIN());
+        } else {
+            textViewQianMin.setText("这个人很懒，什么都没有留下 !");
+        }
+
+        imageViewSex.setVisibility(View.VISIBLE);
+        if (userInfoBean.getSEX().equals("NAN")) {
+            GlideApi(imageViewSex, R.drawable.nan, R.drawable.nan, R.drawable.nan);
+        } else {
+            GlideApi(imageViewSex, R.drawable.nv, R.drawable.nv, R.drawable.nv);
+        }
+
+        textViewShouChan.setText("" + userInfoBean.getSHOUCHAN());
+        textViewGuanZhu.setText("" + userInfoBean.getGUANZHU());
+        textViewJiFeng.setText("" + userInfoBean.getJIFENG());
+
+        // 保存用户信息
+        SharedPreferences.Editor editor = USER_INFO_SP.edit();
+        editor.putInt(OKUserInfoBean.KEY_USERID, userInfoBean.getUSERID());
+        editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUSERNAME());
+        editor.putString(OKUserInfoBean.KEY_NICKNAME, userInfoBean.getNICKNAME());
+        editor.putString(OKUserInfoBean.KEY_PHONE, userInfoBean.getPHONE());
+        editor.putString(OKUserInfoBean.KEY_EMAIL, userInfoBean.getEMAIL());
+        editor.putString(OKUserInfoBean.KEY_QIANMIN, userInfoBean.getQIANMIN());
+        editor.putString(OKUserInfoBean.KEY_SEX, userInfoBean.getSEX());
+        editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, userInfoBean.getBIRTH_DATE());
+        editor.putInt(OKUserInfoBean.KEY_AGE, userInfoBean.getAGE());
+        editor.putString(OKUserInfoBean.KEY_RE_DATE, userInfoBean.getRE_DATE());
+        editor.putInt(OKUserInfoBean.KEY_SHOUCHAN, userInfoBean.getSHOUCHAN());
+        editor.putInt(OKUserInfoBean.KEY_GUANZHU, userInfoBean.getGUANZHU());
+        editor.putInt(OKUserInfoBean.KEY_JIFENG, userInfoBean.getJIFENG());
+        editor.putInt(OKUserInfoBean.KEY_WENZHAN, userInfoBean.getWENZHAN());
+        editor.putString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, userInfoBean.getHEADPORTRAIT_URL());
+        editor.putString(OKUserInfoBean.KEY_HEAD_URL, userInfoBean.getHEAD_URL());
+        editor.putString(OKUserInfoBean.KEY_EDIT_DATE, userInfoBean.getEDIT_DATE());
+        editor.commit();
     }
 }

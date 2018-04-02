@@ -4,6 +4,7 @@ import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -14,7 +15,7 @@ import java.util.Date;
  */
 
 @DatabaseTable(tableName = "card_table")
-public class OKCardBean {
+public class OKCardBean implements Serializable {
     @DatabaseField(columnName = KEY_CARD_ID, id = true, unique = true)
     private int CARD_ID = -1;
     public final static String KEY_CARD_ID = "CARD_ID";

@@ -145,7 +145,7 @@
             android:name="com.onlyknow.app.ui.activity.OKSearchActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.onlyknow.app.ui.activity.OKUserEdit"
+            android:name="com.onlyknow.app.ui.activity.OKUserEditActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name="com.onlyknow.app.ui.activity.OKHomePageActivity"

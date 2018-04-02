@@ -15,9 +15,9 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
+import com.onlyknow.app.api.OKSigNupApi;
 import com.onlyknow.app.database.bean.OKSignupResultBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.net.OKBusinessNet;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.text.SimpleDateFormat;
@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OKSigNupActivity extends OKBaseActivity {
+public class OKSigNupActivity extends OKBaseActivity implements OKSigNupApi.onCallBack {
     private AppCompatButton buttonSigNup;
     private EditText editTextUserName, editTextNickName, editTextPhone, editTextEmail, editTextPassword;
     private RadioGroup sexRg;
@@ -35,7 +35,7 @@ public class OKSigNupActivity extends OKBaseActivity {
     private String strSex = "NAN";
     private TextView textView;
 
-    private SigNupTask mSigNupTask;
+    private OKSigNupApi mOKSigNupApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,8 +54,8 @@ public class OKSigNupActivity extends OKBaseActivity {
     public void onPause() {
         super.onPause();
 
-        if (mSigNupTask != null && mSigNupTask.getStatus() == AsyncTask.Status.RUNNING) {
-            mSigNupTask.cancel(true);
+        if (mOKSigNupApi != null) {
+            mOKSigNupApi.cancelTask();
         }
     }
 
@@ -87,21 +87,23 @@ public class OKSigNupActivity extends OKBaseActivity {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
                     String date = dateFormat.format(now);
 
+                    String name = editTextUserName.getText().toString();
+                    String pass = editTextPassword.getText().toString();
                     Map<String, String> params = new HashMap<String, String>();
-                    params.put("username", editTextUserName.getText().toString());
+                    params.put("username", name);
                     params.put("nickname", editTextNickName.getText().toString());
-                    params.put("password", editTextPassword.getText().toString());
+                    params.put("password", pass);
                     params.put("phone", editTextPhone.getText().toString());
                     params.put("email", editTextEmail.getText().toString());
                     params.put("sexRg", strSex);
                     params.put("age", "0");
                     params.put("redate", date);
 
-                    if (mSigNupTask != null && mSigNupTask.getStatus() == AsyncTask.Status.RUNNING) {
-                        mSigNupTask.cancel(true);
+                    if (mOKSigNupApi != null) {
+                        mOKSigNupApi.cancelTask();
                     }
-                    mSigNupTask = new SigNupTask(editTextUserName.getText().toString(), editTextPassword.getText().toString());
-                    mSigNupTask.executeOnExecutor(exec, params);
+                    mOKSigNupApi = new OKSigNupApi(OKSigNupActivity.this);
+                    mOKSigNupApi.requestSigNup(params, name, pass, OKSigNupActivity.this);
 
                     showProgressDialog("正在注册账号...");
                 } else {
@@ -215,48 +217,25 @@ public class OKSigNupActivity extends OKBaseActivity {
         return errorMsg;
     }
 
-    private class SigNupTask extends AsyncTask<Map<String, String>, Void, OKSignupResultBean> {
-        private String ImUserName, ImPassWord;
+    @Override
+    public void sigNupApiComplete(OKSignupResultBean mSignupResultBean, String imName, String imPass) {
+        closeProgressDialog();
+        if (mSignupResultBean != null) {
+            if (mSignupResultBean.IS_SIGNUP()) {
+                // 向环信注册账号
+                Bundle mBundle = new Bundle();
+                mBundle.putString(OKUserInfoBean.KEY_USERNAME, imName);
+                mBundle.putString(OKUserInfoBean.KEY_PASSWORD, imPass);
+                sendUserBroadcast(ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM, mBundle);
 
-        public SigNupTask(String username, String password) {
-            this.ImUserName = username;
-            this.ImPassWord = password;
-        }
+                showSnackBar(buttonSigNup, "注册成功", "");
 
-        @Override
-        protected OKSignupResultBean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return null;
-            }
-            return new OKBusinessNet().registerUser(params[0]);
-        }
-
-        @Override
-        protected void onPostExecute(OKSignupResultBean mSignupResultBean) {
-            super.onPostExecute(mSignupResultBean);
-            if (isCancelled()) {
-                return;
-            }
-
-            closeProgressDialog();
-
-            if (mSignupResultBean != null) {
-                if (mSignupResultBean.IS_SIGNUP()) {
-                    // 向环信注册账号
-                    Bundle mBundle = new Bundle();
-                    mBundle.putString(OKUserInfoBean.KEY_USERNAME, ImUserName);
-                    mBundle.putString(OKUserInfoBean.KEY_PASSWORD, ImPassWord);
-                    sendUserBroadcast(ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM, mBundle);
-
-                    showSnackBar(buttonSigNup, "注册成功", "");
-
-                    finish();
-                } else {
-                    showSnackBar(buttonSigNup, "注册失败," + mSignupResultBean.getERROR_INFO() + "已存在!", "");
-                }
+                finish();
             } else {
-                showSnackBar(buttonSigNup, "注册失败,服务器错误!", "");
+                showSnackBar(buttonSigNup, "注册失败," + mSignupResultBean.getERROR_INFO() + "已存在!", "");
             }
+        } else {
+            showSnackBar(buttonSigNup, "注册失败,服务器错误!", "");
         }
     }
 }
