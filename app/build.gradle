@@ -105,7 +105,6 @@ dependencies {
     compile files('libs/umeng_social_shareboard.jar')
     compile files('libs/umeng_social_shareview.jar')
     compile files('libs/umeng_social_tool.jar')
-    compile files('libs/zxing.jar')
     compile files('libs/tbs_sdk_v3.5.0.jar')
     compile project(':bottom-navigation-bar')
     compile project(':HiPermission')
