@@ -89,6 +89,8 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.10.0'
     compile 'com.squareup.okio:okio:1.14.0'
     compile 'com.github.xiaoyanger0825:NiceVieoPlayer:v2.2'
+    compile 'cn.bingoogolapple:bga-qrcode-zxing:1.2.1'
+
     testCompile 'junit:junit:4.12'
     compile files('libs/AMap_Location_V3.6.1_20171012.jar')
     compile files('libs/gson-2.3.1.jar')

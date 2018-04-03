@@ -41,7 +41,7 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKCardUrlListBean;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
-import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
+import com.onlyknow.app.ui.activity.OKQrCodeRecognitionActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEditActivity;
 import com.onlyknow.app.ui.view.OKCatLoadingView;
@@ -59,8 +59,6 @@ import com.yalantis.ucrop.UCropActivity;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 所有Activity都必须继承该基本Activity
@@ -208,7 +206,7 @@ public class OKBaseActivity extends AppCompatActivity {
                         break;
                     case R.id.POP_QRCODE_LAYOU:
                         Intent intent = new Intent();
-                        intent.setClass(activity, OKMipcaActivityCapture.class);
+                        intent.setClass(activity, OKQrCodeRecognitionActivity.class);
                         activity.startActivity(intent);
                         popWindow.dismiss();
                         break;

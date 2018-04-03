@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public class OKBase64Util {
     private final static String TAG = "OKBase64Util";
@@ -39,7 +40,7 @@ public class OKBase64Util {
             baos.close();
             return imageBase64;
         } catch (IOException e) {
-            Log.e("IMAGT2String", "图片转Base64失败");
+            OKLogUtil.print("bitmap to base64 string error");
             e.printStackTrace();
             return null;
         }
@@ -153,6 +154,8 @@ public class OKBase64Util {
      * 转换图片成圆形 传入Bitmap对象
      */
     public static Bitmap toRoundBitmap(Bitmap bitmap) {
+        if (bitmap == null) return null;
+
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         float roundPx;
@@ -221,5 +224,33 @@ public class OKBase64Util {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static String stringToBase64(String msg) {
+        byte[] b = null;
+        String result = null;
+        try {
+            b = msg.getBytes("utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        if (b != null) {
+            result = Base64.encodeToString(b, 0);
+        }
+        return result;
+    }
+
+    public static String base64ToString(String msg) {
+        byte[] b = null;
+        String result = null;
+        if (msg != null) {
+            try {
+                b = Base64.decode(msg, 0);
+                result = new String(b, "utf-8");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
 }

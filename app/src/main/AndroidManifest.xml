@@ -122,11 +122,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.onlyknow.app.ui.activity.OKMipcaActivityCapture"
+            android:name="com.onlyknow.app.ui.activity.OKQrCodeRecognitionActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.onlyknow.app.ui.activity.OKCapTureActivity"
+            android:name="com.onlyknow.app.ui.activity.OKQrCodeResultActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity

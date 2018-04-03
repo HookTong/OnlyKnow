@@ -21,7 +21,8 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:layout_marginTop="80dp"
-            android:background="@drawable/shape">
+            android:background="@drawable/shape"
+            android:elevation="5dp">
 
             <android.support.v4.widget.NestedScrollView
                 android:layout_width="match_parent"
@@ -33,7 +34,9 @@
                     android:id="@+id/CAP_qrcode_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center" />
+                    android:layout_gravity="center"
+                    android:textColor="@color/md_white_1000"
+                    android:textSize="16sp" />
             </android.support.v4.widget.NestedScrollView>
         </LinearLayout>
 
@@ -43,7 +46,7 @@
             android:layout_height="45dp"
             android:layout_below="@id/CAP_LLayout"
             android:layout_centerHorizontal="true"
-            android:layout_margin="5dp"
+            android:layout_margin="15dp"
             android:background="@drawable/shape"
             android:enabled="true"
             android:text="@string/cap_but" />

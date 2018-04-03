@@ -40,81 +40,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdImageApi.onCallBack {
+public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdImageApi.onCallBack, AMapLocationListener, EMCallBack, EMMessageListener {
     public static boolean isEMLogIn = false;
 
-    // 环信登录结果回调
-    private EMCallBack mEMCallBackLogIn = new EMCallBack() {
-        @Override
-        public void onSuccess() {
-            isEMLogIn = true;
-
-            EMClient.getInstance().groupManager().loadAllGroups();
-            EMClient.getInstance().chatManager().loadAllConversations();
-            EMClient.getInstance().chatManager().addMessageListener(mMsgListener);
-            OKLogUtil.print("登录聊天服务器成功！");
-        }
-
-        @Override
-        public void onError(int i, String s) {
-            isEMLogIn = false;
-            OKLogUtil.print("登录聊天服务器失败！");
-        }
-
-        @Override
-        public void onProgress(int i, String s) {
-        }
-    };
-
-    // 环信消息接收监听器
-    private EMMessageListener mMsgListener = new EMMessageListener() {
-
-        @Override
-        public void onMessageReceived(List<EMMessage> messages) {
-            //收到消息
-            if (messages != null && messages.size() != 0) {
-                EMClient.getInstance().chatManager().importMessages(messages);
-                EMMessage msg = messages.get(messages.size() - 1);
-                if (msg.getType() == EMMessage.Type.TXT) {
-                    String fromName = msg.getFrom();
-                    initNotice(fromName, ((EMTextMessageBody) msg.getBody()).getMessage());
-                    showNotice(fromName);
-                } else if (msg.getType() == EMMessage.Type.IMAGE) {
-                    String fromName = msg.getFrom();
-                    initNotice(fromName, "给您发送了一张图片");
-                    showNotice(fromName);
-                }
-            }
-        }
-
-        @Override
-        public void onCmdMessageReceived(List<EMMessage> messages) {
-            //收到透传消息
-        }
-
-        @Override
-        public void onMessageRead(List<EMMessage> messages) {
-            //收到已读回执
-        }
-
-        @Override
-        public void onMessageDelivered(List<EMMessage> message) {
-            //收到已送达回执
-        }
-
-        @Override
-        public void onMessageRecalled(List<EMMessage> messages) {
-            //消息被撤回
-        }
-
-        @Override
-        public void onMessageChanged(EMMessage message, Object change) {
-            //消息状态变动
-        }
-    };
-
     // 广播接收器
-    private BroadcastReceiver mServiceBroadcastReceiver = new BroadcastReceiver() {
+    BroadcastReceiver mServiceBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -156,9 +86,9 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
                     OKLogUtil.print("用户试图创建环信账号但没有账号信息");
                 }
             } else if (ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM.equals(action)) {
-                EMClient.getInstance().chatManager().addMessageListener(mMsgListener);
+                EMClient.getInstance().chatManager().addMessageListener(OKMainService.this);
             } else if (ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM.equals(action)) {
-                EMClient.getInstance().chatManager().removeMessageListener(mMsgListener);
+                EMClient.getInstance().chatManager().removeMessageListener(OKMainService.this);
             } else if (OKConstant.ACTION_SHOW_NOTICE.equals(action)) {
                 Bundle mBundle = intent.getExtras();
                 if (mBundle == null) {
@@ -210,21 +140,6 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
 
     private long locationInterval = 0;
 
-    // 声明定位回调监听器
-    private AMapLocationListener mLocationListener = new AMapLocationListener() {
-        @Override
-        public void onLocationChanged(AMapLocation amapLocation) {
-            if (amapLocation != null) {
-                if (amapLocation.getErrorCode() == 0) {
-                    updateUserLocation(amapLocation); //可在其中解析aMapLocation获取相应内容
-                } else {
-                    //定位失败时，可通过ErrCode（错误码）信息来确定失败的原因,errInfo是错误信息,详见错误码表!
-                    OKLogUtil.print("MapError", "ErrCode:" + amapLocation.getErrorCode() + ", errInfo:" + amapLocation.getErrorInfo());
-                }
-            }
-        }
-    };
-
     private OKLoadCarouselAndAdImageApi mOKLoadCarouselAndAdImageApi;
 
     // IM 方法
@@ -249,7 +164,7 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
 
     private void loginIm(String username, String password) {
         if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password) && USER_INFO_SP.getBoolean("STATE", false)) {
-            EMClient.getInstance().login(username, password, mEMCallBackLogIn);
+            EMClient.getInstance().login(username, password, OKMainService.this);
         }
     }
 
@@ -292,12 +207,17 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mServiceBroadcastReceiver);
-        EMClient.getInstance().chatManager().removeMessageListener(mMsgListener);
+        EMClient.getInstance().chatManager().removeMessageListener(OKMainService.this);
         if (mOKLoadCarouselAndAdImageApi != null) {
             mOKLoadCarouselAndAdImageApi.cancelTask();
         }
         mLocationClient.stopLocation();
         mLocationClient.onDestroy();
+
+        OKLogUtil.print("---OKMainService.onDestroy--- 重新启动服务");
+        initNotice("OnlyKnow严重通知", "OKMainService意外终止,正在尝试重启...");
+        showNotice("OnlyKnow严重通知");
+        startService(new Intent(this, OKMainService.class));
     }
 
     private void init() {
@@ -313,7 +233,7 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
             mOKLoadCarouselAndAdImageApi.requestCarouselAndAdImage(this);
         }
         mLocationClient = new AMapLocationClient(getApplicationContext()); // 初始化定位
-        mLocationClient.setLocationListener(mLocationListener); // 设置定位回调监听
+        mLocationClient.setLocationListener(this); // 设置定位回调监听
         AMapLocationClientOption mLocationOption = new AMapLocationClientOption(); // 声明AMapLocationClientOption对象
         mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy); // 设置定位模式为高精度模式
         mLocationOption.setOnceLocation(true); // 获取一次定位结果 该方法默认为false
@@ -370,6 +290,7 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
             OKLogUtil.print("获取轮播图片和广告图片失败");
             return;
         }
+
         // 更新轮播图片,RES_ID为错图替代
         List<Map<String, Object>> headList = new ArrayList<>();
         Map<String, Object> map1 = new HashMap<>();
@@ -415,4 +336,85 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
 
         OKLogUtil.print("OKMainService", "轮播和广告图片加载完成 !");
     }
+
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        if (aMapLocation != null) {
+            if (aMapLocation.getErrorCode() == 0) {
+                updateUserLocation(aMapLocation); //可在其中解析aMapLocation获取相应内容
+            } else {
+                //定位失败时，可通过ErrCode（错误码）信息来确定失败的原因,errInfo是错误信息,详见错误码表!
+                OKLogUtil.print("MapError", "ErrCode:" + aMapLocation.getErrorCode() + ", errInfo:" + aMapLocation.getErrorInfo());
+            }
+        }
+    }
+
+    // 环信登录回调
+    @Override
+    public void onSuccess() {
+        isEMLogIn = true;
+
+        EMClient.getInstance().groupManager().loadAllGroups();
+        EMClient.getInstance().chatManager().loadAllConversations();
+        EMClient.getInstance().chatManager().addMessageListener(OKMainService.this);
+        OKLogUtil.print("登录聊天服务器成功！");
+    }
+
+    @Override
+    public void onError(int i, String s) {
+        isEMLogIn = false;
+
+        OKLogUtil.print("登录聊天服务器失败！");
+    }
+
+    @Override
+    public void onProgress(int i, String s) {
+
+    }
+    // ==============
+
+    // 以下是环信消息接收回调
+    @Override
+    public void onMessageReceived(List<EMMessage> messages) {
+        //收到消息
+        if (messages != null && messages.size() != 0) {
+            EMClient.getInstance().chatManager().importMessages(messages);
+            EMMessage msg = messages.get(messages.size() - 1);
+            if (msg.getType() == EMMessage.Type.TXT) {
+                String fromName = msg.getFrom();
+                initNotice(fromName, ((EMTextMessageBody) msg.getBody()).getMessage());
+                showNotice(fromName);
+            } else if (msg.getType() == EMMessage.Type.IMAGE) {
+                String fromName = msg.getFrom();
+                initNotice(fromName, "给您发送了一张图片");
+                showNotice(fromName);
+            }
+        }
+    }
+
+    @Override
+    public void onCmdMessageReceived(List<EMMessage> list) {
+
+    }
+
+    @Override
+    public void onMessageRead(List<EMMessage> list) {
+
+    }
+
+    @Override
+    public void onMessageDelivered(List<EMMessage> list) {
+
+    }
+
+    @Override
+    public void onMessageRecalled(List<EMMessage> list) {
+
+    }
+
+    @Override
+    public void onMessageChanged(EMMessage emMessage, Object o) {
+
+    }
+    // ========================
 }

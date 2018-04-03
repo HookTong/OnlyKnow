@@ -14,7 +14,7 @@ import com.onlyknow.app.ui.OKBaseActivity;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OKCapTureActivity extends OKBaseActivity {
+public class OKQrCodeResultActivity extends OKBaseActivity {
     private TextView textview;
     private Button butdk;
     private Bundle bundle;
@@ -22,7 +22,7 @@ public class OKCapTureActivity extends OKBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ok_activity_cap_ture);
+        setContentView(R.layout.ok_activity_qrcode_result);
         initSystemBar(this);
         bundle = this.getIntent().getExtras();
         findView();
@@ -54,7 +54,7 @@ public class OKCapTureActivity extends OKBaseActivity {
                     Bundle bundle = new Bundle();
                     bundle.putString("WEB_LINK", textview.getText().toString());
                     Intent intent = new Intent();
-                    intent.setClass(OKCapTureActivity.this, OKBrowserActivity.class);
+                    intent.setClass(OKQrCodeResultActivity.this, OKBrowserActivity.class);
                     intent.putExtras(bundle);
                     startActivity(intent);
                 } else {
@@ -68,7 +68,7 @@ public class OKCapTureActivity extends OKBaseActivity {
 
             @Override
             public void onClick(View v) {
-                OKCapTureActivity.this.finish();
+                OKQrCodeResultActivity.this.finish();
             }
         });
     }

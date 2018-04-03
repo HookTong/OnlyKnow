@@ -10,10 +10,6 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 
-/**
- * Created by Administrator on 2017/12/8.
- */
-
 public class OKQRUtil {
     private static final int WHITE = 0xFFFFFFFF;
     private static final int BLACK = 0xFF000000;

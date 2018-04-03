@@ -1,0 +1,44 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical">
+
+    <include layout="@layout/ok_content_common_toolbar" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <cn.bingoogolapple.qrcode.zxing.ZXingView
+            android:id="@+id/zxingview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:qrcv_animTime="2500"
+            app:qrcv_borderColor="@color/md_white_1000"
+            app:qrcv_borderSize="2dp"
+            app:qrcv_cornerColor="@color/md_pink_300"
+            app:qrcv_cornerLength="20dp"
+            app:qrcv_cornerSize="3dp"
+            app:qrcv_isShowTipTextAsSingleLine="true"
+            app:qrcv_isTipTextBelowRect="true"
+            app:qrcv_maskColor="#33FFFFFF"
+            app:qrcv_qrCodeTipText="将二维码图片放置到识别框中"
+            app:qrcv_rectWidth="250dp"
+            app:qrcv_scanLineColor="@color/md_pink_300"
+            app:qrcv_scanLineSize="1dp"
+            app:qrcv_tipTextMargin="10dp"
+            app:qrcv_topOffset="120dp" />
+
+        <com.onlyknow.app.ui.view.OKSEImageView
+            android:id="@+id/kaideng_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="50dp"
+            android:background="@drawable/ok_kaideng_on" />
+    </RelativeLayout>
+</LinearLayout>

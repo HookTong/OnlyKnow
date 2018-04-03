@@ -33,11 +33,14 @@ public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCo
     private TextView textViewNiChen, textViewQianMin;
     private Button buttonSave;
     private Bundle bundleMe;
+    private String qrCodeContent = "";
+
+    public final static String QR_CODE_START_MSG = "OpenOnlyKnowHomePageFrom:";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ok_activity_qrcode);
+        setContentView(R.layout.ok_activity_qrcode_me);
         initSystemBar(this);
         bundleMe = this.getIntent().getExtras();
         findView();
@@ -80,8 +83,7 @@ public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCo
             @Override
             public void onClick(View v) {
                 imageViewQrCode.buildDrawingCache();
-                OKBase64Util.saveBitmap(imageViewQrCode.getDrawingCache(), OKConstant.IMAGE_PATH,
-                        bundleMe.getString(OKUserInfoBean.KEY_USERNAME) + "_qrcode.jpg");
+                OKBase64Util.saveBitmap(imageViewQrCode.getDrawingCache(), OKConstant.IMAGE_PATH, bundleMe.getString(OKUserInfoBean.KEY_USERNAME) + "_QrCode.jpg");
                 showSnackBar(v, "二维码保存成功,您可以到 " + OKConstant.IMAGE_PATH + " 文件夹下查看", "");
             }
         });
@@ -94,14 +96,14 @@ public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCo
             }
         });
 
-        String content = "WeiZhiUSER=" + bundleMe.getString(OKUserInfoBean.KEY_USERNAME) + "&" + bundleMe.getString(OKUserInfoBean.KEY_NICKNAME);
-        initQeCode(null, content);
+        String usernameBase64 = OKBase64Util.stringToBase64(bundleMe.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        String nickNameBase64 = OKBase64Util.stringToBase64(bundleMe.getString(OKUserInfoBean.KEY_NICKNAME, ""));
+        qrCodeContent = QR_CODE_START_MSG + usernameBase64 + "&" + nickNameBase64;// 二维码内容
 
         GlideApp.with(this).asBitmap().load(url).into(new SimpleTarget<Bitmap>() {
             @Override
             public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                String content = "WeiZhiUSER=" + bundleMe.getString(OKUserInfoBean.KEY_USERNAME) + "&" + bundleMe.getString(OKUserInfoBean.KEY_NICKNAME);
-                initQeCode(resource, content);
+                initQeCode(resource, qrCodeContent);
             }
         });
     }

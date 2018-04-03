@@ -4,11 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
+import com.onlyknow.app.R;
 import com.onlyknow.app.utils.OKBase64Util;
-import com.onlyknow.app.utils.OKNetUtil;
-import com.onlyknow.app.utils.OKQRUtil;
 
-import java.util.Map;
+import cn.bingoogolapple.qrcode.zxing.QRCodeEncoder;
 
 public class OKGenerateQrCodeApi extends OKBaseApi {
     private Context context;
@@ -46,24 +45,17 @@ public class OKGenerateQrCodeApi extends OKBaseApi {
 
         @Override
         protected Bitmap doInBackground(Params... param) {
-            try {
-                Params mParams = param[0];
-                mBitmapTx = mParams.getBitmapTx();
-                mWidth = mParams.getWidth();
+            Params mParams = param[0];
 
-                Bitmap mBitmapQrCode = OKQRUtil.encodeToQRWidth(mParams.getMsg(), mWidth);
-                if (mBitmapTx != null) {
-                    mBitmapTx = OKBase64Util.toRoundBitmap(mBitmapTx);
-                    mBitmapQrCode = OKQRUtil.addLogo(mBitmapQrCode, mBitmapTx);
-                    mBitmapTx.recycle();
-                    mBitmapTx = null;
-                }
+            mBitmapTx = mParams.getBitmapTx();
+            mWidth = mParams.getWidth();
 
-                return mBitmapQrCode;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
+            int foregroundColor = context.getResources().getColor(R.color.md_pink_200);
+            int backgroundColor = context.getResources().getColor(R.color.md_white_1000);
+
+            mBitmapTx = OKBase64Util.toRoundBitmap(mBitmapTx);
+
+            return QRCodeEncoder.syncEncodeQRCode(mParams.getMsg(), mWidth, foregroundColor, backgroundColor, mBitmapTx);
         }
 
         @Override

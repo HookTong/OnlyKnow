@@ -41,7 +41,7 @@ import com.onlyknow.app.database.bean.OKCardUrlListBean;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.ui.activity.OKGanKActivity;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
-import com.onlyknow.app.ui.activity.OKMipcaActivityCapture;
+import com.onlyknow.app.ui.activity.OKQrCodeRecognitionActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEditActivity;
 import com.onlyknow.app.ui.view.OKCatLoadingView;
@@ -53,8 +53,6 @@ import com.onlyknow.app.utils.OKLunarUtil;
 import java.util.Calendar;
 import java.util.Random;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 所有Fragment都必须继承该基本Fragment
@@ -180,7 +178,7 @@ public class OKBaseFragment extends Fragment {
                         break;
                     case R.id.POP_QRCODE_LAYOU:
                         Intent intent = new Intent();
-                        intent.setClass(activity, OKMipcaActivityCapture.class);
+                        intent.setClass(activity, OKQrCodeRecognitionActivity.class);
                         activity.startActivity(intent);
                         popWindow.dismiss();
                         break;
