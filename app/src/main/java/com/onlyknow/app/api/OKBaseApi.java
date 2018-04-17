@@ -12,6 +12,7 @@ import com.onlyknow.app.database.bean.OKSearchBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 
 import java.io.File;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -72,12 +73,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKCardBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -91,12 +87,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKCardBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -110,12 +101,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKCardBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -129,12 +115,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKCardBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -148,12 +129,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKAttentionBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKAttentionBean>> okServiceResult = fromJsonList(json, OKAttentionBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -167,12 +143,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKMeCommentCardBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKMeCommentCardBean>> okServiceResult = fromJsonList(json, OKMeCommentCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -186,12 +157,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKGoodsBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKGoodsBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKGoodsBean>> okServiceResult = fromJsonList(json, OKGoodsBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -205,12 +171,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<List<OKCardBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKCardBean>> okServiceResult = gson.fromJson(json, type);
+        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -224,15 +185,10 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
+        OKServiceResult<List<OKSearchBean>> okServiceResult = fromJsonList(json, OKSearchBean.class);
 
-        Type type = new TypeToken<OKServiceResult<List<OKSearchBean>>>() {
-        }.getType();
-
-        OKServiceResult<List<OKSearchBean>> serviceResult = gson.fromJson(json, type);
-
-        if (serviceResult != null && serviceResult.isSuccess()) {
-            serviceResult.getData();
+        if (okServiceResult != null && okServiceResult.isSuccess()) {
+            okServiceResult.getData();
         }
 
         return null;
@@ -391,5 +347,43 @@ public class OKBaseApi {
         if (serviceResult == null || !serviceResult.isSuccess()) return null;
 
         return serviceResult.getData();
+    }
+
+    private <T> OKServiceResult<T> fromJsonObject(String json, Class<T> clazz) {
+        Type type = new AppType(OKServiceResult.class, new Class[]{clazz});
+        return new Gson().fromJson(json, type);
+    }
+
+    private <T> OKServiceResult<List<T>> fromJsonList(String json, Class<T> clazz) {
+        // 生成List<T> 中的 List<T>
+        Type listType = new AppType(List.class, new Class[]{clazz});
+        // 根据List<T>生成完整的Result<List<T>>
+        Type type = new AppType(OKServiceResult.class, new Type[]{listType});
+        return new Gson().fromJson(json, type);
+    }
+
+    private class AppType implements ParameterizedType {
+        private final Class raw;
+        private final Type[] args;
+
+        AppType(Class raw, Type[] args) {
+            this.raw = raw;
+            this.args = args != null ? args : new Type[0];
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return args;
+        }
+
+        @Override
+        public Type getRawType() {
+            return raw;
+        }
+
+        @Override
+        public Type getOwnerType() {
+            return null;
+        }
     }
 }
