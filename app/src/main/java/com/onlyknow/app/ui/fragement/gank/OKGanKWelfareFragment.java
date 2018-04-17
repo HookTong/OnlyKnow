@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadGanKApi;
+import com.onlyknow.app.api.app.OKLoadGanKApi;
 import com.onlyknow.app.database.bean.OKGanKBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
@@ -110,7 +110,7 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
             page++;
-            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.WELFARE_URL + page, this);
+            mOKLoadGanKApi.requestGanK(OKLoadGanKApi.WELFARE_URL + page, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");
@@ -120,7 +120,7 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
-            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.WELFARE_URL + "1", this);
+            mOKLoadGanKApi.requestGanK(OKLoadGanKApi.WELFARE_URL + "1", this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");

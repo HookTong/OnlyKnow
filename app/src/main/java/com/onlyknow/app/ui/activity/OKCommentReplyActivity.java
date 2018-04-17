@@ -23,9 +23,10 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKCommentPraiseApi;
-import com.onlyknow.app.api.OKLoadCommentReplyApi;
-import com.onlyknow.app.api.OKUserOperationApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.comment.OKManagerCommentApi;
+import com.onlyknow.app.api.comment.OKLoadCommentReplyApi;
+import com.onlyknow.app.api.comment.OKAddCommentApi;
 import com.onlyknow.app.database.bean.OKCommentBean;
 import com.onlyknow.app.database.bean.OKCommentReplyBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
@@ -33,6 +34,7 @@ import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -49,7 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadCommentReplyApi.onCallBack, OKUserOperationApi.onCallBack {
+public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadCommentReplyApi.onCallBack, OKAddCommentApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private CommentReplyCardViewAdapter mCommentReplyCardViewAdapter;
@@ -60,8 +62,9 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
     private OKLoadCommentReplyApi mOKLoadCommentReplyApi;
     private List<OKCommentReplyBean> mCommentReplyBeanList = new ArrayList<>();
-    private OKUserOperationApi mOKUserOperationApi;
+    private OKAddCommentApi mOKAddCommentApi;
 
+    public final static String KEY_BUNDLE = "OKCommentReplyActivity";
     private OKCommentBean mCommentBean;// 父评论
 
     @Override
@@ -71,7 +74,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         initUserInfoSharedPreferences();
         initSystemBar(this);
 
-        mCommentBean = OKCommentBean.fromBundle(getIntent().getExtras());
+        mCommentBean = (OKCommentBean) getIntent().getExtras().getSerializable(KEY_BUNDLE);
         if (mCommentBean == null) {
             showSnackBar(mOKRecyclerView, "父评论为空", "ErrorCode: " + OKConstant.COMMENT_ERROR);
             finish();
@@ -102,8 +105,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         if (mOKLoadCommentReplyApi != null) {
             mOKLoadCommentReplyApi.cancelTask();
         }
-        if (mOKUserOperationApi != null) {
-            mOKUserOperationApi.cancelTask(); // 如果线程已经在执行则取消执行
+        if (mOKAddCommentApi != null) {
+            mOKAddCommentApi.cancelTask(); // 如果线程已经在执行则取消执行
         }
         if (mCommentReplyCardViewAdapter != null) {
             mCommentReplyCardViewAdapter.cancelTask();
@@ -141,19 +144,19 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         mOKRecyclerView.setAdapter(mCommentReplyCardViewAdapter);
 
         // 获取标题图片信息
-        GlideRoundApi(imageViewTX, mCommentBean.getHEAD_PORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+        GlideRoundApi(imageViewTX, mCommentBean.getAvatar(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
 
-        textViewBT.setText(mCommentBean.getNICKNAME());
-        textViewNR.setText(mCommentBean.getCOMMENT_CONTENT());
-        textViewDate.setText(formatTime(mCommentBean.getDATE()));
+        textViewBT.setText(mCommentBean.getNickName());
+        textViewNR.setText(mCommentBean.getMessage());
+        textViewDate.setText(OKDateUtil.formatTime(mCommentBean.getComDate()));
 
         imageViewTX.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putString(OKUserInfoBean.KEY_USERNAME, mCommentBean.getUSER_NAME());
-                bundle.putString(OKUserInfoBean.KEY_NICKNAME, mCommentBean.getNICKNAME());
+                bundle.putString(OKUserInfoBean.KEY_USERNAME, mCommentBean.getUserName());
+                bundle.putString(OKUserInfoBean.KEY_NICKNAME, mCommentBean.getNickName());
                 startUserActivity(bundle, OKHomePageActivity.class);
             }
         });
@@ -169,22 +172,19 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                         return;
                     }
 
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
-                    String date = dateFormat.format(new Date());
-
                     mToolBarProgressBar.setVisibility(View.VISIBLE);
-                    Map<String, String> map = new HashMap<>();// 请求参数
-                    map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                    map.put("username2", "");
-                    map.put("card_id", Integer.toString(mCommentBean.getCOM_ID()));
-                    map.put("message", Msg);
-                    map.put("date", date);
-                    map.put("type", "ADD_PINLUN_REPLY");
-                    if (mOKUserOperationApi != null) {
-                        mOKUserOperationApi.cancelTask();
+
+                    OKAddCommentApi.Params params = new OKAddCommentApi.Params();
+                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setId(mCommentBean.getComId());
+                    params.setType(OKAddCommentApi.Params.TYPE_COMMENT_REPLY);
+                    params.setMessage(Msg);
+
+                    if (mOKAddCommentApi != null) {
+                        mOKAddCommentApi.cancelTask();
                     }
-                    mOKUserOperationApi = new OKUserOperationApi(OKCommentReplyActivity.this);
-                    mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_SEND_COMMENT_REPLY, OKCommentReplyActivity.this);
+                    mOKAddCommentApi = new OKAddCommentApi(OKCommentReplyActivity.this);
+                    mOKAddCommentApi.requestAddComment(params, OKCommentReplyActivity.this);
                 } else {
                     showSnackBar(v, "请输入要发送的评论!", "");
                 }
@@ -209,35 +209,46 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         mRefreshLayout.autoRefresh();
     }
 
+    int page = 0;
+    int size = 30;
+
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
-        OKCommentReplyBean mCommentReplyBean = mCommentReplyCardViewAdapter.getLastCommentReplyBean();
-        if (mCommentReplyBean == null) {
+        if (!OKNetUtil.isNet(this)) {
             mRefreshLayout.finishLoadMore(1500);
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
             return;
         }
-        Map<String, String> map = new HashMap<>();// 请求参数,历史界面无需请求参数,直接获取数据库数据的
-        map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-        map.put("tag", "" + mCommentBean.getCOM_ID());
-        map.put("max_id", "" + mCommentReplyBean.getCOMR_ID());
-        map.put("load_type", "COMMENT_REPLY_ENTRY");
+
+        OKLoadCommentReplyApi.Params params = new OKLoadCommentReplyApi.Params();
+        params.setId(mCommentBean.getComId());
+        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setType(OKLoadCommentReplyApi.Params.TYPE_COMMENT_REPLY);
+        params.setPage(page + 1);
+        params.setSize(size);
+
         if (mOKLoadCommentReplyApi == null) {
-            mOKLoadCommentReplyApi = new OKLoadCommentReplyApi(OKCommentReplyActivity.this, true);
+            mOKLoadCommentReplyApi = new OKLoadCommentReplyApi(this);
         }
-        mOKLoadCommentReplyApi.requestCardBeanList(map, true, this);
+        mOKLoadCommentReplyApi.requestCommentReply(params, this);
     }
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(this)) {
-            Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("com_id", "" + mCommentBean.getCOM_ID());
-            map.put("num", OKConstant.COMMENT_REPLY_LOAD_COUNT);
-            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+
+            OKLoadCommentReplyApi.Params params = new OKLoadCommentReplyApi.Params();
+            params.setId(mCommentBean.getComId());
+            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setType(OKLoadCommentReplyApi.Params.TYPE_COMMENT_REPLY);
+            params.setPage(1);
+            params.setSize(size);
+
             if (mOKLoadCommentReplyApi == null) {
-                mOKLoadCommentReplyApi = new OKLoadCommentReplyApi(this, false);
+                mOKLoadCommentReplyApi = new OKLoadCommentReplyApi(this);
             }
-            mOKLoadCommentReplyApi.requestCardBeanList(map, false, this);
+            mOKLoadCommentReplyApi.requestCommentReply(params, this);
+
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");
@@ -248,9 +259,13 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
     public void commentReplyApiComplete(List<OKCommentReplyBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                page = 1;
+
                 mCommentReplyBeanList.clear();
                 mCommentReplyBeanList.addAll(list);
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page++;
+
                 mCommentReplyBeanList.addAll(list);
             }
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
@@ -265,9 +280,9 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
     }
 
     @Override
-    public void userOperationApiComplete(boolean isSuccess, String type) {
+    public void addCommentApiComplete(OKServiceResult<Object> result, String type) {
         mToolBarProgressBar.setVisibility(View.GONE);
-        if (isSuccess) {
+        if (result != null && result.isSuccess()) {
             editTextMsg.setText("");
             if (mCommentReplyBeanList.size() == 0) {
                 mRefreshLayout.autoRefresh();
@@ -280,10 +295,10 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         }
     }
 
-    private class CommentReplyCardViewAdapter extends RecyclerView.Adapter<CommentReplyCardViewAdapter.CommentReplyViewHolder> implements OKCommentPraiseApi.onCallBack {
+    private class CommentReplyCardViewAdapter extends RecyclerView.Adapter<CommentReplyCardViewAdapter.CommentReplyViewHolder> implements OKManagerCommentApi.onCallBack {
         private Context mContext;
         private List<OKCommentReplyBean> mBeanList;
-        private OKCommentPraiseApi mOKCommentPraiseApi;
+        private OKManagerCommentApi mOKManagerCommentApi;
         private CommentReplyViewHolder viewHolder;
 
         public CommentReplyCardViewAdapter(Context context, List<OKCommentReplyBean> list) {
@@ -293,12 +308,12 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
         private void initViews(final CommentReplyViewHolder mViewHolder, final OKCommentReplyBean bean, final int position) {
             mViewHolder.setListPosition(position);
-            GlideRoundApi(mViewHolder.mImageViewTitle, bean.getHEAD_PORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
-            mViewHolder.mTextViewTitle.setText(bean.getNICKNAME());
-            mViewHolder.mTextViewContent.setText(bean.getCOMMENT_CONTENT());
-            mViewHolder.mTextViewZ.setText("" + bean.getZAN_NUM());
-            mViewHolder.mTextViewDate.setText(formatTime(bean.getDATE()));
-            if (bean.IS_ZAN()) {
+            GlideRoundApi(mViewHolder.mImageViewTitle, bean.getAvatar(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            mViewHolder.mTextViewTitle.setText(bean.getNickName());
+            mViewHolder.mTextViewContent.setText(bean.getMessage());
+            mViewHolder.mTextViewZ.setText("" + bean.getComrPraise());
+            mViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(bean.getComrDate()));
+            if (bean.isPraise()) {
                 GlideApi(mViewHolder.mImageViewZ, R.drawable.comment_red_zan, R.drawable.comment_red_zan, R.drawable.comment_red_zan);
                 mViewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
             } else {
@@ -317,8 +332,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                 @Override
                 public void onClick(View v) {
                     Bundle bundleHp = new Bundle();
-                    bundleHp.putString(OKUserInfoBean.KEY_USERNAME, bean.getUSER_NAME());
-                    bundleHp.putString(OKUserInfoBean.KEY_NICKNAME, bean.getNICKNAME());
+                    bundleHp.putString(OKUserInfoBean.KEY_USERNAME, bean.getUserName());
+                    bundleHp.putString(OKUserInfoBean.KEY_NICKNAME, bean.getNickName());
                     startUserActivity(bundleHp, OKHomePageActivity.class);
                 }
             });
@@ -331,21 +346,19 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                         return;
                     }
 
-                    if (!bean.IS_ZAN()) {
+                    if (!bean.isPraise()) {
                         viewHolder = mViewHolder;
 
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
-                        String date = dateFormat.format(new Date());
-
-                        Map<String, String> param = new HashMap<String, String>();// 请求参数
-                        param.put("id", Integer.toString(bean.getCOMR_ID()));
-                        param.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                        param.put("type", "COMMENT_REPLY_EDIT");
-                        param.put("date", date);
+                        OKManagerCommentApi.Params params = new OKManagerCommentApi.Params();
+                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                        params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                        params.setId(bean.getComrId());
+                        params.setType(OKManagerCommentApi.Params.TYPE_PRAISE_COMMENT_REPLY);
+                        params.setPos(position);
 
                         cancelTask();
-                        mOKCommentPraiseApi = new OKCommentPraiseApi(OKCommentReplyActivity.this);
-                        mOKCommentPraiseApi.requestCommentPraiseApi(param, position, CommentReplyCardViewAdapter.this); // 并行执行线程
+                        mOKManagerCommentApi = new OKManagerCommentApi(OKCommentReplyActivity.this);
+                        mOKManagerCommentApi.requestManagerComment(params, CommentReplyCardViewAdapter.this); // 并行执行线程
                     } else {
                         showSnackBar(v, "您已点过赞了", "");
                     }
@@ -377,8 +390,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                             }
 
                             Bundle bundle = new Bundle();
-                            bundle.putString(OKUserInfoBean.KEY_USERNAME, mCommentReplyBeanHome.getUSER_NAME());
-                            bundle.putString(OKUserInfoBean.KEY_NICKNAME, mCommentReplyBeanHome.getNICKNAME());
+                            bundle.putString(OKUserInfoBean.KEY_USERNAME, mCommentReplyBeanHome.getUserName());
+                            bundle.putString(OKUserInfoBean.KEY_NICKNAME, mCommentReplyBeanHome.getNickName());
                             startUserActivity(bundle, OKHomePageActivity.class);
                             popWindow.dismiss();
                             break;
@@ -390,7 +403,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
                             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                             // 将文本数据复制到剪贴板
-                            cm.setText(mCommentReplyBeanClip.getCOMMENT_CONTENT());
+                            cm.setText(mCommentReplyBeanClip.getMessage());
                             showSnackBar(mOKRecyclerView, "信息已复制到剪切板", "");
                             popWindow.dismiss();
                             break;
@@ -401,8 +414,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                             }
 
                             Bundle bundle3 = new Bundle();
-                            bundle3.putString("JUBAO_TYPE", "COMMENT_REPLY");
-                            bundle3.putString("JUBAO_COMR_ID", Integer.toString(mCommentReplyBeanRePort.getCOMR_ID()));
+                            bundle3.putString(OKRePortActivity.KEY_TYPE, OKRePortActivity.TYPE_COMMENT_REPLY);
+                            bundle3.putString(OKRePortActivity.KEY_ID, Integer.toString(mCommentReplyBeanRePort.getComrId()));
                             startUserActivity(bundle3, OKRePortActivity.class);
                             popWindow.dismiss();
                             break;
@@ -426,17 +439,9 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
             }
         }
 
-        public OKCommentReplyBean getLastCommentReplyBean() {
-            if (mBeanList != null && mBeanList.size() != 0) {
-                return mBeanList.get(mBeanList.size() - 1);
-            } else {
-                return null;
-            }
-        }
-
         public void cancelTask() {
-            if (mOKCommentPraiseApi != null) {
-                mOKCommentPraiseApi.cancelTask(); // 如果线程已经在执行则取消执行
+            if (mOKManagerCommentApi != null) {
+                mOKManagerCommentApi.cancelTask(); // 如果线程已经在执行则取消执行
             }
         }
 
@@ -457,24 +462,24 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         }
 
         @Override
-        public void commentPraiseApiComplete(boolean isSuccess, int pos) {
+        public void managerCommentApiComplete(OKServiceResult<Object> result, String type, int pos) {
             if (viewHolder == null || viewHolder.getListPosition() != pos) return;
 
-            if (isSuccess) {
+            if (result != null && result.isSuccess()) {
                 OKCommentReplyBean mOKCommentReplyBean = getCommentReplyBean(pos);
                 if (mOKCommentReplyBean == null) {
                     return;
                 }
 
-                mOKCommentReplyBean.setZAN_NUM(mOKCommentReplyBean.getZAN_NUM() + 1);
-                mOKCommentReplyBean.setIS_ZAN(true);
+                mOKCommentReplyBean.setComrPraise(mOKCommentReplyBean.getComrPraise() + 1);
+                mOKCommentReplyBean.setPraise(true);
                 mBeanList.set(pos, mOKCommentReplyBean);
 
                 GlideApi(viewHolder.mImageViewZ, R.drawable.comment_red_zan, R.drawable.comment_red_zan, R.drawable.comment_red_zan);
-                viewHolder.mTextViewZ.setText("" + mOKCommentReplyBean.getZAN_NUM());
+                viewHolder.mTextViewZ.setText("" + mOKCommentReplyBean.getComrPraise());
                 viewHolder.mTextViewZ.setTextColor(getResources().getColor(R.color.fenhon));
             } else {
-                showSnackBar(viewHolder.mCardView, "服务器错误,请稍后重试!", "ErrorCode: " + OKConstant.COMMENT_ERROR);
+                showSnackBar(viewHolder.mCardView, "操作失败!", "ErrorCode: " + OKConstant.COMMENT_ERROR);
             }
         }
 

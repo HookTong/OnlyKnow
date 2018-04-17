@@ -30,9 +30,11 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadHistoryApi;
+import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
+import com.onlyknow.app.api.card.OKLoadHistoryCardApi;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.database.bean.OKCarouselAdBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -41,6 +43,7 @@ import com.onlyknow.app.ui.activity.OKSearchActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.view.OKKenBurnsView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -51,9 +54,11 @@ import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener, OKLoadHistoryApi.onCallBack {
+public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener,
+        NavigationView.OnNavigationItemSelectedListener, OKLoadHistoryCardApi.onCallBack, OKLoadCarouselAdApi.onCallBack {
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private OKKenBurnsView mHeaderPicture;
@@ -65,22 +70,12 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     private NavigationView mNavigationView;
     private EntryViewAdapter mEntryViewAdapter;
 
-    private OKLoadHistoryApi mOKLoadHistoryApi;
+    private OKLoadHistoryCardApi mOKLoadHistoryCardApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
-    private View rootView;
+    private OKLoadCarouselAdApi carouselAdApi;
 
-    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            OKLogUtil.print("History 收到广播 :" + action);
-            if (action.equals(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE)) {
-                mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
-                OKConstant.HISTORY_HEAD_DATA_CHANGED = false;
-            }
-        }
-    };
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -97,32 +92,35 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     @Override
     public void onResume() {
         super.onResume();
+
         appBarLayout.addOnOffsetChangedListener(this);
-        if (OKConstant.HISTORY_HEAD_DATA_CHANGED) {
-            mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
-            OKConstant.HISTORY_HEAD_DATA_CHANGED = false;
-        }
-        IntentFilter mIntentFilter = new IntentFilter();
-        mIntentFilter.addAction(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE);
-        getActivity().registerReceiver(mBroadcastReceiver, mIntentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (mOKLoadHistoryApi != null) {
-            mOKLoadHistoryApi.cancelTask();
-        }
+
         mRefreshLayout.finishRefresh();
+
         mRefreshLayout.finishLoadMore();
+
         appBarLayout.removeOnOffsetChangedListener(this);
+
         mDrawerLayout.closeDrawer(GravityCompat.START);
-        getActivity().unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (mOKLoadHistoryCardApi != null) {
+            mOKLoadHistoryCardApi.cancelTask();
+        }
+
+        if (carouselAdApi != null) {
+            carouselAdApi.cancelTask();
+        }
+
         if (null != rootView) {
             ((ViewGroup) rootView.getParent()).removeView(rootView);
         }
@@ -171,7 +169,16 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         mCollapsingToolbarLayout.setTitle("历史记录");
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
-        mHeaderPicture.setUrl(this.getActivity(), OKConstant.getHeadUrls());
+
+        OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
+        params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
+        if (carouselAdApi != null) {
+            carouselAdApi.cancelTask();
+        }
+        carouselAdApi = new OKLoadCarouselAdApi(getActivity());
+        carouselAdApi.requestCarouselAd(params, this);
+
+        mHeaderPicture.setUrl(this.getActivity(), OKConstant.getCarouselImages());
 
         mEntryViewAdapter = new EntryViewAdapter(getActivity(), mCardBeanList);
         mRecyclerView.setAdapter(mEntryViewAdapter);
@@ -195,7 +202,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                                 try {
                                     List<OKCardBean> mList = helper.getCardDao().queryForAll();
                                     for (OKCardBean mCardBean : mList) {
-                                        mCardBean.setIS_READ(false);
+                                        mCardBean.setRead(false);
                                         helper.getCardDao().createOrUpdate(mCardBean);
                                     }
                                 } catch (Exception e) {
@@ -238,6 +245,9 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         mRefreshLayout.autoRefresh();
     }
 
+    int page = 0;
+    int size = 30;
+
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
         OKCardBean lastBean = mEntryViewAdapter.getLastBean();
@@ -246,18 +256,28 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
             showSnackBar(mRecyclerView, "没有历史记录!", "");
             return;
         }
-        if (mOKLoadHistoryApi == null) {
-            mOKLoadHistoryApi = new OKLoadHistoryApi(getActivity());
+
+        OKLoadHistoryCardApi.Params params = new OKLoadHistoryCardApi.Params();
+        params.setPage(page + 1);
+        params.setSize(size);
+
+        if (mOKLoadHistoryCardApi == null) {
+            mOKLoadHistoryCardApi = new OKLoadHistoryCardApi(getActivity());
         }
-        mOKLoadHistoryApi.requestCardBeanList(true, lastBean.getREAD_DATE_LONG(), this);
+        mOKLoadHistoryCardApi.requestHistoryCard(params, this);
     }
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
-        if (mOKLoadHistoryApi == null) {
-            mOKLoadHistoryApi = new OKLoadHistoryApi(getActivity());
+
+        OKLoadHistoryCardApi.Params params = new OKLoadHistoryCardApi.Params();
+        params.setPage(1);
+        params.setSize(size);
+
+        if (mOKLoadHistoryCardApi == null) {
+            mOKLoadHistoryCardApi = new OKLoadHistoryCardApi(getActivity());
         }
-        mOKLoadHistoryApi.requestCardBeanList(false, 0L, this);
+        mOKLoadHistoryCardApi.requestHistoryCard(params, this);
     }
 
     @Override
@@ -296,9 +316,13 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void historyApiComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                page = 1;
+
                 mCardBeanList.clear();
                 mCardBeanList.addAll(list);
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page++;
+
                 mCardBeanList.addAll(list);
             }
             mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -308,6 +332,13 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         } else if (mRefreshLayout.getState() == RefreshState.Loading) {
             mRefreshLayout.finishLoadMore();
         }
+    }
+
+    @Override
+    public void carouselAdApiComplete(OKCarouselAdBean bean) {
+        if (bean == null) return;
+
+        mHeaderPicture.setUrl(this.getActivity(), bean.getCarouselImage());
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {
@@ -321,30 +352,30 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
 
         private void initViews(final EntryViewHolder mEntryViewHolder, final OKCardBean okCardBean, final int position) {
             GlideApi(mEntryViewHolder.mImageViewTitle, R.drawable.lish_card, R.drawable.lish_card, R.drawable.lish_card);
-            if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
+            if (okCardBean.getCardType().equals(CARD_TYPE_TP)) {
                 mEntryViewHolder.mTextViewTitle.setText("精彩图片");
-                mEntryViewHolder.mTextViewContent.setText(okCardBean.getTITLE_TEXT() + " 发表");
-                mEntryViewHolder.mTextViewDate.setText(formatTime(okCardBean.toStringReadDate()));
+                mEntryViewHolder.mTextViewContent.setText(okCardBean.getTitleText() + " 发表");
+                mEntryViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(new Date(okCardBean.getReadTime())));
             } else {
-                mEntryViewHolder.mTextViewTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mEntryViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
-                mEntryViewHolder.mTextViewDate.setText(formatTime(okCardBean.toStringReadDate()));
+                mEntryViewHolder.mTextViewTitle.setText(okCardBean.getContentTitleText());
+                mEntryViewHolder.mTextViewContent.setText(okCardBean.getContentText());
+                mEntryViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(new Date(okCardBean.getReadTime())));
             }
 
             mEntryViewHolder.mCardView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
+                    if (okCardBean.getCardType().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HISTORY);
                         bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HISTORY);
                         bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HISTORY);
                         bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);

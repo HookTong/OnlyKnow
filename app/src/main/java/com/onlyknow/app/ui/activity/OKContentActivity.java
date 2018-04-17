@@ -1,27 +1,30 @@
 package com.onlyknow.app.ui.activity;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKSecurityApi;
-import com.onlyknow.app.database.bean.OKSafetyInfoBean;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.api.app.OKLoadAppInfoApi;
+import com.onlyknow.app.database.bean.OKAppInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class OKContentActivity extends OKBaseActivity implements OKSecurityApi.onCallBack {
+public class OKContentActivity extends OKBaseActivity implements OKLoadAppInfoApi.onCallBack {
     private TextView textViewContent;
 
     private Bundle mBundle;
 
-    private OKSecurityApi mOKSecurityApi;
+    private OKLoadAppInfoApi mOKLoadAppInfoApi;
+
+    public final static String KEY_TYPE = "type";
+    public final static String TYPE_APP = "app";
+    public final static String TYPE_AGREEMENT = "agreement";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,22 +47,25 @@ public class OKContentActivity extends OKBaseActivity implements OKSecurityApi.o
     @Override
     public void onResume() {
         super.onResume();
-        Map<String, String> map = new HashMap<>();
-        map.put("type", mBundle.getString("TYPE"));
-        map.put("value", mBundle.getString("VALUE"));
 
-        mOKSecurityApi = new OKSecurityApi(this);
-        mOKSecurityApi.requestSecurityCheck(map, this);
+        OKLoadAppInfoApi.Params params = new OKLoadAppInfoApi.Params();
+        params.setVersion(OKConstant.APP_VERSION);
+        params.setType(OKLoadAppInfoApi.Params.TYPE_CHECK);
 
         showProgressDialog("正在获取内容...");
+        if (mOKLoadAppInfoApi != null) {
+            mOKLoadAppInfoApi.cancelTask();
+        }
+        mOKLoadAppInfoApi = new OKLoadAppInfoApi(this);
+        mOKLoadAppInfoApi.requestAppInfo(params, this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        if (mOKSecurityApi != null) {
-            mOKSecurityApi.cancelTask();
+        if (mOKLoadAppInfoApi != null) {
+            mOKLoadAppInfoApi.cancelTask();
         }
     }
 
@@ -85,7 +91,7 @@ public class OKContentActivity extends OKBaseActivity implements OKSecurityApi.o
     }
 
     @Override
-    public void securityApiComplete(OKSafetyInfoBean bean) {
+    public void appInfoApiComplete(OKAppInfoBean bean) {
         closeProgressDialog();
 
         if (bean == null) {
@@ -93,10 +99,10 @@ public class OKContentActivity extends OKBaseActivity implements OKSecurityApi.o
             return;
         }
 
-        if (!TextUtils.isEmpty(bean.getAVU_DESCRIBE())) {
-            textViewContent.setText(bean.getAVU_DESCRIBE());
-        } else if (!TextUtils.isEmpty(bean.getUA_CONTENT())) {
-            textViewContent.setText(bean.getUA_CONTENT());
+        if (TYPE_APP.equals(mBundle.getString(KEY_TYPE, ""))) {
+            textViewContent.setText(bean.getAppDescribe());
+        } else if (TYPE_AGREEMENT.equals(mBundle.getString(KEY_TYPE, ""))) {
+            textViewContent.setText(bean.getAppUa());
         }
     }
 }

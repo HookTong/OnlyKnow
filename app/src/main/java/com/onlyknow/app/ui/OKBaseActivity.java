@@ -18,7 +18,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,12 +33,10 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.google.gson.Gson;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCardUrlListBean;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKQrCodeRecognitionActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
@@ -353,92 +350,6 @@ public class OKBaseActivity extends AppCompatActivity {
         sendBroadcast(intentB);
     }
 
-    public OKCardUrlListBean fromCardUrlJson(String json) {
-
-        try {
-            OKCardUrlListBean bean = new Gson().fromJson(json, OKCardUrlListBean.class);
-            return bean;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
-
-    public String getFirstCardImageUrl(OKCardUrlListBean bean) {
-        if (!TextUtils.isEmpty(bean.getUrlImage1())) {
-            return bean.getUrlImage1();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage2())) {
-            return bean.getUrlImage2();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage3())) {
-            return bean.getUrlImage3();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage4())) {
-            return bean.getUrlImage4();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage5())) {
-            return bean.getUrlImage5();
-        }
-        return "";
-    }
-
-    public String getFirstCardImageUrl(OKCardBean cardBean) {
-        if (cardBean == null) {
-            return "";
-        }
-
-        if (cardBean.getBean() == null) {
-            OKCardUrlListBean bean = fromCardUrlJson(cardBean.getCONTENT_IMAGE_URL());
-            if (bean != null) {
-                cardBean.setBean(bean);
-                return getFirstCardImageUrl(bean);
-            } else {
-                return cardBean.getCONTENT_IMAGE_URL();
-            }
-        } else {
-            return getFirstCardImageUrl(cardBean.getBean());
-        }
-    }
-
-    public String getLastCardImageUrl(OKCardUrlListBean bean) {
-
-        if (!TextUtils.isEmpty(bean.getUrlImage5())) {
-            return bean.getUrlImage5();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage4())) {
-            return bean.getUrlImage4();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage3())) {
-            return bean.getUrlImage3();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage2())) {
-            return bean.getUrlImage2();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage1())) {
-            return bean.getUrlImage1();
-        }
-        return "";
-    }
-
-    public String getLastCardImageUrl(OKCardBean cardBean) {
-        if (cardBean == null) {
-            return "";
-        }
-
-        if (cardBean.getBean() == null) {
-            OKCardUrlListBean bean = fromCardUrlJson(cardBean.getCONTENT_IMAGE_URL());
-            if (bean != null) {
-                cardBean.setBean(bean);
-                return getLastCardImageUrl(bean);
-            } else {
-                return cardBean.getCONTENT_IMAGE_URL();
-            }
-        } else {
-            return getLastCardImageUrl(cardBean.getBean());
-        }
-    }
-
     /**
      * 启动裁剪
      *
@@ -529,31 +440,12 @@ public class OKBaseActivity extends AppCompatActivity {
         return NO_TAG;
     }
 
-    public String formatTime(String date) {
-        String time[] = date.split("/");
-        if (time.length != 5) {
-            return date;
-        }
-        String nowDate = OKConstant.getNowDateByString();
-        String nowTime[] = nowDate.split("/");
-        if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (time[2].equals(nowTime[2]))) {
-            return "今天 " + time[3] + ":" + time[4];
-        } else if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (Integer.parseInt(nowTime[2]) - Integer.parseInt(time[2]) == 1)) {
-            return "昨天 " + time[3] + ":" + time[4];
-        } else if (time[0].equals(nowTime[0])) {
-            return time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
-        } else {
-            return time[0] + "年" + time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
-        }
-    }
+    public void shareImage(final List<OKCardBean.CardImage> list, final UMShareListener mShareListener) {
+        if (list == null || list.size() == 0) return;
 
-    public void shareImage(final OKCardUrlListBean bean, final UMShareListener mShareListener) {
-        final List<String> urlList = OKCardUrlListBean.toList(bean);
-        if (urlList == null || urlList.size() == 0) return;
-
-        if (urlList.size() == 1) {
-            if (OKFileUtil.isVideoUrl(urlList.get(0))) {
-                UMVideo video = new UMVideo(urlList.get(0));
+        if (list.size() == 1) {
+            if (OKFileUtil.isVideoUrl(list.get(0).getUrl())) {
+                UMVideo video = new UMVideo(list.get(0).getUrl());
                 UMImage thumb = new UMImage(this, R.drawable.ic_launcher);
                 video.setTitle("唯知空间-视频分享");//视频的标题
                 video.setThumb(thumb);//视频的缩略图
@@ -562,7 +454,7 @@ public class OKBaseActivity extends AppCompatActivity {
                 mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
                 mShareAction.withText("唯知空间-视频分享").withMedia(video).setCallback(mShareListener).open();
             } else {
-                UMImage image = new UMImage(this, urlList.get(0));
+                UMImage image = new UMImage(this, list.get(0).getUrl());
                 UMImage thumb = new UMImage(this, R.drawable.ic_launcher);
                 image.setTitle("唯知空间-图片分享");
                 image.setThumb(thumb);
@@ -596,8 +488,8 @@ public class OKBaseActivity extends AppCompatActivity {
         mBuilder.setView(dialogView);
         final AlertDialog mAlertDialog = mBuilder.show();
 
-        for (int i = 0; i < urlList.size(); i++) {
-            GlideApi(image[i], urlList.get(i), R.drawable.topgd1, R.drawable.topgd1);
+        for (int i = 0; i < list.size(); i++) {
+            GlideApi(image[i], list.get(i).getUrl(), R.drawable.topgd1, R.drawable.topgd1);
             layout[i].setVisibility(View.VISIBLE);
         }
         for (int i = 0; i < 5; i++) {
@@ -606,12 +498,12 @@ public class OKBaseActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     int i = (int) v.getTag(R.id.select_image);
-                    if (i >= urlList.size()) return;
+                    if (i >= list.size()) return;
 
                     mAlertDialog.dismiss();
 
-                    if (OKFileUtil.isVideoUrl(urlList.get(i))) {
-                        UMVideo video = new UMVideo(urlList.get(0));
+                    if (OKFileUtil.isVideoUrl(list.get(i).getUrl())) {
+                        UMVideo video = new UMVideo(list.get(0).getUrl());
                         UMImage thumb = new UMImage(OKBaseActivity.this, R.drawable.ic_launcher);
                         video.setTitle("唯知空间-视频分享");//视频的标题
                         video.setThumb(thumb);//视频的缩略图
@@ -620,7 +512,7 @@ public class OKBaseActivity extends AppCompatActivity {
                         mShareAction.setDisplayList(SHARE_MEDIA.SINA, SHARE_MEDIA.QQ, SHARE_MEDIA.WEIXIN);
                         mShareAction.withText("唯知空间-视频分享").withMedia(video).setCallback(mShareListener).open();
                     } else {
-                        UMImage image = new UMImage(OKBaseActivity.this, urlList.get(i));
+                        UMImage image = new UMImage(OKBaseActivity.this, list.get(i).getUrl());
                         UMImage thumb = new UMImage(OKBaseActivity.this, R.drawable.ic_launcher);
                         image.setTitle("唯知空间-图片分享");
                         image.setThumb(thumb);

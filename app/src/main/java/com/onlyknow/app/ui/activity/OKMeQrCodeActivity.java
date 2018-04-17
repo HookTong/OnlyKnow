@@ -16,7 +16,7 @@ import com.bumptech.glide.request.transition.Transition;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKGenerateQrCodeApi;
+import com.onlyknow.app.api.app.OKGenerateQrCodeApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
@@ -69,14 +69,14 @@ public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCo
     private void init() {
         textViewNiChen.setText(bundleMe.getString(OKUserInfoBean.KEY_NICKNAME));
 
-        String qm = bundleMe.getString(OKUserInfoBean.KEY_QIANMIN);
+        String qm = bundleMe.getString(OKUserInfoBean.KEY_TAG);
         if (!TextUtils.isEmpty(qm) && !qm.equals("NULL")) {
-            textViewQianMin.setText(bundleMe.getString(OKUserInfoBean.KEY_QIANMIN));
+            textViewQianMin.setText(bundleMe.getString(OKUserInfoBean.KEY_TAG));
         } else {
             textViewQianMin.setText("这个人很懒 , 什么都没有留下!");
         }
 
-        String url = bundleMe.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+        String url = bundleMe.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
         GlideRoundApi(circleImageViewTouXian, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
 
         buttonSave.setOnClickListener(new OnClickListener() {
@@ -125,7 +125,7 @@ public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCo
             mOKGenerateQrCodeApi.cancelTask();
         }
         mOKGenerateQrCodeApi = new OKGenerateQrCodeApi(this);
-        mOKGenerateQrCodeApi.requestGenerateQrCodeApi(mBitmapTx, w, str, this);
+        mOKGenerateQrCodeApi.requestGenerateQrCode(mBitmapTx, w, str, this);
     }
 
     private void findView() {

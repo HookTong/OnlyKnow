@@ -8,10 +8,6 @@ import com.bumptech.glide.load.engine.cache.InternalCacheDiskCacheFactory;
 import com.bumptech.glide.load.engine.cache.LruResourceCache;
 import com.bumptech.glide.module.AppGlideModule;
 
-/**
- * Created by Administrator on 2017/12/8.
- */
-
 @GlideModule
 public class OKSimpleGlideModule extends AppGlideModule {
     private static final int DISK_CACHE_SIZE = 100 * 1024 * 1024;

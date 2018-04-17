@@ -12,6 +12,7 @@ import android.widget.ImageView;
 
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.R;
+import com.onlyknow.app.database.bean.OKCarouselAdBean;
 import com.onlyknow.app.utils.OKLogUtil;
 
 import java.util.List;
@@ -82,8 +83,8 @@ public class OKKenBurnsView extends FrameLayout {
     private void fillImageViewsUrls() {
         for (int i = 0; i < mapArrayList.size(); i++) {
             Map<String, Object> map = this.mapArrayList.get(i);
-            String url = map.get("URL").toString();
-            int placeholderId = Integer.parseInt(map.get("RES_ID").toString());
+            String url = map.get(OKCarouselAdBean.KEY_URL).toString();
+            int placeholderId = Integer.parseInt(map.get(OKCarouselAdBean.KEY_RID).toString());
             GlideApi(mImageViews[i], url, placeholderId);
         }
     }

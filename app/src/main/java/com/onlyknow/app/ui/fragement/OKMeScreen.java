@@ -26,8 +26,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadUserInfoApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
@@ -36,15 +38,19 @@ import com.onlyknow.app.ui.activity.OKLoginActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKUserEditActivity;
 import com.onlyknow.app.ui.adapter.OKFragmentPagerAdapter;
+import com.onlyknow.app.ui.fragement.me.OKApproveFragment;
+import com.onlyknow.app.ui.fragement.me.OKAttentionFragment;
+import com.onlyknow.app.ui.fragement.me.OKCommentFragment;
+import com.onlyknow.app.ui.fragement.me.OKDynamicFragment;
+import com.onlyknow.app.ui.fragement.me.OKWatchFragment;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKDateUtil;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetChangedListener, NavigationView.OnNavigationItemSelectedListener, OKLoadUserInfoApi.onCallBack {
+public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetChangedListener, NavigationView.OnNavigationItemSelectedListener, OKManagerUserApi.onCallBack {
     private AppBarLayout appBarLayout;
     private Toolbar toolbar;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -71,9 +77,9 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     private final OKCommentFragment mCommentFragment = new OKCommentFragment();
     private final OKApproveFragment mApproveFragment = new OKApproveFragment();
 
-    private View rootView;
+    private OKManagerUserApi okManagerUserApi;
 
-    private OKLoadUserInfoApi mOKLoadUserInfoApi;
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -102,11 +108,13 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         }
 
         if (USER_INFO_SP.getBoolean("STATE", false) && !TextUtils.isEmpty(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
-            mOKLoadUserInfoApi = new OKLoadUserInfoApi(getActivity());
-            Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-            map.put("type", "ALL");
-            mOKLoadUserInfoApi.requestUserInfo(map, this);
+            OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+            params.setType(OKManagerUserApi.Params.TYPE_GET_INFO);
+
+            okManagerUserApi = new OKManagerUserApi(getActivity());
+            okManagerUserApi.requestManagerUser(params, this);
         }
     }
 
@@ -114,8 +122,8 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     public void onPause() {
         super.onPause();
         //如果异步任务不为空并且状态是运行时,就把他取消这个加载任务
-        if (mOKLoadUserInfoApi != null) {
-            mOKLoadUserInfoApi.cancelTask();
+        if (okManagerUserApi != null) {
+            okManagerUserApi.cancelTask();
         }
         mDrawerLayout.closeDrawer(GravityCompat.START);
         appBarLayout.removeOnOffsetChangedListener(this);
@@ -132,7 +140,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     private void bindUserInfo() {
         if (USER_INFO_SP.getBoolean("STATE", false)) {
             // 用户信息设置
-            String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+            String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
             GlideRoundApi(imageViewTX, url, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
             GlideBlurApi(mImageViewHead, url, R.drawable.topgd3, R.drawable.topgd3);
             if (USER_INFO_SP.getString(OKUserInfoBean.KEY_SEX, "").equals("NAN")) {
@@ -143,15 +151,15 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
                 GlideApi(imageViewSex, R.drawable.nv, R.drawable.nv, R.drawable.nv);
             }
             textViewName.setText(USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "您还未登录"));
-            String qm = USER_INFO_SP.getString(OKUserInfoBean.KEY_QIANMIN, "");
+            String qm = USER_INFO_SP.getString(OKUserInfoBean.KEY_TAG, "");
             if (!TextUtils.isEmpty(qm) && !qm.equals("NULL")) {
                 textViewQianMin.setText(qm);
             } else {
                 textViewQianMin.setText("这个人很懒，什么都没有留下 !");
             }
-            textViewGuanZhu.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_GUANZHU, 0));
-            textViewShouChan.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_SHOUCHAN, 0));
-            textViewJiFeng.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_JIFENG, 0));
+            textViewGuanZhu.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_ME_ATTENTION, 0));
+            textViewShouChan.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_ME_WATCH, 0));
+            textViewJiFeng.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_INTEGRAL, 0));
         } else {
             imageViewSex.setVisibility(View.INVISIBLE);
             textViewName.setText("您还未登录");
@@ -209,7 +217,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
                     mBundle.putInt("top", location[1]);
                     mBundle.putInt("height", imageViewTX.getHeight());
                     mBundle.putInt("width", imageViewTX.getWidth());
-                    String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+                    String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
                     mBundle.putString("url", url);
 
                     startUserActivity(mBundle, OKDragPhotoActivity.class);
@@ -338,56 +346,61 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     }
 
     @Override
-    public void userInfoApiComplete(OKUserInfoBean userInfoBean) {
+    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        if (OKManagerUserApi.Params.TYPE_GET_INFO.equals(type)) {
+            if (serviceResult == null || !serviceResult.isSuccess()) {
+                showSnackBar(rootView, "没有获取到用户信息", "");
+                return;
+            }
 
-        if (userInfoBean == null) {
-            showSnackBar(rootView, "没有获取到用户信息", "");
-            return;
+            OKUserInfoBean userInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+
+            if (userInfoBean == null) return;
+
+            if (!userInfoBean.getHeadPortraitUrl().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, ""))) {
+                GlideRoundApi(imageViewTX, userInfoBean.getHeadPortraitUrl(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+                GlideBlurApi(mImageViewHead, userInfoBean.getHeadPortraitUrl(), R.drawable.topgd3, R.drawable.topgd3);
+            }
+
+            textViewName.setText(userInfoBean.getUserNickname());
+
+            if (!TextUtils.isEmpty(userInfoBean.getTag())) {
+                textViewQianMin.setText(userInfoBean.getTag());
+            } else {
+                textViewQianMin.setText("这个人很懒，什么都没有留下 !");
+            }
+
+            imageViewSex.setVisibility(View.VISIBLE);
+            if (userInfoBean.getSex().equalsIgnoreCase("NAN")) {
+                GlideApi(imageViewSex, R.drawable.nan, R.drawable.nan, R.drawable.nan);
+            } else {
+                GlideApi(imageViewSex, R.drawable.nv, R.drawable.nv, R.drawable.nv);
+            }
+
+            textViewShouChan.setText("" + userInfoBean.getMeWatch());
+            textViewGuanZhu.setText("" + userInfoBean.getMeAttention());
+            textViewJiFeng.setText("" + userInfoBean.getMeIntegral());
+
+            // 保存用户信息
+            SharedPreferences.Editor editor = USER_INFO_SP.edit();
+            editor.putInt(OKUserInfoBean.KEY_USER_ID, userInfoBean.getUserId());
+            editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUserName());
+            editor.putString(OKUserInfoBean.KEY_NICKNAME, userInfoBean.getUserNickname());
+            editor.putString(OKUserInfoBean.KEY_PHONE, userInfoBean.getUserPhone());
+            editor.putString(OKUserInfoBean.KEY_EMAIL, userInfoBean.getUserEmail());
+            editor.putString(OKUserInfoBean.KEY_TAG, userInfoBean.getTag());
+            editor.putString(OKUserInfoBean.KEY_SEX, userInfoBean.getSex());
+            editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, OKDateUtil.stringByDate(userInfoBean.getBirthDate()));
+            editor.putInt(OKUserInfoBean.KEY_AGE, userInfoBean.getAge());
+            editor.putString(OKUserInfoBean.KEY_RE_DATE, OKDateUtil.stringByDate(userInfoBean.getReDate()));
+            editor.putInt(OKUserInfoBean.KEY_ME_WATCH, userInfoBean.getMeWatch());
+            editor.putInt(OKUserInfoBean.KEY_ME_ATTENTION, userInfoBean.getMeAttention());
+            editor.putInt(OKUserInfoBean.KEY_INTEGRAL, userInfoBean.getMeIntegral());
+            editor.putInt(OKUserInfoBean.KEY_ARTICLE, userInfoBean.getMeArticle());
+            editor.putString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, userInfoBean.getHeadPortraitUrl());
+            editor.putString(OKUserInfoBean.KEY_HOME_PAGE_URL, userInfoBean.getHomepageUrl());
+            editor.putString(OKUserInfoBean.KEY_EDIT_DATE, OKDateUtil.stringByDate(userInfoBean.getEditDate()));
+            editor.commit();
         }
-
-        if (!userInfoBean.getHEADPORTRAIT_URL().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""))) {
-            GlideRoundApi(imageViewTX, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
-            GlideBlurApi(mImageViewHead, userInfoBean.getHEADPORTRAIT_URL(), R.drawable.topgd3, R.drawable.topgd3);
-        }
-
-        textViewName.setText(userInfoBean.getNICKNAME());
-
-        if (!TextUtils.isEmpty(userInfoBean.getQIANMIN()) && !userInfoBean.getQIANMIN().equals("NULL")) {
-            textViewQianMin.setText(userInfoBean.getQIANMIN());
-        } else {
-            textViewQianMin.setText("这个人很懒，什么都没有留下 !");
-        }
-
-        imageViewSex.setVisibility(View.VISIBLE);
-        if (userInfoBean.getSEX().equals("NAN")) {
-            GlideApi(imageViewSex, R.drawable.nan, R.drawable.nan, R.drawable.nan);
-        } else {
-            GlideApi(imageViewSex, R.drawable.nv, R.drawable.nv, R.drawable.nv);
-        }
-
-        textViewShouChan.setText("" + userInfoBean.getSHOUCHAN());
-        textViewGuanZhu.setText("" + userInfoBean.getGUANZHU());
-        textViewJiFeng.setText("" + userInfoBean.getJIFENG());
-
-        // 保存用户信息
-        SharedPreferences.Editor editor = USER_INFO_SP.edit();
-        editor.putInt(OKUserInfoBean.KEY_USERID, userInfoBean.getUSERID());
-        editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUSERNAME());
-        editor.putString(OKUserInfoBean.KEY_NICKNAME, userInfoBean.getNICKNAME());
-        editor.putString(OKUserInfoBean.KEY_PHONE, userInfoBean.getPHONE());
-        editor.putString(OKUserInfoBean.KEY_EMAIL, userInfoBean.getEMAIL());
-        editor.putString(OKUserInfoBean.KEY_QIANMIN, userInfoBean.getQIANMIN());
-        editor.putString(OKUserInfoBean.KEY_SEX, userInfoBean.getSEX());
-        editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, userInfoBean.getBIRTH_DATE());
-        editor.putInt(OKUserInfoBean.KEY_AGE, userInfoBean.getAGE());
-        editor.putString(OKUserInfoBean.KEY_RE_DATE, userInfoBean.getRE_DATE());
-        editor.putInt(OKUserInfoBean.KEY_SHOUCHAN, userInfoBean.getSHOUCHAN());
-        editor.putInt(OKUserInfoBean.KEY_GUANZHU, userInfoBean.getGUANZHU());
-        editor.putInt(OKUserInfoBean.KEY_JIFENG, userInfoBean.getJIFENG());
-        editor.putInt(OKUserInfoBean.KEY_WENZHAN, userInfoBean.getWENZHAN());
-        editor.putString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, userInfoBean.getHEADPORTRAIT_URL());
-        editor.putString(OKUserInfoBean.KEY_HEAD_URL, userInfoBean.getHEAD_URL());
-        editor.putString(OKUserInfoBean.KEY_EDIT_DATE, userInfoBean.getEDIT_DATE());
-        editor.commit();
     }
 }

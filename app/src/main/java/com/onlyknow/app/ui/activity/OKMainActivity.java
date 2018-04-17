@@ -127,7 +127,7 @@ public class OKMainActivity extends OKBaseActivity {
             @Override
             public void onClick(View view) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                    startUserActivity(null, OKArticleReleaseActivity.class);
+                    startUserActivity(null, OKAddCardActivity.class);
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
                 }

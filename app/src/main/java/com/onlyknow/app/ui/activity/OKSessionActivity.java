@@ -23,14 +23,16 @@ import android.widget.Toast;
 import com.dmcbig.mediapicker.PickerActivity;
 import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
+import com.google.gson.Gson;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMImageMessageBody;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadSessionApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.user.OKLoadSessionApi;
+import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -52,7 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKSessionActivity extends OKBaseActivity implements OnRefreshListener, OKLoadSessionApi.onCallBack {
+public class OKSessionActivity extends OKBaseActivity implements OnRefreshListener, OKLoadSessionApi.onCallBack, OKManagerUserApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private SessionAdapter mSessionAdapter;
@@ -60,18 +62,19 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     private EditText editTextMsg;
     private OKSEImageView sendButtonMsg, sendButtonImage;
 
-    private String THIS_USER_NAME;
-    private String THIS_USER_NICKNAME;
-    private String SEND_USER_NAME;
-    private String SEND_USER_NICKNAME;
-    private OKUserInfoBean THE_USER_INFO;
-    private OKUserInfoBean ME_USER_INFO;
-    private final int UPDATE_SESSION = 3;
+    private String meUserName;
+    private String meNickName;
+
+    private String theUserName;
+    private String theNickName;
+    private OKUserInfoBean theUserInfoBean;
 
     private OKLoadSessionApi mOKLoadSessionApi;
     private OKMessageReceiveCallBack mOKMessageReceiveCallBack;
     private OKMessageSendCallBack mOKMessageSendCallBack;
-    private List<EMMessage> EMMessageList = new ArrayList<>();
+    private List<EMMessage> emMessageList = new ArrayList<>();
+
+    private OKManagerUserApi managerUserApi;
 
     @SuppressLint("HandlerLeak")
     private Handler mMsgHandler = new Handler() {
@@ -90,11 +93,6 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                     showSnackBar(mOKRecyclerView, "消息发送失败", "");
                     break;
                 case OKMessageReceiveCallBack.RECEIVED_MESSAGE:
-                    mOKRecyclerView.getAdapter().notifyDataSetChanged();
-                    mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
-                    break;
-                case UPDATE_SESSION:
-                    mToolbarTitle.setText("与 " + SEND_USER_NICKNAME + " 的会话");
                     mOKRecyclerView.getAdapter().notifyDataSetChanged();
                     mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
                     break;
@@ -120,10 +118,10 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
 
         sendUserBroadcast(ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM, null); // 移除服务中的消息接收监听器
 
-        THIS_USER_NAME = USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "");
-        THIS_USER_NICKNAME = USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "");
-        SEND_USER_NAME = getIntent().getExtras().getString(OKUserInfoBean.KEY_USERNAME);
-        SEND_USER_NICKNAME = getIntent().getExtras().getString(OKUserInfoBean.KEY_NICKNAME);
+        meUserName = USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "");
+        meNickName = USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "");
+        theUserName = getIntent().getExtras().getString(OKUserInfoBean.KEY_USERNAME);
+        theNickName = getIntent().getExtras().getString(OKUserInfoBean.KEY_NICKNAME);
 
         EMClient.getInstance().groupManager().loadAllGroups();
         EMClient.getInstance().chatManager().loadAllConversations();
@@ -185,7 +183,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
 
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
-        mToolbarTitle.setText("与 " + SEND_USER_NICKNAME + " 的会话");
+        mToolbarTitle.setText("与 " + theNickName + " 的会话");
 
         mRefreshLayout = (RefreshLayout) findViewById(R.id.Session_SwipeRefresh);
         mOKRecyclerView = (OKRecyclerView) findViewById(R.id.Session_Nolistview);
@@ -202,31 +200,20 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     }
 
     private void init() {
-        mSessionAdapter = new SessionAdapter(this, EMMessageList);
+        mSessionAdapter = new SessionAdapter(this, emMessageList);
         mOKRecyclerView.setAdapter(mSessionAdapter);
 
-        mOKMessageReceiveCallBack = new OKMessageReceiveCallBack(this, EMMessageList, SEND_USER_NAME, mMsgHandler);
+        mOKMessageReceiveCallBack = new OKMessageReceiveCallBack(this, emMessageList, theUserName, mMsgHandler);
         EMClient.getInstance().chatManager().addMessageListener(mOKMessageReceiveCallBack); // 添加当前Activity的消息接收监听器
 
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                Map<String, String> map = new HashMap<>();
-                map.put("username", THIS_USER_NAME);
-                map.put("type", "HEAD_PORTRAIT");
-                ME_USER_INFO = new OKBusinessApi().getUserInfo(map);
-                THIS_USER_NICKNAME = ME_USER_INFO.getNICKNAME();
-
-                Map<String, String> map2 = new HashMap<>();
-                map2.put("username", SEND_USER_NAME);
-                map2.put("type", "HEAD_PORTRAIT");
-                THE_USER_INFO = new OKBusinessApi().getUserInfo(map2);
-                SEND_USER_NICKNAME = THE_USER_INFO.getNICKNAME();
-
-                mMsgHandler.sendEmptyMessage(UPDATE_SESSION);
-            }
-        }.start();
+        OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+        params.setUsername(theUserName);
+        params.setType(OKManagerUserApi.Params.TYPE_GET_INFO);
+        if (managerUserApi != null) {
+            managerUserApi.cancelTask();
+        }
+        managerUserApi = new OKManagerUserApi(this);
+        managerUserApi.requestManagerUser(params, this);
 
         sendButtonMsg.setOnClickListener(new OnClickListener() {
 
@@ -234,21 +221,21 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             public void onClick(View v) {
                 final String content = editTextMsg.getText().toString();
                 if (!TextUtils.isEmpty(content)) {
-                    final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+                    final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
                     mToolBarProgressBar.setVisibility(View.VISIBLE);
                     new Thread() {
                         @Override
                         public void run() {
                             super.run();
                             //创建一条文本消息,content为消息文字内容,toChatUsername为对方用户或者群聊的id,后文皆是如此
-                            EMMessage sendMessage = EMMessage.createTxtSendMessage(content, SEND_USER_NAME);
-                            mOKMessageSendCallBack = new OKMessageSendCallBack(EMMessageList, sendMessage, mMsgHandler);
+                            EMMessage sendMessage = EMMessage.createTxtSendMessage(content, theUserName);
+                            mOKMessageSendCallBack = new OKMessageSendCallBack(emMessageList, sendMessage, mMsgHandler);
                             sendMessage.setMessageStatusCallback(mOKMessageSendCallBack); // 设置消息发送状态监听
-                            sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
-                            sendMessage.setTo(SEND_USER_NAME); // 设置消息的接收者
-                            sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME); // 设置FROM昵称属性
-                            sendMessage.setAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, SEND_USER_NICKNAME); // 设置TO昵称属性
-                            sendMessage.setAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, headPortraitUrl);// 设置头像属性
+                            sendMessage.setFrom(meUserName); // 设置消息发送者
+                            sendMessage.setTo(theUserName); // 设置消息的接收者
+                            sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, meNickName); // 设置FROM昵称属性
+                            sendMessage.setAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, theNickName); // 设置TO昵称属性
+                            sendMessage.setAttribute(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, headPortraitUrl);// 设置头像属性
                             EMClient.getInstance().chatManager().sendMessage(sendMessage);//发送消息
                         }
                     }.start();
@@ -285,11 +272,11 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             mOKLoadSessionApi.cancelTask();
         }
         String topId = "";
-        if (EMMessageList.size() != 0) {
-            topId = EMMessageList.get(0).getMsgId();
+        if (emMessageList.size() != 0) {
+            topId = emMessageList.get(0).getMsgId();
         }
-        mOKLoadSessionApi = new OKLoadSessionApi(this, SEND_USER_NAME);
-        mOKLoadSessionApi.requestMessageList(SEND_USER_NAME, topId, EMMessageList, this);
+        mOKLoadSessionApi = new OKLoadSessionApi(this, theUserName);
+        mOKLoadSessionApi.requestMessage(theUserName, topId, emMessageList, this);
     }
 
     private ArrayList<MediaBean> mSelectMediaBean;
@@ -302,7 +289,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         final MediaBean item = imageItems.get(0);
-        final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+        final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
         mToolBarProgressBar.setVisibility(View.VISIBLE);
         new Thread() {
             @Override
@@ -310,17 +297,17 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                 //imagePath为图片本地路径,false为不发送原图,默认超过100k的图片会压缩后发给对方,需要发送原图传true
                 EMMessage sendMessage;
                 if (OKFileUtil.isGifFile(item.path)) {
-                    sendMessage = EMMessage.createImageSendMessage(item.path, true, SEND_USER_NAME);
+                    sendMessage = EMMessage.createImageSendMessage(item.path, true, theUserName);
                 } else {
-                    sendMessage = EMMessage.createImageSendMessage(item.path, false, SEND_USER_NAME);
+                    sendMessage = EMMessage.createImageSendMessage(item.path, false, theUserName);
                 }
-                mOKMessageSendCallBack = new OKMessageSendCallBack(EMMessageList, sendMessage, mMsgHandler);
+                mOKMessageSendCallBack = new OKMessageSendCallBack(emMessageList, sendMessage, mMsgHandler);
                 sendMessage.setMessageStatusCallback(mOKMessageSendCallBack); // 设置消息发送状态监听
-                sendMessage.setFrom(THIS_USER_NAME); // 设置消息发送者
-                sendMessage.setTo(SEND_USER_NAME); // 设置消息的接收者
-                sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME); // 设置FROM昵称属性
-                sendMessage.setAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, SEND_USER_NICKNAME); // 设置TO昵称属性
-                sendMessage.setAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, headPortraitUrl);// 设置头像属性
+                sendMessage.setFrom(meUserName); // 设置消息发送者
+                sendMessage.setTo(theUserName); // 设置消息的接收者
+                sendMessage.setAttribute("FROM_" + OKUserInfoBean.KEY_NICKNAME, meNickName); // 设置FROM昵称属性
+                sendMessage.setAttribute("TO_" + OKUserInfoBean.KEY_NICKNAME, theNickName); // 设置TO昵称属性
+                sendMessage.setAttribute(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, headPortraitUrl);// 设置头像属性
                 EMClient.getInstance().chatManager().sendMessage(sendMessage);
             }
         }.start();
@@ -333,11 +320,29 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             showSnackBar(mOKRecyclerView, "没有新的消息了", "");
             return;
         }
-        list.addAll(EMMessageList);
-        EMMessageList.clear();
-        EMMessageList.addAll(list);
+        list.addAll(emMessageList);
+        emMessageList.clear();
+        emMessageList.addAll(list);
         mOKRecyclerView.getAdapter().notifyDataSetChanged();
         mRefreshLayout.finishRefresh();
+    }
+
+    @Override
+    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        if (OKManagerUserApi.Params.TYPE_GET_INFO.equals(type)) {
+
+            if (serviceResult == null || !serviceResult.isSuccess()) return;
+
+            theUserInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+
+            if (theUserInfoBean == null) return;
+
+            theNickName = theUserInfoBean.getUserNickname();
+
+            mToolbarTitle.setText("与 " + theNickName + " 的会话");
+            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+            mOKRecyclerView.scrollToPosition(mOKRecyclerView.getAdapter().getItemCount() - 1);
+        }
     }
 
     private class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionViewHolder> {
@@ -350,11 +355,11 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         private void initLeftViews(final SessionViewHolder viewHolder, final EMMessage mMessage, final int position) {
-            if (THE_USER_INFO == null) {
-                String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+            if (theUserInfoBean == null) {
+                String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
                 GlideRoundApi(viewHolder.leftImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             } else {
-                GlideRoundApi(viewHolder.leftImageViewTitle, THE_USER_INFO.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+                GlideRoundApi(viewHolder.leftImageViewTitle, theUserInfoBean.getHeadPortraitUrl(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             }
             if (mMessage.getType() == EMMessage.Type.TXT) {
                 viewHolder.leftImageViewContent.setVisibility(View.GONE);
@@ -394,19 +399,21 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                 @Override
                 public void onClick(View v) {
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, SEND_USER_NAME);
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, SEND_USER_NICKNAME);
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, theUserName);
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, theNickName);
                     startUserActivity(bundle, OKHomePageActivity.class);
                 }
             });
         }
 
         public void initRightViews(final SessionViewHolder viewHolder, final EMMessage mMessage, final int position) {
-            if (ME_USER_INFO == null) {
-                String url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+            String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+
+            if (TextUtils.isEmpty(url)) {
+                url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
                 GlideRoundApi(viewHolder.rightImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             } else {
-                GlideRoundApi(viewHolder.rightImageViewTitle, ME_USER_INFO.getHEADPORTRAIT_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+                GlideRoundApi(viewHolder.rightImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             }
             if (mMessage.getType() == EMMessage.Type.TXT) {
                 viewHolder.rightImageViewContent.setVisibility(View.GONE);
@@ -447,8 +454,8 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
                 @Override
                 public void onClick(View v) {
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, THIS_USER_NAME);
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, THIS_USER_NICKNAME);
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, meUserName);
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, meNickName);
                     startUserActivity(bundle, OKHomePageActivity.class);
                 }
             });
@@ -467,7 +474,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             viewHolder.setListPosition(position);
             String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(emMessage.getMsgTime()));
             viewHolder.mTextViewDate.setText(date);
-            if (emMessage.getFrom().equals(SEND_USER_NAME)) {
+            if (emMessage.getFrom().equals(theUserName)) {
                 viewHolder.rightRelativeLayout.setVisibility(View.GONE);
                 viewHolder.leftRelativeLayout.setVisibility(View.VISIBLE);
                 initLeftViews(viewHolder, emMessage, position);

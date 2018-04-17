@@ -1,11 +1,6 @@
 package com.onlyknow.app.database.bean;
 
-/**
- * Created by Administrator on 2018/2/2.
- */
-
 public class OKSearchBean {
-
     public enum SEARCH_TYPE {
         USER, CARD, ALL;
     }

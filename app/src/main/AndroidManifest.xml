@@ -109,7 +109,7 @@
             android:label="@string/app_name"
             android:theme="@style/ImageTranslucentTheme" />
         <activity
-            android:name="com.onlyknow.app.ui.activity.OKSigNupActivity"
+            android:name="com.onlyknow.app.ui.activity.OKRegisteredActivity"
             android:label="@string/app_name"
             android:theme="@style/ImageTranslucentTheme" />
         <activity
@@ -169,7 +169,7 @@
             android:name="com.onlyknow.app.ui.activity.OKSessionActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name="com.onlyknow.app.ui.activity.OKArticleReleaseActivity"
+            android:name="com.onlyknow.app.ui.activity.OKAddCardActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name="com.onlyknow.app.ui.activity.OKGoodsActivity"

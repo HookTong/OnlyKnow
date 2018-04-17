@@ -310,6 +310,14 @@ public class OKFileUtil {
         }
     }
 
+    public static String getFileFormat(String path) {
+        int index = path.lastIndexOf(".");
+
+        if (index == -1) return null;
+
+        return path.substring(index + 1);
+    }
+
     public static int copy(InputStream input, OutputStream output) throws IOException {
         long count = copyLarge(input, output);
         if (count > Integer.MAX_VALUE) {

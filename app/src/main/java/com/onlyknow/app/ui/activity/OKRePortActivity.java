@@ -9,21 +9,37 @@ import android.widget.CheckBox;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKUserOperationApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.comment.OKAddCommentApi;
+import com.onlyknow.app.api.user.OKReportApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class OKRePortActivity extends OKBaseActivity implements OKUserOperationApi.onCallBack {
+public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCallBack {
     private CheckBox checkBox1, checkBox2, checkBox3, checkBox4;
     private AppCompatButton appCompatButton;
+
+    public final static String KEY_TYPE = "type";
+    public final static String KEY_ID = "id";
+    public final static String KEY_NAME = "username";
+
+    public final static String TYPE_CARD = "reportCard";
+    public final static String TYPE_USER = "reportUser";
+    public final static String TYPE_COMMENT = "reportComment";
+    public final static String TYPE_COMMENT_REPLY = "reportCommentReply";
+
+    private final String item1 = "report_content_entry_item1";
+    private final String item2 = "report_content_entry_item2";
+    private final String item3 = "report_content_entry_item3";
+    private final String item4 = "report_content_entry_item4";
 
     private Bundle mBundle;
     private String RePortType = "";
 
-    private OKUserOperationApi mOKUserOperationApi;
+    private OKReportApi okReportApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +48,9 @@ public class OKRePortActivity extends OKBaseActivity implements OKUserOperationA
         initUserInfoSharedPreferences();
         initSystemBar(this);
         mBundle = getIntent().getExtras();
-        RePortType = mBundle.getString("JUBAO_TYPE");
+
+        RePortType = mBundle.getString(KEY_TYPE);
+
         findView();
         init();
     }
@@ -45,8 +63,8 @@ public class OKRePortActivity extends OKBaseActivity implements OKUserOperationA
     @Override
     public void onPause() {
         super.onPause();
-        if (mOKUserOperationApi != null) {
-            mOKUserOperationApi.cancelTask();
+        if (okReportApi != null) {
+            okReportApi.cancelTask();
         }
     }
 
@@ -57,79 +75,41 @@ public class OKRePortActivity extends OKBaseActivity implements OKUserOperationA
             public void onClick(View v) {
                 String msg = "";
                 if (checkBox1.isChecked()) {
-                    msg = msg + "JuBao_itme1/";
+                    msg = msg + item1 + "/";
                 }
                 if (checkBox2.isChecked()) {
-                    msg = msg + "JuBao_itme2/";
+                    msg = msg + item2 + "/";
                 }
                 if (checkBox3.isChecked()) {
-                    msg = msg + "JuBao_itme3/";
+                    msg = msg + item3 + "/";
                 }
                 if (checkBox4.isChecked()) {
-                    msg = msg + "JuBao_itme4";
+                    msg = msg + item4 + "";
                 }
 
                 if (!TextUtils.isEmpty(msg)) {
                     if (USER_INFO_SP.getBoolean("STATE", false)) {
-                        if (RePortType.equals("USER")) {
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                            map.put("username2", mBundle.getString("JUBAO_NAME"));
-                            map.put("card_id", "");
-                            map.put("message", msg);
-                            map.put("date", OKConstant.getNowDateByString());
-                            map.put("type", "JUBAO_USER");
-                            if (mOKUserOperationApi != null) {
-                                mOKUserOperationApi.cancelTask();
-                            }
-                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
-                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
-                            showProgressDialog("正在提交举报信息");
-                        } else if (RePortType.equals("CARD")) {
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                            map.put("username2", "");
-                            map.put("card_id", mBundle.getString("JUBAO_CARD_ID"));
-                            map.put("message", msg);
-                            map.put("date", OKConstant.getNowDateByString());
-                            map.put("type", "JUBAO_CARD");
-                            if (mOKUserOperationApi != null) {
-                                mOKUserOperationApi.cancelTask();
-                            }
-                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
-                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
-                            showProgressDialog("正在提交举报信息");
-                        } else if (RePortType.equals("COMMENT")) {
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                            map.put("username2", "");
-                            map.put("card_id", mBundle.getString("JUBAO_COM_ID"));
-                            map.put("message", msg);
-                            map.put("date", OKConstant.getNowDateByString());
-                            map.put("type", "JUBAO_COMMENT");
-                            if (mOKUserOperationApi != null) {
-                                mOKUserOperationApi.cancelTask();
-                            }
-                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
-                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
-                            showProgressDialog("正在提交举报信息");
-                        } else if (RePortType.equals("COMMENT_REPLY")) {
-                            Map<String, String> map = new HashMap<String, String>();
-                            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                            map.put("username2", "");
-                            map.put("card_id", mBundle.getString("JUBAO_COMR_ID"));
-                            map.put("message", msg);
-                            map.put("date", OKConstant.getNowDateByString());
-                            map.put("type", "JUBAO_COMMENT_REPLY");
-                            if (mOKUserOperationApi != null) {
-                                mOKUserOperationApi.cancelTask();
-                            }
-                            mOKUserOperationApi = new OKUserOperationApi(OKRePortActivity.this);
-                            mOKUserOperationApi.requestUserOperation(map, OKUserOperationApi.TYPE_REPORT, OKRePortActivity.this);
-                            showProgressDialog("正在提交举报信息");
+                        if (TYPE_USER.equals(RePortType)) {
+
+                            report(TYPE_USER, msg, -1, mBundle.getString(KEY_NAME));
+
+                        } else if (TYPE_CARD.equals(RePortType)) {
+
+                            report(TYPE_CARD, msg, Integer.parseInt(mBundle.getString(KEY_ID)), "");
+
+                        } else if (TYPE_COMMENT.equals(RePortType)) {
+
+                            report(TYPE_COMMENT, msg, Integer.parseInt(mBundle.getString(KEY_ID)), "");
+
+                        } else if (TYPE_COMMENT_REPLY.equals(RePortType)) {
+
+                            report(TYPE_COMMENT_REPLY, msg, Integer.parseInt(mBundle.getString(KEY_ID)), "");
+
                         } else {
-                            startUserActivity(null, OKLoginActivity.class);
+                            showSnackBar(appCompatButton, "非法的举报类型!", "");
                         }
+                    } else {
+                        startUserActivity(null, OKLoginActivity.class);
                     }
                 }
             }
@@ -159,6 +139,25 @@ public class OKRePortActivity extends OKBaseActivity implements OKUserOperationA
         setSupportActionBar(mToolbar);
     }
 
+    private void report(String type, String msg, int id, String name) {
+        OKReportApi.Params params = new OKReportApi.Params();
+
+        params.setId(id);
+        params.setReportUsername(name);
+        params.setType(type);
+        params.setMessage(msg);
+
+        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+
+        showProgressDialog("正在提交举报信息");
+
+        if (okReportApi != null) {
+            okReportApi.cancelTask();
+        }
+        okReportApi = new OKReportApi(OKRePortActivity.this);
+        okReportApi.requestReport(params, OKRePortActivity.this);
+    }
+
     @Override
     public void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -168,12 +167,14 @@ public class OKRePortActivity extends OKBaseActivity implements OKUserOperationA
     }
 
     @Override
-    public void userOperationApiComplete(boolean isSuccess, String type) {
-        if (isSuccess) {
-            showSnackBar(appCompatButton, "举报成功", "");
-        } else {
-            showSnackBar(appCompatButton, "举报失败,请检查网络!", "");
-        }
+    public void reportApiComplete(OKServiceResult<Object> result, String type) {
         closeProgressDialog();
+
+        if (result == null || !result.isSuccess()) {
+            showSnackBar(appCompatButton, "举报失败,请检查网络!", "");
+            return;
+        }
+
+        showSnackBar(appCompatButton, "举报成功", "");
     }
 }

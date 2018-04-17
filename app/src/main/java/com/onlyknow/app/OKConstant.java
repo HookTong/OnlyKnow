@@ -1,7 +1,8 @@
 package com.onlyknow.app;
 
 import android.os.Environment;
-import android.support.v4.util.LruCache;
+
+import com.onlyknow.app.database.bean.OKCarouselAdBean;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.Map;
 *  全局静态数据
 * */
 
-public class OKConstant {
+public final class OKConstant {
     public final static String APP_VERSION = "2.0.9"; // app版本号
 
     // 广播动作
@@ -44,127 +45,81 @@ public class OKConstant {
 
     // 错误对照码
     public final static String WEATHER_BEAN_ERROR = "0x00000";
-    public final static String WEATHER_ID_ERROR = "0x0001"; // 因为CityID导致天气获取失败
-    public final static String WEATHER_NAME_ERROR = "0x0002"; // 因为CityName导致天气获取失败
-    public final static String GOODS_BUY_ERROR = "0x0003"; // 商品购买错误
-    public final static String ATTENTION_CANCEL_ERROR = "0x0004"; // 关注取消错误
-    public final static String ARTICLE_CANCEL_ERROR = "0x0005"; // 文章删除错误
-    public final static String SERVICE_ERROR = "0x0006"; // 服务错误
-    public final static String COMMENT_ERROR = "0x0007"; // 评论错误
-    public final static String NOT_INIT_ERROR = "0x0008"; // 对象未实例化
-    public final static String DATA_SOURCE_ERROR = "0x0009";
+    public final static String WEATHER_ID_ERROR = "0x00001"; // 因为CityID导致天气获取失败
+    public final static String WEATHER_NAME_ERROR = "0x00002"; // 因为CityName导致天气获取失败
+    public final static String GOODS_BUY_ERROR = "0x00003"; // 商品购买错误
+    public final static String ATTENTION_CANCEL_ERROR = "0x00004"; // 关注取消错误
+    public final static String ARTICLE_CANCEL_ERROR = "0x00005"; // 文章删除错误
+    public final static String SERVICE_ERROR = "0x00006"; // 服务错误
+    public final static String COMMENT_ERROR = "0x00007"; // 评论错误
+    public final static String NOT_INIT_ERROR = "0x00008"; // 对象未实例化
+    public final static String DATA_SOURCE_ERROR = "0x00009";
 
-    public final static int EXPLORE_COUNT = 30;
-    public final static String EXPLORE_LOAD_COUNT = "30";
+    private final static List<Map<String, Object>> carouselImages = new ArrayList<>();
 
-    public final static int NEAR_COUNT = 30;
-    public final static String NEAR_LOAD_COUNT = "30";
+    private final static List<Map<String, String>> adImages = new ArrayList<>();
 
-    public final static int DYNAMIC_COUNT = 20;
-    public final static String DYNAMIC_LOAD_COUNT = "20";
-
-    public final static int ATTENTION_COUNT = 30;
-    public final static String ATTENTION_LOAD_COUNT = "30";
-
-    public final static int WATCH_COUNT = 20;
-    public final static String WATCH_LOAD_COUNT = "20";
-
-    public final static int HOME_COUNT = 30;
-    public final static String HOME_LOAD_COUNT = "30";
-
-    public final static int HOT_COUNT = 20;
-    public final static String HOT_LOAD_COUNT = "20";
-
-    public final static int GOODS_COUNT = 30;
-    public final static String GOODS_LOAD_COUNT = "30";
-
-    public final static int COMMENT_COUNT = 30;
-    public final static String COMMENT_LOAD_COUNT = "30";
-
-    public final static int COMMENT_REPLY_COUNT = 30;
-    public final static String COMMENT_REPLY_LOAD_COUNT = "30";
-
-    public final static int CARD_AND_COMMENT_COUNT = 30;
-    public final static String CARD_AND_COMMENT_LOAD_COUNT = "30";
-
-    public final static int APPROVE_COUNT = 30;
-    public final static String APPROVE_LOAD_COUNT = "30";
-
-    private final static List<Map<String, Object>> HEAD_IMAGE_LIST_URL = new ArrayList<>();
-
-    private final static List<Map<String, String>> AD_IMAGE_AND_LINK_LIST_URL = new ArrayList<>();
-
-    public final static List<Map<String, Object>> getHeadUrls() {
-        if (HEAD_IMAGE_LIST_URL.size() == 0) {
+    public static List<Map<String, Object>> getCarouselImages() {
+        if (carouselImages.size() == 0) {
             Map<String, Object> map0 = new HashMap<>();
-            map0.put("URL", ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head001.jpg");
-            map0.put("RES_ID", R.drawable.topgd1);
+            map0.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head001.jpg");
+            map0.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd1);
 
             Map<String, Object> map1 = new HashMap<>();
-            map1.put("URL", ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head002.jpg");
-            map1.put("RES_ID", R.drawable.topgd2);
+            map1.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head002.jpg");
+            map1.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd2);
 
             Map<String, Object> map2 = new HashMap<>();
-            map2.put("URL", ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head003.jpg");
-            map2.put("RES_ID", R.drawable.topgd3);
+            map2.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head003.jpg");
+            map2.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd3);
 
             Map<String, Object> map3 = new HashMap<>();
-            map3.put("URL", ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head004.jpg");
-            map3.put("RES_ID", R.drawable.topgd4);
+            map3.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head004.jpg");
+            map3.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd4);
 
             Map<String, Object> map4 = new HashMap<>();
-            map4.put("URL", ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head005.jpg");
-            map4.put("RES_ID", R.drawable.topgd5);
+            map4.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head005.jpg");
+            map4.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd5);
 
-            HEAD_IMAGE_LIST_URL.add(map0);
-            HEAD_IMAGE_LIST_URL.add(map1);
-            HEAD_IMAGE_LIST_URL.add(map2);
-            HEAD_IMAGE_LIST_URL.add(map3);
-            HEAD_IMAGE_LIST_URL.add(map4);
+            carouselImages.add(map0);
+            carouselImages.add(map1);
+            carouselImages.add(map2);
+            carouselImages.add(map3);
+            carouselImages.add(map4);
         }
-        return HEAD_IMAGE_LIST_URL;
+        return carouselImages;
     }
 
-    public static boolean EXPLORE_HEAD_DATA_CHANGED = false;
-    public static boolean NEAR_HEAD_DATA_CHANGED = false;
-    public static boolean HISTORY_HEAD_DATA_CHANGED = false;
-
-    public final static void setHeadUrls(List<Map<String, Object>> list) {
+    public static void setCarouselImages(List<Map<String, Object>> list) {
         if (list != null && list.size() != 0) {
-            HEAD_IMAGE_LIST_URL.clear();
-            HEAD_IMAGE_LIST_URL.addAll(list);
-            EXPLORE_HEAD_DATA_CHANGED = true;
-            NEAR_HEAD_DATA_CHANGED = true;
-            HISTORY_HEAD_DATA_CHANGED = true;
+            carouselImages.clear();
+            carouselImages.addAll(list);
         }
     }
 
-    public final static List<Map<String, String>> getAdUrls() {
-        if (AD_IMAGE_AND_LINK_LIST_URL.size() == 0) {
+    public static List<Map<String, String>> getAdImages() {
+        if (adImages.size() == 0) {
             Map<String, String> map = new HashMap<>();
-            map.put("URL", ONLY_KNOW_RESOURCES_AD_URL + "onlyKnowAd.jpg");
-            map.put("LINK", ONLY_KNOW_OFFICIAL_WEBSITE_URL);
-            AD_IMAGE_AND_LINK_LIST_URL.add(map);
+            map.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_AD_URL + "onlyKnowAd.jpg");
+            map.put(OKCarouselAdBean.KEY_LINK, ONLY_KNOW_OFFICIAL_WEBSITE_URL);
+            adImages.add(map);
         }
-        return AD_IMAGE_AND_LINK_LIST_URL;
+        return adImages;
     }
 
-    public static boolean EXPLORE_AD_DATA_CHANGED = false;
-
-    public final static void setAdUrls(List<Map<String, String>> list) {
+    public static void setAdImages(List<Map<String, String>> list) {
         if (list != null && list.size() != 0) {
-            AD_IMAGE_AND_LINK_LIST_URL.clear();
-            AD_IMAGE_AND_LINK_LIST_URL.addAll(list);
-            EXPLORE_AD_DATA_CHANGED = true;
+            adImages.clear();
+            adImages.addAll(list);
         }
     }
 
-    public final static String getNowDateByString() {
+    public static String getNowDateByString() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
         return dateFormat.format(new Date());
     }
 
-    public final static long getNowDateByLong() {
+    public static long getNowDateByLong() {
         return new Date().getTime();
     }
 }

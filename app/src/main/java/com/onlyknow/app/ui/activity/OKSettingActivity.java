@@ -19,10 +19,9 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKSecurityApi;
+import com.onlyknow.app.api.app.OKLoadAppInfoApi;
 import com.onlyknow.app.database.OKDatabaseHelper;
-import com.onlyknow.app.database.bean.OKSafetyInfoBean;
-import com.onlyknow.app.api.OKBusinessApi;
+import com.onlyknow.app.database.bean.OKAppInfoBean;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKProgressButton;
@@ -34,15 +33,15 @@ import java.util.Map;
 
 import okhttp3.Request;
 
-public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.onCallBack {
+public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoApi.onCallBack {
     private LinearLayout layoutFontSet, layoutCacheQk, layoutVersionUpdate, layoutVersionJieSao, layoutUserXieYi;
     private LinearLayout layoutYiJianFanKui, layoutDiBuDaoHan, mLinearLayoutAbout;
     private SwitchCompat switchCompat;
     private TextView textViewVersionID;
 
-    private int dbpos = 0;
+    private int dbPos = 0;
 
-    private OKSecurityApi mOKSecurityApi;
+    private OKLoadAppInfoApi mOKLoadAppInfoApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,8 +69,8 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
     @Override
     public void onPause() {
         super.onPause();
-        if (mOKSecurityApi != null) {
-            mOKSecurityApi.cancelTask();
+        if (mOKLoadAppInfoApi != null) {
+            mOKLoadAppInfoApi.cancelTask();
         }
     }
 
@@ -167,15 +166,16 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
 
             @Override
             public void onClick(View v) {
-                Map<String, String> map = new HashMap<String, String>();
-                map.put("type", "APP_VERSION_CHECK");
-                map.put("value", OKConstant.APP_VERSION);
 
-                if (mOKSecurityApi != null) {
-                    mOKSecurityApi.cancelTask();
+                OKLoadAppInfoApi.Params params = new OKLoadAppInfoApi.Params();
+                params.setVersion(OKConstant.APP_VERSION);
+                params.setType(OKLoadAppInfoApi.Params.TYPE_CHECK);
+
+                if (mOKLoadAppInfoApi != null) {
+                    mOKLoadAppInfoApi.cancelTask();
                 }
-                mOKSecurityApi = new OKSecurityApi(OKSettingActivity.this);
-                mOKSecurityApi.requestSecurityCheck(map, OKSettingActivity.this);
+                mOKLoadAppInfoApi = new OKLoadAppInfoApi(OKSettingActivity.this);
+                mOKLoadAppInfoApi.requestAppInfo(params, OKSettingActivity.this);
             }
         });
 
@@ -184,8 +184,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putString("TYPE", "APP_VERSION_CHECK");
-                bundle.putString("VALUE", "NULL");
+                bundle.putString(OKContentActivity.KEY_TYPE, OKContentActivity.TYPE_APP);
                 startUserActivity(bundle, OKContentActivity.class);
             }
         });
@@ -195,8 +194,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putString("TYPE", "AGREEMENT_VERSION_CHECK");
-                bundle.putString("VALUE", "NULL");
+                bundle.putString(OKContentActivity.KEY_TYPE, OKContentActivity.TYPE_AGREEMENT);
                 startUserActivity(bundle, OKContentActivity.class);
             }
         });
@@ -213,20 +211,20 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
 
             @Override
             public void onClick(View v) {
-                dbpos = SETTING_SP.getInt("BottomNnavigation", 0);
+                dbPos = SETTING_SP.getInt("BottomNnavigation", 0);
                 AlertDialog.Builder builder = new AlertDialog.Builder(OKSettingActivity.this);
                 builder.setTitle("选择底部导航样式");
                 builder.setSingleChoiceItems(new String[]{"FIXED+RIPPLE 效果", "FIXED+STATIC 效果", "SHIFTING+STATIC 效果",
-                        "SHIFTING+RIPPLE 效果"}, dbpos, new DialogInterface.OnClickListener() {
+                        "SHIFTING+RIPPLE 效果"}, dbPos, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int pos) {
-                        dbpos = pos;
+                        dbPos = pos;
                     }
                 });
                 builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
-                        SETTING_SP.edit().putInt("BottomNnavigation", dbpos).commit();
+                        SETTING_SP.edit().putInt("BottomNnavigation", dbPos).commit();
                     }
                 });
                 builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -276,7 +274,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
         textViewVersionID = (TextView) findViewById(R.id.setting_text_banbenID);
     }
 
-    private void showUpdateAppDialog(final OKSafetyInfoBean bean) {
+    private void showUpdateAppDialog(final OKAppInfoBean bean) {
         final AlertDialog.Builder DialogMenu = new AlertDialog.Builder(this);
         final View dialogView = LayoutInflater.from(this).inflate(R.layout.ok_dialog_update_app, null);
         final ImageView mImageViewBackground = (ImageView) dialogView.findViewById(R.id.ok_dialog_update_app_background_image);
@@ -290,17 +288,17 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
         DialogMenu.setView(dialogView);
         DialogMenu.setCancelable(false);
         final AlertDialog mAlertDialog = DialogMenu.show();
-        if (OKSafetyInfoBean.AVD_IS_MANDATORY.YES.toString().equals(bean.getAVD_IS_MANDATORY())) {
+        if (bean.isAppIsMandatory()) {
             mOKSEImageViewClose.setVisibility(View.GONE);
         } else {
             mOKSEImageViewClose.setVisibility(View.VISIBLE);
         }
-        mTextViewName.setText(bean.getAVU_NAME());
+        mTextViewName.setText(bean.getAppName());
         mTextViewOldVer.setText("旧版本 :" + OKConstant.APP_VERSION + " 版本");
-        mTextViewNewVer.setText("是否更新到 " + bean.getAVU_VERSION() + " 版本 ?");
-        mTextViewSize.setText("最新版本大小 :" + bean.getAVD_SIZE());
-        mTextViewInfo.setText(bean.getAVU_DESCRIBE());
-        GlideApi(mImageViewBackground, bean.getAVU_IMAG(), R.drawable.topgd1, R.drawable.topgd1);
+        mTextViewNewVer.setText("是否更新到 " + bean.getAppVersion() + " 版本 ?");
+        mTextViewSize.setText("最新版本大小 :" + bean.getAppSize());
+        mTextViewInfo.setText(bean.getAppDescribe());
+        GlideApi(mImageViewBackground, bean.getAppImageUrl(), R.drawable.topgd1, R.drawable.topgd1);
         mProgressButton.setCurrentText("更新到最新版本");
 
         mProgressButton.setOnClickListener(new View.OnClickListener() {
@@ -311,10 +309,10 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
                     mProgressButton.setMaxProgress(100);
                     String dirPath = Environment.getExternalStorageDirectory().getPath();
                     OKWebService webService = OKWebService.getInstance();
-                    String array[] = bean.getAVU_URL().split("/");
+                    String array[] = bean.getAppUrl().split("/");
                     String fileName = array[array.length - 1];
                     DownloadCallback mDownloadCallback = new DownloadCallback(mProgressButton, mAlertDialog, dirPath + "/" + fileName);
-                    webService.downloadFile(bean.getAVU_URL(), dirPath, mDownloadCallback);
+                    webService.downloadFile(bean.getAppUrl(), dirPath, mDownloadCallback);
                 }
             }
         });
@@ -337,35 +335,15 @@ public class OKSettingActivity extends OKBaseActivity implements OKSecurityApi.o
     }
 
     @Override
-    public void securityApiComplete(OKSafetyInfoBean bean) {
+    public void appInfoApiComplete(OKAppInfoBean bean) {
         if (bean == null) {
             showSnackBar(layoutUserXieYi, "检查失败", "");
             return;
         }
-        if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
+        if (!OKConstant.APP_VERSION.equals(bean.getAppVersion())) {
             showUpdateAppDialog(bean);
         } else {
             showSnackBar(layoutUserXieYi, "已经是最新版本!", "");
-        }
-    }
-
-    private class SettingTask extends AsyncTask<Map<String, String>, Void, OKSafetyInfoBean> {
-
-        @Override
-        protected OKSafetyInfoBean doInBackground(Map<String, String>... params) {
-            if (isCancelled()) {
-                return null;
-            }
-            return new OKBusinessApi().securityCheck(params[0]);
-        }
-
-        @Override
-        protected void onPostExecute(final OKSafetyInfoBean bean) {
-            super.onPostExecute(bean);
-            if (isCancelled()) {
-                return;
-            }
-
         }
     }
 

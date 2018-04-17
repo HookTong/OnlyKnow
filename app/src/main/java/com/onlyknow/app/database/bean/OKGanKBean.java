@@ -2,11 +2,7 @@ package com.onlyknow.app.database.bean;
 
 import java.util.List;
 
-/**
- * Created by maning on 16/6/2.
- */
 public class OKGanKBean {
-
     private boolean error;
     private List<Results> results;
 

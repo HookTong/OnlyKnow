@@ -16,14 +16,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hyphenate.chat.EMClient;
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadNoticeApi;
+import com.onlyknow.app.api.user.OKLoadNoticeApi;
 import com.onlyknow.app.database.bean.OKNoticeBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -144,7 +144,7 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
                 mOKLoadNoticeApi.cancelTask();
             }
             mOKLoadNoticeApi = new OKLoadNoticeApi(this);
-            mOKLoadNoticeApi.requestNoticeBeanList(this);
+            mOKLoadNoticeApi.requestNotice(this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "请检查用户状态和网络设置!", "");
@@ -176,18 +176,18 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
         private void initViews(final EntryViewHolder mEntryViewHolder, final OKNoticeBean okNoticeBean, final int position) {
             mEntryViewHolder.setListPosition(position);
             // 控件内容设置
-            String url = okNoticeBean.getHEAD_PORTRAIT_URL();
+            String url = okNoticeBean.getAvatarUrl();
             GlideRoundApi(mEntryViewHolder.mImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
-            mEntryViewHolder.mTextViewTitle.setText(okNoticeBean.getNOTICE_TITLE());
-            mEntryViewHolder.mTextViewContent.setText(okNoticeBean.getNOTICE_CONTENT());
-            mEntryViewHolder.mTextViewDate.setText(formatTime(okNoticeBean.getDATE()));
+            mEntryViewHolder.mTextViewTitle.setText(okNoticeBean.getNoticeTitle());
+            mEntryViewHolder.mTextViewContent.setText(okNoticeBean.getNoticeContent());
+            mEntryViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(okNoticeBean.getDate()));
 
             mEntryViewHolder.mCardView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okNoticeBean.getUSER_NAME());
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okNoticeBean.getNOTICE_TITLE());
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okNoticeBean.getUserName());
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okNoticeBean.getNoticeTitle());
                     startUserActivity(bundle, OKSessionActivity.class);
                 }
             });
@@ -196,8 +196,8 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
                 @Override
                 public void onClick(View v) {
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okNoticeBean.getUSER_NAME());
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okNoticeBean.getNOTICE_TITLE());
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okNoticeBean.getUserName());
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okNoticeBean.getNoticeTitle());
                     startUserActivity(bundle, OKHomePageActivity.class);
                 }
             });
@@ -213,7 +213,7 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
                                         @Override
                                         public void run() {
                                             super.run();
-                                            EMClient.getInstance().chatManager().deleteConversation(okNoticeBean.getUSER_NAME(), true);
+                                            EMClient.getInstance().chatManager().deleteConversation(okNoticeBean.getUserName(), true);
                                         }
                                     }.start();
 

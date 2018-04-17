@@ -13,13 +13,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadHotApi;
+import com.onlyknow.app.api.card.OKLoadHotCardApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -28,16 +28,14 @@ import com.scwang.smartrefresh.layout.footer.BallPulseFooter;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, OKLoadHotApi.onCallBack {
+public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, OKLoadHotCardApi.onCallBack {
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mOKRecyclerView;
     private CardViewAdapter mCardViewAdapter;
 
-    private OKLoadHotApi mOKLoadHotApi;
+    private OKLoadHotCardApi mOKLoadHotCardApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
     @Override
@@ -67,8 +65,8 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
         super.onPause();
         mRefreshLayout.finishRefresh();
         mRefreshLayout.finishLoadMore();
-        if (mOKLoadHotApi != null) {
-            mOKLoadHotApi.cancelTask();
+        if (mOKLoadHotCardApi != null) {
+            mOKLoadHotCardApi.cancelTask();
         }
     }
 
@@ -112,15 +110,18 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
         mRefreshLayout.autoRefresh();
     }
 
+    int size = 20;
+
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(this)) {
-            Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("num", OKConstant.HOT_LOAD_COUNT);
-            if (mOKLoadHotApi == null) {
-                mOKLoadHotApi = new OKLoadHotApi(this);
+            OKLoadHotCardApi.Params params = new OKLoadHotCardApi.Params();
+            params.setSize(size);
+
+            if (mOKLoadHotCardApi == null) {
+                mOKLoadHotCardApi = new OKLoadHotCardApi(this);
             }
-            mOKLoadHotApi.requestCardBeanList(map, this);
+            mOKLoadHotCardApi.requestHotCard(params, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");
@@ -149,55 +150,54 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
         private void initViews(final CardViewHolder mCardViewHolder, final OKCardBean okCardBean, final int position) {
             mCardViewHolder.setListPosition(position);
 
-            String cardType = okCardBean.getCARD_TYPE();
+            String cardType = okCardBean.getCardType();
             // 设置标题控件内容
-            GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTITLE_IMAGE_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
-            mCardViewHolder.mTextViewTitle.setText(okCardBean.getTITLE_TEXT());
-            mCardViewHolder.mTextViewDate.setText(formatTime(okCardBean.getCREATE_DATE()) + " 发表");
+            GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTitleImageUrl(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            mCardViewHolder.mTextViewTitle.setText(okCardBean.getTitleText());
+            mCardViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(okCardBean.getCreateDate()) + " 发表");
             // 设置内容控件内容
             if (cardType.equals(CARD_TYPE_TW)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
 
-                GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                GlideApi(mCardViewHolder.mImageViewContentImage, okCardBean.getFirstCardImage(), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
 
-                String z = Integer.toString(okCardBean.getZAN_NUM());
-                String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
-                String p = Integer.toString(okCardBean.getPINGLUN_NUM());
-                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
+                String z = Integer.toString(okCardBean.getPraiseCount());
+                String s = Integer.toString(okCardBean.getWatchCount());
+                String p = Integer.toString(okCardBean.getCommentCount());
+                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getContentTitleText());
+                mCardViewHolder.mTextViewContent.setText(okCardBean.getContentText());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
             } else if (cardType.equals(CARD_TYPE_TP)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.GONE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
-                GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                GlideApi(mCardViewHolder.mImageViewContentImage, okCardBean.getFirstCardImage(), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
             } else if (cardType.equals(CARD_TYPE_WZ)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.GONE);
 
-                String z = Integer.toString(okCardBean.getZAN_NUM());
-                String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
-                String p = Integer.toString(okCardBean.getPINGLUN_NUM());
-
-                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
+                String z = Integer.toString(okCardBean.getPraiseCount());
+                String s = Integer.toString(okCardBean.getWatchCount());
+                String p = Integer.toString(okCardBean.getCommentCount());
+                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getContentTitleText());
+                mCardViewHolder.mTextViewContent.setText(okCardBean.getContentText());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
             }
 
             mCardViewHolder.mCardView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
+                    if (okCardBean.getCardType().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HOT);
                         bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HOT);
                         bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_HOT);
                         bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
@@ -212,8 +212,8 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
                 public void onClick(View v) {
                     // 查看他人主页
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okCardBean.getUSER_NAME());
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okCardBean.getTITLE_TEXT());
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okCardBean.getUserName());
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okCardBean.getTitleText());
                     startUserActivity(bundle, OKHomePageActivity.class);
                 }
             });

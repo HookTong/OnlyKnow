@@ -1,9 +1,6 @@
 package com.onlyknow.app.ui.fragement;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -32,9 +29,11 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadExploreApi;
-import com.onlyknow.app.api.OKLoadWeatherApi;
+import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
+import com.onlyknow.app.api.card.OKLoadExploreCardApi;
+import com.onlyknow.app.api.app.OKLoadWeatherApi;
 import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.database.bean.OKCarouselAdBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.service.OKMainService;
@@ -53,8 +52,8 @@ import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.activity.OKWeatherActivity;
 import com.onlyknow.app.ui.view.OKKenBurnsView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKLoadBannerImage;
-import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -69,11 +68,11 @@ import com.youth.banner.Transformer;
 import com.youth.banner.listener.OnBannerListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, OKLoadExploreApi.onCallBack, OKLoadWeatherApi.onCallBack, OnNavigationItemSelectedListener {
+public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener,
+        OKLoadExploreCardApi.onCallBack, OKLoadWeatherApi.onCallBack, OnNavigationItemSelectedListener, OKLoadCarouselAdApi.onCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fab;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -88,27 +87,15 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     private NavigationView mNavigationView;
     private CardViewAdapter mCardViewAdapter;
 
-    private OKLoadExploreApi mOKLoadExploreApi;
+    private OKLoadExploreCardApi mOKLoadExploreCardApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
     private OKLoadWeatherApi mWeatherApi;
     private OKWeatherBean mOKWeatherBean;
 
-    private View rootView;
+    private OKLoadCarouselAdApi carouselAdApi;
 
-    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action.equals(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE)) {
-                mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
-                updateBanner();
-                OKConstant.EXPLORE_HEAD_DATA_CHANGED = false;
-                OKConstant.EXPLORE_AD_DATA_CHANGED = false;
-            }
-            OKLogUtil.print("Explore 收到广播 :" + action);
-        }
-    };
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -129,41 +116,41 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     @Override
     public void onResume() {
         super.onResume();
+
         appBarLayout.addOnOffsetChangedListener(this);
+
         startBanner();
-        checkHeadDataChanged();
-        IntentFilter mIntentFilter = new IntentFilter();
-        mIntentFilter.addAction(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE);
-        getActivity().registerReceiver(mBroadcastReceiver, mIntentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
+
         stopBanner();
-        if (mOKLoadExploreApi != null) {
-            mOKLoadExploreApi.cancelTask();
-        }
+
         mRefreshLayout.finishRefresh();
+
         mRefreshLayout.finishLoadMore();
+
         appBarLayout.removeOnOffsetChangedListener(this);
+
         mDrawerLayout.closeDrawer(GravityCompat.START);
-        getActivity().unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (null != rootView) {
-            ((ViewGroup) rootView.getParent()).removeView(rootView);
-        }
-    }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+        if (mOKLoadExploreCardApi != null) {
+            mOKLoadExploreCardApi.cancelTask();
+        }
+
         if (mWeatherApi != null) {
             mWeatherApi.cancelTask();
+        }
+
+        if (null != rootView) {
+            ((ViewGroup) rootView.getParent()).removeView(rootView);
         }
     }
 
@@ -220,9 +207,25 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
 
-        mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
+        // 请求轮播广告
+        OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
+        params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
+        if (carouselAdApi != null) {
+            carouselAdApi.cancelTask();
+        }
+        carouselAdApi = new OKLoadCarouselAdApi(getActivity());
+        carouselAdApi.requestCarouselAd(params, this);
+
+        // 请求天气信息
+        if (mWeatherApi != null) {
+            mWeatherApi.cancelTask();
+        }
+        mWeatherApi = new OKLoadWeatherApi(getActivity());
+        mWeatherApi.requestWeather(USER_INFO_SP.getString("CITY_ID", ""), this);
+
+        mHeaderPicture.setUrl(getActivity(), OKConstant.getCarouselImages());
+
         bindWeatherView();
-        getWeatherInfo();
 
         mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
         mRecyclerView.setAdapter(mCardViewAdapter);
@@ -263,7 +266,12 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         imageViewWeatherIcon.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                getWeatherInfo();
+                if (mWeatherApi != null) {
+                    mWeatherApi.cancelTask();
+                }
+                mWeatherApi = new OKLoadWeatherApi(getActivity());
+                mWeatherApi.requestWeather(USER_INFO_SP.getString("CITY_ID", ""), OKExploreScreen.this);
+
                 showSnackBar(v, "重新获取天气", "");
             }
         });
@@ -282,17 +290,6 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         mRefreshLayout.autoRefresh();
     }
 
-    private void checkHeadDataChanged() {
-        if (OKConstant.EXPLORE_HEAD_DATA_CHANGED) {
-            mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
-            OKConstant.EXPLORE_HEAD_DATA_CHANGED = false;
-        }
-        if (OKConstant.EXPLORE_AD_DATA_CHANGED) {
-            updateBanner();
-            OKConstant.EXPLORE_AD_DATA_CHANGED = false;
-        }
-    }
-
     private View initHeaderView() {
         View mHeaderView = LayoutInflater.from(getActivity()).inflate(R.layout.ok_main_header, null);
         mBanner = (Banner) mHeaderView.findViewById(R.id.MAIN_top_header_guangaotp_banner);
@@ -306,16 +303,16 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         mBanner.isAutoPlay(true);
         mBanner.setDelayTime(5000);
         mBanner.setIndicatorGravity(BannerConfig.CENTER);
-        mBanner.setImages(OKConstant.getAdUrls());
+        mBanner.setImages(OKConstant.getAdImages());
         startBanner();
 
         mBanner.setOnBannerListener(new OnBannerListener() {
             @Override
             public void OnBannerClick(int position) {
-                Map<String, String> map = OKConstant.getAdUrls().get(position);
-                if (!TextUtils.isEmpty(map.get("LINK"))) {
+                Map<String, String> map = OKConstant.getAdImages().get(position);
+                if (!TextUtils.isEmpty(map.get(OKCarouselAdBean.KEY_LINK))) {
                     Bundle bundle = new Bundle();
-                    bundle.putString("WEB_LINK", map.get("LINK"));
+                    bundle.putString("WEB_LINK", map.get(OKCarouselAdBean.KEY_LINK));
                     startUserActivity(bundle, OKBrowserActivity.class);
                 } else {
                     showSnackBar(rootView, "没有发现链接", "");
@@ -371,23 +368,6 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
     }
 
-    private void updateBanner() {
-        if (mBanner != null) {
-            stopBanner();
-            mBanner.setImages(OKConstant.getAdUrls());
-            startBanner();
-        }
-    }
-
-    private void getWeatherInfo() {
-        String city_id = USER_INFO_SP.getString("CITY_ID", "");
-        if (TextUtils.isEmpty(city_id)) {
-            return;
-        }
-        mWeatherApi = new OKLoadWeatherApi(getActivity());
-        mWeatherApi.requestWeather(city_id, this);
-    }
-
     private void bindWeatherView() {
         String Type = WEATHER_SP.getString("WEATHER_TYPE", "N/A");// 天气类型;如雷阵雨
 
@@ -399,74 +379,83 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         textViewWenDuHig.setText(WEATHER_SP.getString("TEMPERATURE_HIG", "N/A"));
         textViewDistrict.setText(WEATHER_SP.getString("DISTRICT", "N/A"));
 
+        int resId;
         if (Type.indexOf("晴") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_qing);
+            resId = R.drawable.tianqi_qing;
         } else if (Type.indexOf("阴") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_ying);
+            resId = R.drawable.tianqi_ying;
         } else if (Type.indexOf("多云") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_duoyun);
+            resId = R.drawable.tianqi_duoyun;
         } else if (Type.indexOf("大雨") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_dayu);
+            resId = R.drawable.tianqi_dayu;
         } else if (Type.indexOf("小雨") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_xiaoyu);
+            resId = R.drawable.tianqi_xiaoyu;
         } else if (Type.indexOf("中雨") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_zhonyu);
+            resId = R.drawable.tianqi_zhonyu;
         } else if (Type.indexOf("雷阵雨") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_leizhenyu);
+            resId = R.drawable.tianqi_leizhenyu;
         } else if (Type.indexOf("大雪") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_daxue);
+            resId = R.drawable.tianqi_daxue;
         } else if (Type.indexOf("小雪") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_xiaoxue);
+            resId = R.drawable.tianqi_xiaoxue;
         } else if (Type.indexOf("暴雨") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_baoyu);
+            resId = R.drawable.tianqi_baoyu;
         } else if (Type.indexOf("阵雨") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_zhenyu);
+            resId = R.drawable.tianqi_zhenyu;
         } else if (Type.indexOf("雨夹雪") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_yujaxue);
+            resId = R.drawable.tianqi_yujaxue;
         } else if (Type.indexOf("沙尘暴") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_shachenbao);
+            resId = R.drawable.tianqi_shachenbao;
         } else if (Type.indexOf("浮尘") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_fucheng);
+            resId = R.drawable.tianqi_fucheng;
         } else if (Type.indexOf("雾霾") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_wumai);
+            resId = R.drawable.tianqi_wumai;
         } else if (Type.indexOf("雾") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_wu);
+            resId = R.drawable.tianqi_wu;
         } else if (Type.indexOf("台风") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_taifeng);
+            resId = R.drawable.tianqi_taifeng;
         } else if (Type.indexOf("龙卷风") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_lonjuanfeng);
+            resId = R.drawable.tianqi_lonjuanfeng;
         } else if (Type.indexOf("大风") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_dafeng);
+            resId = R.drawable.tianqi_dafeng;
         } else if (Type.indexOf("风") != -1) {
-            bindWeatherIcon(R.drawable.tianqi_feng);
+            resId = R.drawable.tianqi_feng;
         } else {
-            bindWeatherIcon(R.drawable.tianqi_other);
+            resId = R.drawable.tianqi_other;
         }
-    }
 
-    private void bindWeatherIcon(int resId) {
         GlideApi(imageViewWeatherIcon, resId, R.drawable.tianqi_other, R.drawable.tianqi_other);
         WEATHER_SP.edit().putInt("WEATHER_ICON_ID", resId).commit();
     }
 
+    private int page = 0;
+    private int size = 30;
+
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
-        Map<String, String> map = new HashMap<>();// 请求参数
-        map.put("num", OKConstant.EXPLORE_LOAD_COUNT);
-        if (mOKLoadExploreApi == null) {
-            mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
+        OKLoadExploreCardApi.Params params = new OKLoadExploreCardApi.Params();
+
+        params.setPage(page + 1);
+        params.setSize(size);
+
+        if (mOKLoadExploreCardApi == null) {
+            mOKLoadExploreCardApi = new OKLoadExploreCardApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, mCardBeanList, true, this);
+        mOKLoadExploreCardApi.requestExploreCard(params, this);
     }
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
-        Map<String, String> map = new HashMap<>();// 请求参数
-        map.put("num", OKConstant.EXPLORE_LOAD_COUNT);
-        if (mOKLoadExploreApi == null) {
-            mOKLoadExploreApi = new OKLoadExploreApi(getActivity());
+        OKLoadExploreCardApi.Params params = new OKLoadExploreCardApi.Params();
+
+
+        params.setPage(1);
+        params.setSize(size);
+
+        if (mOKLoadExploreCardApi == null) {
+            mOKLoadExploreCardApi = new OKLoadExploreCardApi(getActivity());
         }
-        mOKLoadExploreApi.requestCardBeanList(map, mCardBeanList, false, this);
+        mOKLoadExploreCardApi.requestExploreCard(params, this);
     }
 
     @Override
@@ -517,9 +506,13 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void exploreApiComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                page = 1;
+
                 mCardBeanList.clear();
                 mCardBeanList.addAll(list);
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page++;
+
                 mCardBeanList.addAll(list);
             }
             mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -529,6 +522,16 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         } else if (mRefreshLayout.getState() == RefreshState.Loading) {
             mRefreshLayout.finishLoadMore();
         }
+    }
+
+    @Override
+    public void carouselAdApiComplete(OKCarouselAdBean bean) {
+        if (bean == null) return;
+
+        mHeaderPicture.setUrl(getActivity(), bean.getCarouselImage());
+        stopBanner();
+        mBanner.setImages(bean.getAdImage());
+        startBanner();
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {
@@ -541,55 +544,56 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
 
         private void initViews(final CardViewHolder mCardViewHolder, final OKCardBean okCardBean, final int position) {
-            String cardType = okCardBean.getCARD_TYPE();
+            String cardType = okCardBean.getCardType();
             // 设置标题控件内容
-            GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTITLE_IMAGE_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
-            mCardViewHolder.mTextViewTitle.setText(okCardBean.getTITLE_TEXT());
-            mCardViewHolder.mTextViewDate.setText(formatTime(okCardBean.getCREATE_DATE()) + " 发表");
+            GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTitleImageUrl(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            mCardViewHolder.mTextViewTitle.setText(okCardBean.getTitleText());
+            mCardViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(okCardBean.getCreateDate()) + " 发表");
             // 设置内容控件内容
             if (cardType.equals(CARD_TYPE_TW)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
 
-                GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                GlideApi(mCardViewHolder.mImageViewContentImage, okCardBean.getFirstCardImage(), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
 
-                String z = Integer.toString(okCardBean.getZAN_NUM());
-                String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
-                String p = Integer.toString(okCardBean.getPINGLUN_NUM());
-                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
+                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getContentTitleText());
+                mCardViewHolder.mTextViewContent.setText(okCardBean.getContentText());
+
+                String z = Integer.toString(okCardBean.getPraiseCount());
+                String s = Integer.toString(okCardBean.getWatchCount());
+                String p = Integer.toString(okCardBean.getCommentCount());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
             } else if (cardType.equals(CARD_TYPE_TP)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.GONE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
-                GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                GlideApi(mCardViewHolder.mImageViewContentImage, okCardBean.getFirstCardImage(), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
             } else if (cardType.equals(CARD_TYPE_WZ)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.GONE);
 
-                String z = Integer.toString(okCardBean.getZAN_NUM());
-                String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
-                String p = Integer.toString(okCardBean.getPINGLUN_NUM());
+                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getContentTitleText());
+                mCardViewHolder.mTextViewContent.setText(okCardBean.getContentText());
 
-                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
+                String z = Integer.toString(okCardBean.getPraiseCount());
+                String s = Integer.toString(okCardBean.getWatchCount());
+                String p = Integer.toString(okCardBean.getCommentCount());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
             }
 
             mCardViewHolder.mCardView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
+                    if (okCardBean.getCardType().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_EXPLORE);
                         bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_EXPLORE);
                         bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_EXPLORE);
                         bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
@@ -612,8 +616,8 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                 public void onClick(View v) {
                     // 查看他人主页
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okCardBean.getUSER_NAME());
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okCardBean.getTITLE_TEXT());
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okCardBean.getUserName());
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okCardBean.getTitleText());
                     startUserActivity(bundle, OKHomePageActivity.class);
                 }
             });

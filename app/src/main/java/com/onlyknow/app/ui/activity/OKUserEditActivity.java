@@ -19,21 +19,21 @@ import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKUserEditApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKSDCardUtil;
 import com.yalantis.ucrop.UCrop;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.onCallBack {
+public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserApi.onCallBack {
     private AppCompatButton mButtonCommit;
     private EditText mEditName, mEditPhone, mEditEmail, mEditTag, mEditNian, mEditYue, mEditRi;
     private OKCircleImageView mImageViewTouXian;
@@ -41,11 +41,11 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
     private RadioButton mRbNan, mRbNv;
     private TextView mTextViewQrCode;
 
-    private String USERNAME, NICKNAME, PHONE, EMAIL, QIANMIN, SEX, BIRTH_DATE;
-    private String XG_NICKNAME = "", XG_PHONE = "", XG_EMAIL = "", XG_QIANMIN = "", XG_BIRTHDATE = "", XG_SEX = "";
+    private String USERNAME, NICKNAME, PHONE, EMAIL, USER_TAG, SEX, BIRTH_DATE;
+    private String XG_NICKNAME = "", XG_PHONE = "", XG_EMAIL = "", XG_USER_TAG = "", XG_BIRTH_DATE = "", XG_SEX = "";
     private String mFilePath;
 
-    private OKUserEditApi mOKUserEditApi;
+    private OKManagerUserApi okManagerUserApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,11 +63,11 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
         NICKNAME = USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "");
         PHONE = USER_INFO_SP.getString(OKUserInfoBean.KEY_PHONE, "");
         EMAIL = USER_INFO_SP.getString(OKUserInfoBean.KEY_EMAIL, "");
-        QIANMIN = USER_INFO_SP.getString(OKUserInfoBean.KEY_QIANMIN, "");
+        USER_TAG = USER_INFO_SP.getString(OKUserInfoBean.KEY_TAG, "");
         SEX = USER_INFO_SP.getString(OKUserInfoBean.KEY_SEX, "");
         BIRTH_DATE = USER_INFO_SP.getString(OKUserInfoBean.KEY_BIRTH_DATE, "");
 
-        String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, "");
+        String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
 
         GlideRoundApi(mImageViewTouXian, url, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
 
@@ -75,8 +75,8 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
         mEditPhone.setText(PHONE);
         mEditEmail.setText(EMAIL);
 
-        if (!TextUtils.isEmpty(QIANMIN)) {
-            mEditTag.setText(QIANMIN);
+        if (!TextUtils.isEmpty(USER_TAG)) {
+            mEditTag.setText(USER_TAG);
         }
 
         if (!TextUtils.isEmpty(BIRTH_DATE) && !BIRTH_DATE.equals("NULL")) {
@@ -108,8 +108,8 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mOKUserEditApi != null) {
-            mOKUserEditApi.cancelTask();
+        if (okManagerUserApi != null) {
+            okManagerUserApi.cancelTask();
         }
     }
 
@@ -137,16 +137,21 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                         showSnackBar(mButtonCommit, "文件路径错误", "");
                         return;
                     }
-                    if (mOKUserEditApi != null) {
-                        mOKUserEditApi.cancelTask();
-                    }
-                    mOKUserEditApi = new OKUserEditApi(this);
-                    Map<String, String> params = new HashMap<>();
-                    params.put("username", USERNAME);
-                    params.put("baseimag", mFilePath);
-                    params.put("type", "TOUXIAN");
-                    mOKUserEditApi.requestUserEdit(params, OKUserEditApi.TYPE_UPDATE_HEAD_PORTRAIT, this);
+
+                    OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+                    params.setUsername(USERNAME);
+                    params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                    params.setAvatarData(mFilePath);
+                    params.setType(OKManagerUserApi.Params.TYPE_UPDATE_AVATAR);
+
                     showProgressDialog("正在上传头像...");
+
+                    if (okManagerUserApi != null) {
+                        okManagerUserApi.cancelTask();
+                    }
+                    okManagerUserApi = new OKManagerUserApi(this);
+                    okManagerUserApi.requestManagerUser(params, this);
+
                 }
                 break;
             case UCrop.RESULT_ERROR:
@@ -170,8 +175,8 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                 XG_NICKNAME = NICKNAME;
                 XG_PHONE = PHONE;
                 XG_EMAIL = EMAIL;
-                XG_QIANMIN = QIANMIN;
-                XG_BIRTHDATE = BIRTH_DATE;
+                XG_USER_TAG = USER_TAG;
+                XG_BIRTH_DATE = BIRTH_DATE;
                 if (!TextUtils.isEmpty(mEditName.getText().toString()) && !mEditName.getText().toString().equals(NICKNAME)) {
                     XG_NICKNAME = mEditName.getText().toString();
                 }
@@ -181,8 +186,8 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                 if (!TextUtils.isEmpty(mEditEmail.getText().toString()) && !mEditEmail.getText().toString().equals(EMAIL)) {
                     XG_EMAIL = mEditEmail.getText().toString();
                 }
-                if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals(QIANMIN)) {
-                    XG_QIANMIN = mEditTag.getText().toString();
+                if (!TextUtils.isEmpty(mEditTag.getText().toString()) && !mEditTag.getText().toString().equals(USER_TAG)) {
+                    XG_USER_TAG = mEditTag.getText().toString();
                 }
                 if (!TextUtils.isEmpty(mEditNian.getText().toString())
                         && !TextUtils.isEmpty(mEditYue.getText().toString())
@@ -190,7 +195,7 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
                     boolean isBirth = Integer.parseInt(dateFormat.format(new Date())) > Integer.parseInt(mEditNian.getText().toString());
                     if (isBirth) {
-                        XG_BIRTHDATE = mEditNian.getText().toString() + "/" + mEditYue.getText().toString()
+                        XG_BIRTH_DATE = mEditNian.getText().toString() + "/" + mEditYue.getText().toString()
                                 + "/" + mEditRi.getText().toString();
                     } else {
                         showSnackBar(mButtonCommit, "生日不能大于当前年份", "");
@@ -200,20 +205,29 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                 if (TextUtils.isEmpty(XG_SEX)) {
                     XG_SEX = SEX;
                 }
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("username", USERNAME);
-                params.put("nickname", XG_NICKNAME);
-                params.put("phone", XG_PHONE);
-                params.put("email", XG_EMAIL);
-                params.put("qianmin", XG_QIANMIN);
-                params.put("birth", XG_BIRTHDATE);
-                params.put("sex", XG_SEX);
-                if (mOKUserEditApi != null) {
-                    mOKUserEditApi.cancelTask();
-                }
-                mOKUserEditApi = new OKUserEditApi(OKUserEditActivity.this);
-                mOKUserEditApi.requestUserEdit(params, OKUserEditApi.TYPE_UPDATE_USER_INFO, OKUserEditActivity.this);
+
+                OKUserInfoBean bean = new OKUserInfoBean();
+                bean.setUserNickname(XG_NICKNAME);
+                bean.setUserPhone(XG_PHONE);
+                bean.setUserEmail(XG_EMAIL);
+                bean.setTag(XG_USER_TAG);
+                bean.setSex(XG_SEX);
+                bean.setBirthDate(OKDateUtil.dateByString(XG_BIRTH_DATE));
+
+                OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+                params.setUsername(USERNAME);
+                params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                params.setType(OKManagerUserApi.Params.TYPE_UPDATE_INFO);
+                params.setEntity(bean);
+
                 showProgressDialog("正在修改资料...");
+
+                if (okManagerUserApi != null) {
+                    okManagerUserApi.cancelTask();
+                }
+                okManagerUserApi = new OKManagerUserApi(OKUserEditActivity.this);
+                okManagerUserApi.requestManagerUser(params, OKUserEditActivity.this);
+
             }
         });
 
@@ -252,8 +266,8 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                 Bundle bundle = new Bundle();
                 bundle.putString(OKUserInfoBean.KEY_USERNAME, USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
                 bundle.putString(OKUserInfoBean.KEY_NICKNAME, USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, ""));
-                bundle.putString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, USER_INFO_SP.getString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, ""));
-                bundle.putString(OKUserInfoBean.KEY_QIANMIN, USER_INFO_SP.getString(OKUserInfoBean.KEY_QIANMIN, "这个人很懒 , 什么都没有留下!"));
+                bundle.putString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, ""));
+                bundle.putString(OKUserInfoBean.KEY_TAG, USER_INFO_SP.getString(OKUserInfoBean.KEY_TAG, "这个人很懒 , 什么都没有留下!"));
                 startUserActivity(bundle, OKMeQrCodeActivity.class);
             }
         });
@@ -319,19 +333,31 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
     }
 
     @Override
-    public void userEditApiComplete(boolean b, String type) {
-        if (b) {
-            if (type.equals(OKUserEditApi.TYPE_UPDATE_USER_INFO)) {
+    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        if (OKManagerUserApi.Params.TYPE_UPDATE_AVATAR.equals(type)) {
+
+            if (serviceResult != null && serviceResult.isSuccess()) {
+
+                GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+
+                showSnackBar(mButtonCommit, "修改成功", "");
+            } else {
+                showSnackBar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
+            }
+
+        } else if (OKManagerUserApi.Params.TYPE_UPDATE_INFO.equals(type)) {
+
+            if (serviceResult != null && serviceResult.isSuccess()) {
                 SharedPreferences.Editor editor = USER_INFO_SP.edit();
                 editor.putString(OKUserInfoBean.KEY_NICKNAME, XG_NICKNAME);
                 editor.putString(OKUserInfoBean.KEY_PHONE, XG_PHONE);
                 editor.putString(OKUserInfoBean.KEY_EMAIL, XG_EMAIL);
-                editor.putString(OKUserInfoBean.KEY_QIANMIN, XG_QIANMIN);
+                editor.putString(OKUserInfoBean.KEY_TAG, XG_USER_TAG);
                 editor.putString(OKUserInfoBean.KEY_SEX, XG_SEX);
-                editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, XG_BIRTHDATE);
+                editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, XG_BIRTH_DATE);
                 int age = 0;
-                if (!TextUtils.isEmpty(XG_BIRTHDATE)) {
-                    String[] items = XG_BIRTHDATE.split("/");
+                if (!TextUtils.isEmpty(XG_BIRTH_DATE)) {
+                    String[] items = XG_BIRTH_DATE.split("/");
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy");
                     age = Integer.parseInt(dateFormat.format(new Date())) - Integer.parseInt(items[0]);
                 }
@@ -339,13 +365,14 @@ public class OKUserEditActivity extends OKBaseActivity implements OKUserEditApi.
                 editor.commit();
 
                 loadData();
-            } else if (type.equals(OKUserEditApi.TYPE_UPDATE_HEAD_PORTRAIT)) {
-                GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
+
+                showSnackBar(mButtonCommit, "修改成功", "");
+            } else {
+                showSnackBar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
             }
-            showSnackBar(mButtonCommit, "修改成功", "");
-        } else {
-            showSnackBar(mButtonCommit, "修改失败", "ErrorCode :" + OKConstant.SERVICE_ERROR);
+
         }
+
         closeProgressDialog();
     }
 }

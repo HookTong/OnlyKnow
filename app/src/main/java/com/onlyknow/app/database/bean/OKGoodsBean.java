@@ -1,117 +1,97 @@
 package com.onlyknow.app.database.bean;
 
-/**
- * Created by Administrator on 2017/12/10.
- */
+import java.util.Date;
 
 public class OKGoodsBean {
-    public final static String KEY_CML_ID = "GD_ID";
-    private int GD_ID = -1;
+    private int gdId;
+    private String gdName;
+    private String gdType;
+    private String gdDescribe;
+    private int gdPrice;
+    private String gdIntroduction;
+    private String gdIconUrl;
+    private String gdImageUrl;
+    private Date gdDate;
 
-    public final static String KEY_GD_NAME = "GD_NAME";
-    private String GD_NAME = "";
+    private boolean isGoodsBy = false;
 
-    public final static String KEY_GD_TYPE = "GD_TYPE";
-    private String GD_TYPE = "";
-
-    public final static String KEY_GD_INTRODUCTION = "GD_INTRODUCTION";
-    private String GD_INTRODUCTION = "";
-
-    public final static String KEY_GD_DESCRIBE = "GD_DESCRIBE";
-    private String GD_DESCRIBE = "";
-
-    public final static String KEY_GD_ICON_URL = "GD_ICON_URL";
-    private String GD_ICON_URL = "";
-
-    public final static String KEY_GD_IMAGE_URL = "GD_IMAGE_URL";
-    private String GD_IMAGE_URL = "";
-
-    public final static String KEY_GD_PRICE = "GD_PRICE";
-    private int GD_PRICE = 0;
-
-    public final static String KEY_GD_DATE = "GD_DATE";
-    private String GD_DATE = "";
-
-    public final static String KEY_IS_BUY = "IS_BUY";
-    private boolean IS_BUY;
-
-    public int getGD_ID() {
-        return GD_ID;
+    public int getGdId() {
+        return gdId;
     }
 
-    public void setGD_ID(int GD_ID) {
-        this.GD_ID = GD_ID;
+    public void setGdId(int gdId) {
+        this.gdId = gdId;
     }
 
-    public String getGD_NAME() {
-        return GD_NAME;
+    public String getGdName() {
+        return gdName;
     }
 
-    public void setGD_NAME(String GD_NAME) {
-        this.GD_NAME = GD_NAME;
+    public void setGdName(String gdName) {
+        this.gdName = gdName;
     }
 
-    public String getGD_TYPE() {
-        return GD_TYPE;
+    public String getGdType() {
+        return gdType;
     }
 
-    public void setGD_TYPE(String GD_TYPE) {
-        this.GD_TYPE = GD_TYPE;
+    public void setGdType(String gdType) {
+        this.gdType = gdType;
     }
 
-    public String getGD_DESCRIBE() {
-        return GD_DESCRIBE;
+    public String getGdDescribe() {
+        return gdDescribe;
     }
 
-    public void setGD_DESCRIBE(String GD_DESCRIBE) {
-        this.GD_DESCRIBE = GD_DESCRIBE;
+    public void setGdDescribe(String gdDescribe) {
+        this.gdDescribe = gdDescribe;
     }
 
-    public int getGD_PRICE() {
-        return GD_PRICE;
+    public int getGdPrice() {
+        return gdPrice;
     }
 
-    public void setGD_PRICE(int GD_PRICE) {
-        this.GD_PRICE = GD_PRICE;
+    public void setGdPrice(int gdPrice) {
+        this.gdPrice = gdPrice;
     }
 
-    public String getGD_DATE() {
-        return GD_DATE;
+    public String getGdIntroduction() {
+        return gdIntroduction;
     }
 
-    public void setGD_DATE(String GD_DATE) {
-        this.GD_DATE = GD_DATE;
+    public void setGdIntroduction(String gdIntroduction) {
+        this.gdIntroduction = gdIntroduction;
     }
 
-    public boolean IS_BUY() {
-        return IS_BUY;
+    public String getGdIconUrl() {
+        return gdIconUrl;
     }
 
-    public void setIS_BUY(boolean IS_BUY) {
-        this.IS_BUY = IS_BUY;
+    public void setGdIconUrl(String gdIconUrl) {
+        this.gdIconUrl = gdIconUrl;
     }
 
-    public String getGD_INTRODUCTION() {
-        return GD_INTRODUCTION;
+    public String getGdImageUrl() {
+        return gdImageUrl;
     }
 
-    public void setGD_INTRODUCTION(String GD_INTRODUCTION) {
-        this.GD_INTRODUCTION = GD_INTRODUCTION;
+    public void setGdImageUrl(String gdImageUrl) {
+        this.gdImageUrl = gdImageUrl;
     }
 
-    public String getGD_ICON_URL() {
-        return GD_ICON_URL;
+    public Date getGdDate() {
+        return gdDate;
     }
 
-    public void setGD_ICON_URL(String GD_ICON_URL) {
-        this.GD_ICON_URL = GD_ICON_URL;
+    public void setGdDate(Date gdDate) {
+        this.gdDate = gdDate;
     }
 
-    public String getGD_IMAGE_URL() {
-        return GD_IMAGE_URL;
+    public boolean isGoodsBy() {
+        return isGoodsBy;
     }
 
-    public void setGD_IMAGE_URL(String GD_IMAGE_URL) {
-        this.GD_IMAGE_URL = GD_IMAGE_URL;
+    public void setGoodsBy(boolean goodsBy) {
+        isGoodsBy = goodsBy;
     }
 }

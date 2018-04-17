@@ -1,205 +1,225 @@
 package com.onlyknow.app.database.bean;
 
-/**
- * Created by Administrator on 2017/12/11.
- */
+import java.util.Date;
 
 public class OKUserInfoBean {
-    public final static String KEY_USERID = "USERID";
-    private int USERID = -1;
+    public final static String KEY_USER_ID = "userId";
+    private int userId;
 
-    public final static String KEY_USERNAME = "USERNAME";
-    private String USERNAME = "";
+    public final static String KEY_USERNAME = "userName";
+    private String userName;
 
-    public final static String KEY_PASSWORD = "PASSWORD";
-    private String PASSWORD = "";
+    public final static String KEY_NICKNAME = "userNickname";
+    private String userNickname;
 
-    public final static String KEY_NICKNAME = "NICKNAME";
-    private String NICKNAME = "";
+    public final static String KEY_USER_TYPE = "userType";
+    private String userType;
 
-    public final static String KEY_PHONE = "PHONE";
-    private String PHONE = "";
+    public final static String KEY_PASSWORD = "userPassword";
+    private String userPassword;
 
-    public final static String KEY_EMAIL = "EMAIL";
-    private String EMAIL = "";
+    public final static String KEY_PHONE = "userPhone";
+    private String userPhone;
 
-    public final static String KEY_QIANMIN = "QIANMIN";
-    private String QIANMIN = "";
+    public final static String KEY_EMAIL = "userEmail";
+    private String userEmail;
 
-    public final static String KEY_SEX = "SEX";
-    private String SEX = "";
+    public final static String KEY_SEX = "sex";
+    private String sex;
 
-    public final static String KEY_BIRTH_DATE = "BIRTH_DATE";
-    private String BIRTH_DATE = "";
+    public final static String KEY_AGE = "age";
+    private Integer age;
 
-    public final static String KEY_AGE = "AGE";
-    private int AGE = 0;
+    public final static String KEY_BIRTH_DATE = "birthDate";
+    private Date birthDate;
 
-    public final static String KEY_RE_DATE = "RE_DATE";
-    private String RE_DATE = "";
+    public final static String KEY_HEAD_PORTRAIT_URL = "headPortraitUrl";
+    private String headPortraitUrl;
 
-    public final static String KEY_SHOUCHAN = "SHOUCHAN";
-    private int SHOUCHAN = 0;
+    public final static String KEY_HOME_PAGE_URL = "homepageUrl";
+    private String homepageUrl;
 
-    public final static String KEY_GUANZHU = "GUANZHU";
-    private int GUANZHU = 0;
+    public final static String KEY_TAG = "tag";
+    private String tag;
 
-    public final static String KEY_JIFENG = "JIFENG";
-    private int JIFENG = 0;
+    public final static String KEY_ME_WATCH = "meWatch";
+    private Integer meWatch;
 
-    public final static String KEY_WENZHAN = "WENZHAN";
-    private int WENZHAN = 0;
+    public final static String KEY_ME_ATTENTION = "meAttention";
+    private Integer meAttention;
 
-    public final static String KEY_HEADPORTRAIT_URL = "HEADPORTRAIT_URL";
-    private String HEADPORTRAIT_URL = "";
+    public final static String KEY_INTEGRAL = "meIntegral";
+    private Integer meIntegral;
 
-    public final static String KEY_HEAD_URL = "HEAD_URL";
-    private String HEAD_URL = "";
+    public final static String KEY_ARTICLE = "meArticle";
+    private Integer meArticle;
 
-    public final static String KEY_EDIT_DATE = "EDIT_DATE";
-    private String EDIT_DATE = "";
+    public final static String KEY_WITHOUT_APPROVE = "withoutApprova";
+    private boolean withoutApprova;
 
-    public int getUSERID() {
-        return USERID;
+    public final static String KEY_EDIT_DATE = "editDate";
+    private Date editDate;
+
+    public final static String KEY_RE_DATE = "reDate";
+    private Date reDate;
+
+    public int getUserId() {
+        return userId;
     }
 
-    public void setUSERID(int USERID) {
-        this.USERID = USERID;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
-    public String getUSERNAME() {
-        return USERNAME;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUSERNAME(String USERNAME) {
-        this.USERNAME = USERNAME;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
-    public String getNICKNAME() {
-        return NICKNAME;
+    public String getUserNickname() {
+        return userNickname;
     }
 
-    public void setNICKNAME(String NICKNAME) {
-        this.NICKNAME = NICKNAME;
+    public void setUserNickname(String userNickname) {
+        this.userNickname = userNickname;
     }
 
-    public String getPHONE() {
-        return PHONE;
+    public String getUserType() {
+        return userType;
     }
 
-    public void setPHONE(String PHONE) {
-        this.PHONE = PHONE;
+    public void setUserType(String userType) {
+        this.userType = userType;
     }
 
-    public String getEMAIL() {
-        return EMAIL;
+    public String getUserPassword() {
+        return userPassword;
     }
 
-    public void setEMAIL(String EMAIL) {
-        this.EMAIL = EMAIL;
+    public void setUserPassword(String userPassword) {
+        this.userPassword = userPassword;
     }
 
-    public String getQIANMIN() {
-        return QIANMIN;
+    public String getUserPhone() {
+        return userPhone;
     }
 
-    public void setQIANMIN(String QIANMIN) {
-        this.QIANMIN = QIANMIN;
+    public void setUserPhone(String userPhone) {
+        this.userPhone = userPhone;
     }
 
-    public String getSEX() {
-        return SEX;
+    public String getUserEmail() {
+        return userEmail;
     }
 
-    public void setSEX(String SEX) {
-        this.SEX = SEX;
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
-    public String getBIRTH_DATE() {
-        return BIRTH_DATE;
+    public String getSex() {
+        return sex;
     }
 
-    public void setBIRTH_DATE(String BIRTH_DATE) {
-        this.BIRTH_DATE = BIRTH_DATE;
+    public void setSex(String sex) {
+        this.sex = sex;
     }
 
-    public int getAGE() {
-        return AGE;
+    public Integer getAge() {
+        return age;
     }
 
-    public void setAGE(int AGE) {
-        this.AGE = AGE;
+    public void setAge(Integer age) {
+        this.age = age;
     }
 
-    public String getRE_DATE() {
-        return RE_DATE;
+    public Date getBirthDate() {
+        return birthDate;
     }
 
-    public void setRE_DATE(String RE_DATE) {
-        this.RE_DATE = RE_DATE;
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
     }
 
-    public int getSHOUCHAN() {
-        return SHOUCHAN;
+    public String getHeadPortraitUrl() {
+        return headPortraitUrl;
     }
 
-    public void setSHOUCHAN(int SHOUCHAN) {
-        this.SHOUCHAN = SHOUCHAN;
+    public void setHeadPortraitUrl(String headPortraitUrl) {
+        this.headPortraitUrl = headPortraitUrl;
     }
 
-    public int getGUANZHU() {
-        return GUANZHU;
+    public String getHomepageUrl() {
+        return homepageUrl;
     }
 
-    public void setGUANZHU(int GUANZHU) {
-        this.GUANZHU = GUANZHU;
+    public void setHomepageUrl(String homepageUrl) {
+        this.homepageUrl = homepageUrl;
     }
 
-    public int getJIFENG() {
-        return JIFENG;
+    public String getTag() {
+        return tag;
     }
 
-    public void setJIFENG(int JIFENG) {
-        this.JIFENG = JIFENG;
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
-    public String getHEADPORTRAIT_URL() {
-        return HEADPORTRAIT_URL;
+    public Integer getMeWatch() {
+        return meWatch;
     }
 
-    public void setHEADPORTRAIT_URL(String HEADPORTRAIT_URL) {
-        this.HEADPORTRAIT_URL = HEADPORTRAIT_URL;
+    public void setMeWatch(Integer meWatch) {
+        this.meWatch = meWatch;
     }
 
-    public String getHEAD_URL() {
-        return HEAD_URL;
+    public Integer getMeAttention() {
+        return meAttention;
     }
 
-    public void setHEAD_URL(String HEAD_URL) {
-        this.HEAD_URL = HEAD_URL;
+    public void setMeAttention(Integer meAttention) {
+        this.meAttention = meAttention;
     }
 
-    public int getWENZHAN() {
-        return WENZHAN;
+    public Integer getMeIntegral() {
+        return meIntegral;
     }
 
-    public void setWENZHAN(int WENZHAN) {
-        this.WENZHAN = WENZHAN;
+    public void setMeIntegral(Integer meIntegral) {
+        this.meIntegral = meIntegral;
     }
 
-    public String getPASSWORD() {
-        return PASSWORD;
+    public Integer getMeArticle() {
+        return meArticle;
     }
 
-    public void setPASSWORD(String PASSWORD) {
-        this.PASSWORD = PASSWORD;
+    public void setMeArticle(Integer meArticle) {
+        this.meArticle = meArticle;
     }
 
-    public String getEDIT_DATE() {
-        return EDIT_DATE;
+    public boolean isWithoutApprova() {
+        return withoutApprova;
     }
 
-    public void setEDIT_DATE(String EDIT_DATE) {
-        this.EDIT_DATE = EDIT_DATE;
+    public void setWithoutApprova(boolean withoutApprova) {
+        this.withoutApprova = withoutApprova;
+    }
+
+    public Date getEditDate() {
+        return editDate;
+    }
+
+    public void setEditDate(Date editDate) {
+        this.editDate = editDate;
+    }
+
+    public Date getReDate() {
+        return reDate;
+    }
+
+    public void setReDate(Date reDate) {
+        this.reDate = reDate;
     }
 }

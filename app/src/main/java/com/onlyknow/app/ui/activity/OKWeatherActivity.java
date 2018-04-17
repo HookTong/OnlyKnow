@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadWeatherApi;
+import com.onlyknow.app.api.app.OKLoadWeatherApi;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -171,7 +171,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         mBanner.isAutoPlay(true);
         mBanner.setDelayTime(5000);
         mBanner.setIndicatorGravity(BannerConfig.CENTER);
-        mBanner.setImages(OKConstant.getAdUrls());
+        mBanner.setImages(OKConstant.getAdImages());
         startBanner();
 
         reGetFloatingActionButton.setOnClickListener(new View.OnClickListener() {
@@ -185,7 +185,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         mBanner.setOnBannerListener(new OnBannerListener() {
             @Override
             public void OnBannerClick(int position) {
-                Map<String, String> map = OKConstant.getAdUrls().get(position);
+                Map<String, String> map = OKConstant.getAdImages().get(position);
                 if (!TextUtils.isEmpty(map.get("LINK"))) {
                     Bundle bundle = new Bundle();
                     bundle.putString("WEB_LINK", map.get("LINK"));
@@ -215,10 +215,10 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         }
 
         int i = new Random().nextInt(5);
-        if (i < OKConstant.getHeadUrls().size()) {
-            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getHeadUrls().get(i).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
-        } else if (OKConstant.getHeadUrls().size() != 0) {
-            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getHeadUrls().get(0).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+        if (i < OKConstant.getCarouselImages().size()) {
+            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getCarouselImages().get(i).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+        } else if (OKConstant.getCarouselImages().size() != 0) {
+            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getCarouselImages().get(0).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
         } else {
             GlideBlurApi(okActivityWeatherHeadImage, R.drawable.topgd1, R.drawable.topgd1, R.drawable.topgd1);
         }

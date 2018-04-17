@@ -8,11 +8,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.TextUtils;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -26,10 +24,11 @@ import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.exceptions.HyphenateException;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadCarouselAndAdImageApi;
-import com.onlyknow.app.database.bean.OKCarouselAndAdImageBean;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
+import com.onlyknow.app.api.user.OKManagerUserApi;
+import com.onlyknow.app.database.bean.OKCarouselAdBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.utils.OKCityUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
@@ -40,7 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdImageApi.onCallBack, AMapLocationListener, EMCallBack, EMMessageListener {
+public class OKMainService extends OKBaseService implements AMapLocationListener, EMCallBack, EMMessageListener, OKManagerUserApi.onCallBack {
     public static boolean isEMLogIn = false;
 
     // 广播接收器
@@ -114,12 +113,6 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
                     if (USER_INFO_SP.getBoolean("STATE", false)) { // 登录IM
                         createIm(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""), USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                     }
-                    // 获取轮播图片和广告
-                    if (mOKLoadCarouselAndAdImageApi != null) {
-                        mOKLoadCarouselAndAdImageApi.cancelTask();
-                    }
-                    mOKLoadCarouselAndAdImageApi = new OKLoadCarouselAndAdImageApi(OKMainService.this);
-                    mOKLoadCarouselAndAdImageApi.requestCarouselAndAdImage(OKMainService.this);
                 } else {
                     OKLogUtil.print("网络连接已断开");
                 }
@@ -138,9 +131,9 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
     // 声明AMapLocationClient类对象
     private AMapLocationClient mLocationClient;
 
-    private long locationInterval = 0;
+    private OKManagerUserApi managerUserApi;
 
-    private OKLoadCarouselAndAdImageApi mOKLoadCarouselAndAdImageApi;
+    private long locationInterval = 0;
 
     // IM 方法
     private void createIm(final String username, final String password) {
@@ -206,13 +199,18 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
     @Override
     public void onDestroy() {
         super.onDestroy();
+
         unregisterReceiver(mServiceBroadcastReceiver);
+
         EMClient.getInstance().chatManager().removeMessageListener(OKMainService.this);
-        if (mOKLoadCarouselAndAdImageApi != null) {
-            mOKLoadCarouselAndAdImageApi.cancelTask();
-        }
+
         mLocationClient.stopLocation();
+
         mLocationClient.onDestroy();
+
+        if (managerUserApi != null) {
+            managerUserApi.cancelTask();
+        }
 
         OKLogUtil.print("---OKMainService.onDestroy--- 重新启动服务");
         initNotice("OnlyKnow严重通知", "OKMainService意外终止,正在尝试重启...");
@@ -225,12 +223,6 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
             if (USER_INFO_SP.getBoolean("STATE", false)) {
                 createIm(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""), USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
             }
-            // 获取轮播图片和广告
-            if (mOKLoadCarouselAndAdImageApi != null) {
-                mOKLoadCarouselAndAdImageApi.cancelTask();
-            }
-            mOKLoadCarouselAndAdImageApi = new OKLoadCarouselAndAdImageApi(this);
-            mOKLoadCarouselAndAdImageApi.requestCarouselAndAdImage(this);
         }
         mLocationClient = new AMapLocationClient(getApplicationContext()); // 初始化定位
         mLocationClient.setLocationListener(this); // 设置定位回调监听
@@ -249,16 +241,19 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
 
     // 更新用户地理位置
     private void updateUserLocation(AMapLocation amapLocation) {
-        double LONGITUDE = amapLocation.getLongitude(); // 经度
-        double DIMENSION = amapLocation.getLongitude(); // 纬度
+
+        double longitude = amapLocation.getLongitude(); // 经度
+        double latitude = amapLocation.getLatitude(); // 纬度
+
         String CityName = amapLocation.getCity();
         String CityCode = amapLocation.getCityCode();
         String CityID = new OKCityUtil(OKMainService.this.getApplicationContext()).getCityID(CityName.replace("市", ""));
         String District = amapLocation.getDistrict();
+
         // 地理位置保存在用户sp中
         Editor editor = USER_INFO_SP.edit();
-        editor.putFloat("LONGITUDE", (float) LONGITUDE);
-        editor.putFloat("DIMENSION", (float) DIMENSION);
+        editor.putFloat(OKManagerUserApi.Params.KEY_LONGITUDE, (float) longitude);
+        editor.putFloat(OKManagerUserApi.Params.KEY_LATITUDE, (float) latitude);
         editor.putString("CITY_NAME", CityName);
         editor.putString("CITY_CODE", CityCode);
         editor.putString("CITY_ID", CityID);
@@ -266,75 +261,26 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
         editor.commit();
 
         // 更新用户地理位置
-        if (!TextUtils.isEmpty(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "")) && OKNetUtil.isNet(OKMainService.this)) {
-            final Map<String, String> map = new HashMap<>();
-            map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-            map.put("longitude", Double.toString(LONGITUDE));
-            map.put("dimension", Double.toString(DIMENSION));
-            map.put("date", OKConstant.getNowDateByString());
+        String name = USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "");
+        String pass = USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, "");
+        if (!TextUtils.isEmpty(name) && OKNetUtil.isNet(this)) {
 
-            new Thread() {
-                @Override
-                public void run() {
-                    super.run();
-                    new OKBusinessApi().addUserLocation(map);
-                }
-            }.start();
-        }
-        OKLogUtil.print("LONGITUDE: " + String.valueOf(LONGITUDE) + "DIMENSION: " + String.valueOf(DIMENSION));
-    }
+            OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+            params.setUsername(name);
+            params.setPassword(pass);
+            params.setLongitude(longitude);
+            params.setLatitude(latitude);
+            params.setType(OKManagerUserApi.Params.TYPE_UPDATE_LOCATION);
 
-    @Override
-    public void carouselAndAdImageApiComplete(OKCarouselAndAdImageBean bean) {
-        if (bean == null) {
-            OKLogUtil.print("获取轮播图片和广告图片失败");
-            return;
+            if (managerUserApi != null) {
+                managerUserApi.cancelTask();
+            }
+            managerUserApi = new OKManagerUserApi(this);
+            managerUserApi.requestManagerUser(params, this);
         }
 
-        // 更新轮播图片,RES_ID为错图替代
-        List<Map<String, Object>> headList = new ArrayList<>();
-        Map<String, Object> map1 = new HashMap<>();
-        map1.put("URL", bean.getHP_IMAGE_URL1());
-        map1.put("RES_ID", R.drawable.topgd1);
-        Map<String, Object> map2 = new HashMap<>();
-        map2.put("URL", bean.getHP_IMAGE_URL2());
-        map2.put("RES_ID", R.drawable.topgd2);
-        Map<String, Object> map3 = new HashMap<>();
-        map3.put("URL", bean.getHP_IMAGE_URL3());
-        map3.put("RES_ID", R.drawable.topgd3);
-        Map<String, Object> map4 = new HashMap<>();
-        map4.put("URL", bean.getHP_IMAGE_URL4());
-        map4.put("RES_ID", R.drawable.topgd4);
-        Map<String, Object> map5 = new HashMap<>();
-        map5.put("URL", bean.getHP_IMAGE_URL5());
-        map5.put("RES_ID", R.drawable.topgd5);
-        headList.add(map1);
-        headList.add(map2);
-        headList.add(map3);
-        headList.add(map4);
-        headList.add(map5);
-        OKConstant.setHeadUrls(headList);
+        OKLogUtil.print("位置信息 经度:" + String.valueOf(longitude) + " 纬度:" + String.valueOf(latitude));
 
-        // 更新广告URL
-        List<Map<String, String>> adList = new ArrayList<>();
-        Map<String, String> adMap1 = new HashMap<>();
-        adMap1.put("URL", bean.getAD_IMAGE_URL1());
-        adMap1.put("LINK", bean.getAD_LINK_URL1());
-        Map<String, String> adMap2 = new HashMap<>();
-        adMap2.put("URL", bean.getAD_IMAGE_URL2());
-        adMap2.put("LINK", bean.getAD_LINK_URL2());
-        Map<String, String> adMap3 = new HashMap<>();
-        adMap3.put("URL", bean.getAD_IMAGE_URL3());
-        adMap3.put("LINK", bean.getAD_LINK_URL3());
-        adList.add(adMap1);
-        adList.add(adMap2);
-        adList.add(adMap3);
-        OKConstant.setAdUrls(adList);
-
-        Intent mIntent = new Intent(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE);
-        sendBroadcast(mIntent);
-
-        OKLogUtil.print("OKMainService", "轮播和广告图片加载完成 !");
     }
 
     @Override
@@ -371,7 +317,6 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
     public void onProgress(int i, String s) {
 
     }
-    // ==============
 
     // 以下是环信消息接收回调
     @Override
@@ -416,5 +361,16 @@ public class OKMainService extends OKBaseService implements OKLoadCarouselAndAdI
     public void onMessageChanged(EMMessage emMessage, Object o) {
 
     }
-    // ========================
+
+    // 更新用户地理位置的结果回调
+    @Override
+    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        if (OKManagerUserApi.Params.TYPE_UPDATE_LOCATION.equals(type)) {
+            if (serviceResult != null && serviceResult.isSuccess()) {
+                OKLogUtil.print("用户地理位置更新成功!");
+            } else {
+                OKLogUtil.print("用户地理位置更新失败!");
+            }
+        }
+    }
 }

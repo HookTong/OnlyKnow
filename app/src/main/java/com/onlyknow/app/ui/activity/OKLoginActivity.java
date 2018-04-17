@@ -1,7 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.text.TextUtils;
@@ -10,20 +9,20 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLogInApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
+import com.onlyknow.app.utils.OKDateUtil;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class OKLoginActivity extends OKBaseActivity implements OKLogInApi.onCallBack {
+public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.onCallBack {
     private AppCompatButton but;
     private EditText editTextUserName, editTextPssword;
     private TextView textView;
 
-    private OKLogInApi mOKLogInApi;
+    private OKManagerUserApi okManagerUserApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +41,8 @@ public class OKLoginActivity extends OKBaseActivity implements OKLogInApi.onCall
     @Override
     public void onPause() {
         super.onPause();
-        if (mOKLogInApi != null) {
-            mOKLogInApi.cancelTask();
+        if (okManagerUserApi != null) {
+            okManagerUserApi.cancelTask();
         }
     }
 
@@ -53,7 +52,7 @@ public class OKLoginActivity extends OKBaseActivity implements OKLogInApi.onCall
 
             @Override
             public void onClick(View v) {
-                startUserActivity(null, OKSigNupActivity.class);
+                startUserActivity(null, OKRegisteredActivity.class);
             }
         });
 
@@ -64,13 +63,19 @@ public class OKLoginActivity extends OKBaseActivity implements OKLogInApi.onCall
                 String name = editTextUserName.getText().toString();
                 String pass = editTextPssword.getText().toString();
                 if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(pass)) {
-                    if (mOKLogInApi != null) {
-                        mOKLogInApi.cancelTask();
-                    }
-                    mOKLogInApi = new OKLogInApi(OKLoginActivity.this);
-                    mOKLogInApi.requestLogIn(name, pass, OKLoginActivity.this);
+                    OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+                    params.setUsername(name);
+                    params.setPassword(pass);
+                    params.setType(OKManagerUserApi.Params.TYPE_LOGIN);
 
                     showProgressDialog("正在登录...");
+
+                    if (okManagerUserApi != null) {
+                        okManagerUserApi.cancelTask();
+                    }
+                    okManagerUserApi = new OKManagerUserApi(OKLoginActivity.this);
+                    okManagerUserApi.requestManagerUser(params, OKLoginActivity.this);
+
                 } else {
                     showSnackBar(v, "用户名和密码不能为空!", "");
                 }
@@ -86,28 +91,42 @@ public class OKLoginActivity extends OKBaseActivity implements OKLogInApi.onCall
     }
 
     @Override
-    public void logInApiComplete(OKUserInfoBean mUserInfoBean, String imName, String imPass) {
+    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
         closeProgressDialog();
 
-        if (mUserInfoBean != null) {
+        if (OKManagerUserApi.Params.TYPE_LOGIN.equals(type)) {
+
+            if (serviceResult == null || !serviceResult.isSuccess()) {
+                showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");
+                return;
+            }
+
+            OKUserInfoBean userInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+
+            if (userInfoBean == null) {
+                showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");
+                return;
+            }
+
             SharedPreferences.Editor editor = USER_INFO_SP.edit();
-            editor.putInt(OKUserInfoBean.KEY_USERID, mUserInfoBean.getUSERID());
-            editor.putString(OKUserInfoBean.KEY_USERNAME, mUserInfoBean.getUSERNAME());
-            editor.putString(OKUserInfoBean.KEY_PASSWORD, imPass);
-            editor.putString(OKUserInfoBean.KEY_NICKNAME, mUserInfoBean.getNICKNAME());
-            editor.putString(OKUserInfoBean.KEY_HEADPORTRAIT_URL, mUserInfoBean.getHEADPORTRAIT_URL());
-            editor.putString(OKUserInfoBean.KEY_HEAD_URL, mUserInfoBean.getHEAD_URL());
-            editor.putString(OKUserInfoBean.KEY_PHONE, mUserInfoBean.getPHONE());
-            editor.putString(OKUserInfoBean.KEY_EMAIL, mUserInfoBean.getEMAIL());
-            editor.putString(OKUserInfoBean.KEY_QIANMIN, mUserInfoBean.getQIANMIN());
-            editor.putString(OKUserInfoBean.KEY_SEX, mUserInfoBean.getSEX());
-            editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, mUserInfoBean.getBIRTH_DATE());
-            editor.putInt(OKUserInfoBean.KEY_AGE, mUserInfoBean.getAGE());
-            editor.putString(OKUserInfoBean.KEY_RE_DATE, mUserInfoBean.getRE_DATE());
-            editor.putInt(OKUserInfoBean.KEY_SHOUCHAN, mUserInfoBean.getSHOUCHAN());
-            editor.putInt(OKUserInfoBean.KEY_GUANZHU, mUserInfoBean.getGUANZHU());
-            editor.putInt(OKUserInfoBean.KEY_JIFENG, mUserInfoBean.getJIFENG());
-            editor.putString(OKUserInfoBean.KEY_EDIT_DATE, mUserInfoBean.getEDIT_DATE());
+            editor.putInt(OKUserInfoBean.KEY_USER_ID, userInfoBean.getUserId());
+            editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUserName());
+            editor.putString(OKUserInfoBean.KEY_PASSWORD, userInfoBean.getUserPassword());
+            editor.putString(OKUserInfoBean.KEY_NICKNAME, userInfoBean.getUserNickname());
+            editor.putString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, userInfoBean.getHeadPortraitUrl());
+            editor.putString(OKUserInfoBean.KEY_HOME_PAGE_URL, userInfoBean.getHomepageUrl());
+            editor.putString(OKUserInfoBean.KEY_PHONE, userInfoBean.getUserPhone());
+            editor.putString(OKUserInfoBean.KEY_EMAIL, userInfoBean.getUserEmail());
+            editor.putString(OKUserInfoBean.KEY_TAG, userInfoBean.getTag());
+            editor.putString(OKUserInfoBean.KEY_SEX, userInfoBean.getSex());
+            editor.putString(OKUserInfoBean.KEY_BIRTH_DATE, OKDateUtil.stringByDate(userInfoBean.getBirthDate()));
+            editor.putInt(OKUserInfoBean.KEY_AGE, userInfoBean.getAge());
+            editor.putString(OKUserInfoBean.KEY_RE_DATE, OKDateUtil.stringByDate(userInfoBean.getReDate()));
+            editor.putInt(OKUserInfoBean.KEY_ME_WATCH, userInfoBean.getMeWatch());
+            editor.putInt(OKUserInfoBean.KEY_ME_ATTENTION, userInfoBean.getMeAttention());
+            editor.putInt(OKUserInfoBean.KEY_INTEGRAL, userInfoBean.getMeIntegral());
+            editor.putInt(OKUserInfoBean.KEY_ARTICLE, userInfoBean.getMeArticle());
+            editor.putString(OKUserInfoBean.KEY_EDIT_DATE, OKDateUtil.stringByDate(userInfoBean.getEditDate()));
 
             editor.putBoolean("STATE", true);
             editor.putBoolean("STATE_CHANGE", true);
@@ -116,15 +135,15 @@ public class OKLoginActivity extends OKBaseActivity implements OKLogInApi.onCall
 
             // 登录环信账号
             Bundle mBundle = new Bundle();
-            mBundle.putString(OKUserInfoBean.KEY_USERNAME, imName);
-            mBundle.putString(OKUserInfoBean.KEY_PASSWORD, imPass);
+            mBundle.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUserName());
+            mBundle.putString(OKUserInfoBean.KEY_PASSWORD, userInfoBean.getUserPassword());
             sendUserBroadcast(ACTION_MAIN_SERVICE_LOGIN_IM, mBundle);
 
             showSnackBar(but, "登录成功", "");
 
             finish();
         } else {
-            showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");
+            showSnackBar(but, "异常操作类型!", "");
         }
     }
 }

@@ -29,8 +29,11 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadNearApi;
+import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
+import com.onlyknow.app.api.card.OKLoadNearCardApi;
+import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.database.bean.OKCarouselAdBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
@@ -41,6 +44,7 @@ import com.onlyknow.app.ui.activity.OKSearchActivity;
 import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.view.OKKenBurnsView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
@@ -53,11 +57,10 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener, OKLoadNearApi.onCallBack {
+public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener,
+        NavigationView.OnNavigationItemSelectedListener, OKLoadNearCardApi.onCallBack, OKLoadCarouselAdApi.onCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fabReGet;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -69,24 +72,14 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     private NavigationView mNavigationView;
     private CardViewAdapter mCardViewAdapter;
 
-    private OKLoadNearApi mOKLoadNearApi;
+    private OKLoadNearCardApi mOKLoadNearCardApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
-    private View rootView;
-
-    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            OKLogUtil.print("Near 收到广播 :" + action);
-            if (action.equals(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE)) {
-                mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
-                OKConstant.NEAR_HEAD_DATA_CHANGED = false;
-            }
-        }
-    };
+    private OKLoadCarouselAdApi carouselAdApi;
 
     private long locationInterval = 0;
+
+    private View rootView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -107,31 +100,33 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void onResume() {
         super.onResume();
         appBarLayout.addOnOffsetChangedListener(this);
-        if (OKConstant.NEAR_HEAD_DATA_CHANGED) {
-            mHeaderPicture.setUrl(getActivity(), OKConstant.getHeadUrls());
-            OKConstant.NEAR_HEAD_DATA_CHANGED = false;
-        }
-        IntentFilter mIntentFilter = new IntentFilter();
-        mIntentFilter.addAction(OKConstant.ACTION_UPDATE_CAROUSE_AND_AD_IMAGE);
-        getActivity().registerReceiver(mBroadcastReceiver, mIntentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (mOKLoadNearApi != null) {
-            mOKLoadNearApi.cancelTask();
-        }
+
         mRefreshLayout.finishRefresh();
+
         mRefreshLayout.finishLoadMore();
+
         appBarLayout.removeOnOffsetChangedListener(this);
+
         mDrawerLayout.closeDrawer(GravityCompat.START);
-        getActivity().unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        if (mOKLoadNearCardApi != null) {
+            mOKLoadNearCardApi.cancelTask();
+        }
+
+        if (carouselAdApi != null) {
+            carouselAdApi.cancelTask();
+        }
+
         if (null != rootView) {
             ((ViewGroup) rootView.getParent()).removeView(rootView);
         }
@@ -180,7 +175,16 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mCollapsingToolbarLayout.setTitle("世界就在身边");
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
-        mHeaderPicture.setUrl(this.getActivity(), OKConstant.getHeadUrls());
+
+        OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
+        params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
+        if (carouselAdApi != null) {
+            carouselAdApi.cancelTask();
+        }
+        carouselAdApi = new OKLoadCarouselAdApi(getActivity());
+        carouselAdApi.requestCarouselAd(params, this);
+
+        mHeaderPicture.setUrl(this.getActivity(), OKConstant.getCarouselImages());
 
         mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
         mRecyclerView.setAdapter(mCardViewAdapter);
@@ -227,18 +231,23 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mRefreshLayout.autoRefresh();
     }
 
+    private int page = 0;
+    private int size = 30;
+
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
-            Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("username", USER_INFO_SP.getString("USERNAME", "Anonymous"));
-            map.put("longitude", Float.toString(USER_INFO_SP.getFloat("LONGITUDE", -1)));
-            map.put("dimension", Float.toString(USER_INFO_SP.getFloat("DIMENSION", -1)));
-            map.put("num", OKConstant.NEAR_LOAD_COUNT);
-            if (mOKLoadNearApi == null) {
-                mOKLoadNearApi = new OKLoadNearApi(getActivity());
+            OKLoadNearCardApi.Params params = new OKLoadNearCardApi.Params();
+            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "anonymous"));
+            params.setPage(page + 1);
+            params.setSize(size);
+            params.setLongitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LONGITUDE, -1));
+            params.setLatitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LATITUDE, -1));
+
+            if (mOKLoadNearCardApi == null) {
+                mOKLoadNearCardApi = new OKLoadNearCardApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, mCardBeanList, true, this);
+            mOKLoadNearCardApi.requestNearCard(params, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackBar(rootView, "没有网络连接!", "");
@@ -248,17 +257,19 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
-            Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("username", USER_INFO_SP.getString("USERNAME", "Anonymous"));
-            map.put("longitude", Float.toString(USER_INFO_SP.getFloat("LONGITUDE", -1)));
-            map.put("dimension", Float.toString(USER_INFO_SP.getFloat("DIMENSION", -1)));
-            map.put("num", OKConstant.NEAR_LOAD_COUNT);
-            if (mOKLoadNearApi == null) {
-                mOKLoadNearApi = new OKLoadNearApi(getActivity());
+            OKLoadNearCardApi.Params params = new OKLoadNearCardApi.Params();
+            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "anonymous"));
+            params.setPage(1);
+            params.setSize(size);
+            params.setLongitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LONGITUDE, -1));
+            params.setLatitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LATITUDE, -1));
+
+            if (mOKLoadNearCardApi == null) {
+                mOKLoadNearCardApi = new OKLoadNearCardApi(getActivity());
             }
-            mOKLoadNearApi.requestCardBeanList(map, mCardBeanList, false, this);
+            mOKLoadNearCardApi.requestNearCard(params, this);
         } else {
-            mRefreshLayout.finishRefresh(1500);
+            mRefreshLayout.finishLoadMore(1500);
             showSnackBar(rootView, "没有网络连接!", "");
         }
     }
@@ -299,9 +310,13 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void nearApiComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                page = 1;
+
                 mCardBeanList.clear();
                 mCardBeanList.addAll(list);
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page++;
+
                 mCardBeanList.addAll(list);
             }
             mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -311,6 +326,13 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         } else if (mRefreshLayout.getState() == RefreshState.Loading) {
             mRefreshLayout.finishLoadMore();
         }
+    }
+
+    @Override
+    public void carouselAdApiComplete(OKCarouselAdBean bean) {
+        if (bean == null) return;
+
+        mHeaderPicture.setUrl(this.getActivity(), bean.getCarouselImage());
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {
@@ -323,55 +345,55 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         }
 
         private void initViews(final CardViewHolder mCardViewHolder, final OKCardBean okCardBean, final int position) {
-            String cardType = okCardBean.getCARD_TYPE();
+            String cardType = okCardBean.getCardType();
             // 设置标题控件内容
-            GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTITLE_IMAGE_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
-            mCardViewHolder.mTextViewTitle.setText(okCardBean.getTITLE_TEXT());
-            mCardViewHolder.mTextViewDate.setText(formatTime(okCardBean.getCREATE_DATE()) + " 发表");
+            GlideRoundApi(mCardViewHolder.mImageViewAvatar, okCardBean.getTitleImageUrl(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+            mCardViewHolder.mTextViewTitle.setText(okCardBean.getTitleText());
+            mCardViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(okCardBean.getCreateDate()) + " 发表");
             // 设置内容控件内容
             if (cardType.equals(CARD_TYPE_TW)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
 
-                GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                GlideApi(mCardViewHolder.mImageViewContentImage, okCardBean.getFirstCardImage(), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getContentTitleText());
+                mCardViewHolder.mTextViewContent.setText(okCardBean.getContentText());
 
-                String z = Integer.toString(okCardBean.getZAN_NUM());
-                String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
-                String p = Integer.toString(okCardBean.getPINGLUN_NUM());
-                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
+                String z = Integer.toString(okCardBean.getPraiseCount());
+                String s = Integer.toString(okCardBean.getWatchCount());
+                String p = Integer.toString(okCardBean.getCommentCount());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
             } else if (cardType.equals(CARD_TYPE_TP)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.GONE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.VISIBLE);
-                GlideApi(mCardViewHolder.mImageViewContentImage, getFirstCardImageUrl(okCardBean), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
+                GlideApi(mCardViewHolder.mImageViewContentImage, okCardBean.getFirstCardImage(), R.drawable.toplayout_imag, R.drawable.toplayout_imag);
             } else if (cardType.equals(CARD_TYPE_WZ)) {
                 mCardViewHolder.mLinearLayoutContent.setVisibility(View.VISIBLE);
                 mCardViewHolder.mImageViewContentImage.setVisibility(View.GONE);
 
-                String z = Integer.toString(okCardBean.getZAN_NUM());
-                String s = Integer.toString(okCardBean.getSHOUCHAN_NUM());
-                String p = Integer.toString(okCardBean.getPINGLUN_NUM());
+                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getContentTitleText());
+                mCardViewHolder.mTextViewContent.setText(okCardBean.getContentText());
 
-                mCardViewHolder.mTextViewContentTitle.setText(okCardBean.getCONTENT_TITLE_TEXT());
-                mCardViewHolder.mTextViewContent.setText(okCardBean.getCONTENT_TEXT());
+                String z = Integer.toString(okCardBean.getPraiseCount());
+                String s = Integer.toString(okCardBean.getWatchCount());
+                String p = Integer.toString(okCardBean.getCommentCount());
                 mCardViewHolder.mTextViewContentPraise.setText(z + "赞同; " + s + "收藏; " + p + "评论");
             }
 
             mCardViewHolder.mCardView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
+                    if (okCardBean.getCardType().equals(CARD_TYPE_TW)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_NEAR);
                         bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTWActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_TP)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_NEAR);
                         bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, okCardBean);
                         startUserActivity(bundle, OKCardTPActivity.class);
-                    } else if (okCardBean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
+                    } else if (okCardBean.getCardType().equals(CARD_TYPE_WZ)) {
                         Bundle bundle = new Bundle();
                         bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_NEAR);
                         bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, okCardBean);
@@ -395,8 +417,8 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
                 public void onClick(View v) {
                     // 查看他人主页
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okCardBean.getUSER_NAME());
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okCardBean.getTITLE_TEXT());
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, okCardBean.getUserName());
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, okCardBean.getTitleText());
                     startUserActivity(bundle, OKHomePageActivity.class);
                 }
             });

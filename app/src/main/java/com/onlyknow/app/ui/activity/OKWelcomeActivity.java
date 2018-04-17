@@ -3,7 +3,6 @@ package com.onlyknow.app.ui.activity;
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -19,8 +18,8 @@ import android.widget.Toast;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKSecurityApi;
-import com.onlyknow.app.database.bean.OKSafetyInfoBean;
+import com.onlyknow.app.api.app.OKLoadAppInfoApi;
+import com.onlyknow.app.database.bean.OKAppInfoBean;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
@@ -43,7 +42,7 @@ import me.weyye.hipermission.PermissionCallback;
 import me.weyye.hipermission.PermissionItem;
 import okhttp3.Request;
 
-public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallback, OKSecurityApi.onCallBack {
+public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallback, OKLoadAppInfoApi.onCallBack {
     @Bind(R.id.ok_activity_welcome_image)
     ImageView okActivityWelcomeImage;
     @Bind(R.id.ok_activity_welcome_log_image)
@@ -51,7 +50,7 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
     @Bind(R.id.ok_activity_welcome_fastPassLog_image)
     ImageView okActivityWelcomeFastPassLogImage;
 
-    private OKSecurityApi mOKSecurityApi;
+    private OKLoadAppInfoApi mOKLoadAppInfoApi;
     private Handler mHandler = new Handler();
     private long SPLASH_LENGTH = 2000;
 
@@ -71,8 +70,8 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mOKSecurityApi != null) {
-            mOKSecurityApi.cancelTask();
+        if (mOKLoadAppInfoApi != null) {
+            mOKLoadAppInfoApi.cancelTask();
         }
     }
 
@@ -120,7 +119,7 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         startService(intent);
     }
 
-    private void showUpdateAppDialog(final OKSafetyInfoBean bean) {
+    private void showUpdateAppDialog(final OKAppInfoBean bean) {
         final AlertDialog.Builder DialogMenu = new AlertDialog.Builder(OKWelcomeActivity.this);
         final View dialogView = LayoutInflater.from(OKWelcomeActivity.this).inflate(R.layout.ok_dialog_update_app, null);
         final ImageView mImageViewBackground = (ImageView) dialogView.findViewById(R.id.ok_dialog_update_app_background_image);
@@ -134,17 +133,17 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         DialogMenu.setView(dialogView);
         DialogMenu.setCancelable(false);
         final AlertDialog mAlertDialog = DialogMenu.show();
-        if (OKSafetyInfoBean.AVD_IS_MANDATORY.YES.toString().equals(bean.getAVD_IS_MANDATORY())) {
+        if (bean.isAppIsMandatory()) {
             mOKSEImageViewClose.setVisibility(View.GONE);
         } else {
             mOKSEImageViewClose.setVisibility(View.VISIBLE);
         }
-        mTextViewName.setText(bean.getAVU_NAME());
+        mTextViewName.setText(bean.getAppName());
         mTextViewOldVer.setText("旧版本 :" + OKConstant.APP_VERSION + "版本");
-        mTextViewNewVer.setText("是否更新到 " + bean.getAVU_VERSION() + " 版本 ?");
-        mTextViewSize.setText("最新版本大小 :" + bean.getAVD_SIZE());
-        mTextViewInfo.setText(bean.getAVU_DESCRIBE());
-        GlideApp.with(OKWelcomeActivity.this).load(bean.getAVU_IMAG()).error(R.drawable.topgd1).into(mImageViewBackground);
+        mTextViewNewVer.setText("是否更新到 " + bean.getAppVersion() + " 版本 ?");
+        mTextViewSize.setText("最新版本大小 :" + bean.getAppSize());
+        mTextViewInfo.setText(bean.getAppDescribe());
+        GlideApp.with(OKWelcomeActivity.this).load(bean.getAppImageUrl()).error(R.drawable.topgd1).into(mImageViewBackground);
         mProgressButton.setCurrentText("更新到最新版本");
 
         mProgressButton.setOnClickListener(new View.OnClickListener() {
@@ -155,10 +154,10 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
                     mProgressButton.setMaxProgress(100);
                     String dirPath = Environment.getExternalStorageDirectory().getPath();
                     OKWebService webService = OKWebService.getInstance();
-                    String array[] = bean.getAVU_URL().split("/");
+                    String array[] = bean.getAppUrl().split("/");
                     String fileName = array[array.length - 1];
                     DownloadCallback mDownloadCallback = new DownloadCallback(mProgressButton, mAlertDialog, dirPath + "/" + fileName);
-                    webService.downloadFile(bean.getAVU_URL(), dirPath, mDownloadCallback);
+                    webService.downloadFile(bean.getAppUrl(), dirPath, mDownloadCallback);
                 }
             }
         });
@@ -207,14 +206,15 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         startMainService(); // 启动后台服务
 
         if (OKNetUtil.isNet(this)) { // 版本检查
-            if (mOKSecurityApi != null) {
-                mOKSecurityApi.cancelTask();
+            OKLoadAppInfoApi.Params params = new OKLoadAppInfoApi.Params();
+            params.setVersion(OKConstant.APP_VERSION);
+            params.setType(OKLoadAppInfoApi.Params.TYPE_CHECK);
+
+            if (mOKLoadAppInfoApi != null) {
+                mOKLoadAppInfoApi.cancelTask();
             }
-            Map<String, String> map = new HashMap<>();
-            map.put("type", "APP_VERSION_CHECK");
-            map.put("value", OKConstant.APP_VERSION);
-            mOKSecurityApi = new OKSecurityApi(this);
-            mOKSecurityApi.requestSecurityCheck(map, this);
+            mOKLoadAppInfoApi = new OKLoadAppInfoApi(this);
+            mOKLoadAppInfoApi.requestAppInfo(params, this);
         } else { // 无网络直接启动
             SPLASH_LENGTH += 2000;
             startMainActivity();
@@ -234,14 +234,14 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
     }
 
     @Override
-    public void securityApiComplete(OKSafetyInfoBean bean) {
+    public void appInfoApiComplete(OKAppInfoBean bean) {
         if (bean == null) {
             startMainActivity();
             return;
         }
-        if (!OKConstant.APP_VERSION.equals(bean.getAVU_VERSION())) {
+        if (!OKConstant.APP_VERSION.equals(bean.getAppVersion())) {
             // 有新版本
-            if (OKSafetyInfoBean.AVD_IS_MANDATORY.YES.toString().equals(bean.getAVD_IS_MANDATORY())) {
+            if (bean.isAppIsMandatory()) {
                 showUpdateAppDialog(bean); // 强制更新
                 return;
             } else if (SETTING_SP.getBoolean("AUTO_UPDATE", true)) {

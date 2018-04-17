@@ -13,20 +13,20 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKCardBindApi;
-import com.onlyknow.app.api.OKUserOperationApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.card.OKManagerCardApi;
+import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCardBindBean;
-import com.onlyknow.app.database.bean.OKCardUrlListBean;
+import com.onlyknow.app.database.bean.OKCardRelatedBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.api.OKBusinessApi;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKDeviceInfoUtil;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKFileUtil;
 import com.onlyknow.app.utils.OKLoadBannerImage;
 import com.onlyknow.app.utils.OKLogUtil;
@@ -39,12 +39,8 @@ import com.youth.banner.Transformer;
 import com.youth.banner.listener.OnBannerListener;
 
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 图文卡片浏览界面
@@ -53,7 +49,7 @@ import java.util.Map;
  * Created by ReSet on 2018/03/01.
  */
 
-public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.onCallBack, OKUserOperationApi.onCallBack {
+public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi.onCallBack, OKManagerUserApi.onCallBack {
     public final static String KEY_INTENT_IMAGE_AND_TEXT_CARD = "IMAGE_AND_TEXT_CARD";
 
     private OKCircleImageView imageHeadPortrait;
@@ -67,11 +63,11 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
     private OKCardBean mCardBean;
     private int mStartInterfaceType;
 
-    private OKCardBindApi mOKCardBindApi;
-    private OKCardBindBean mCardBindBean;
-    private OKUserOperationApi mOKUserOperationApi;
+    private OKManagerCardApi okManagerCardApi;
+    private OKCardRelatedBean mCardBindBean;
 
-    private OKCardUrlListBean mOKCardUrlListBean;
+    private OKManagerUserApi okManagerUserApi;
+
     private List<String> mImageUrls = new ArrayList<>();
 
     private UMShareListener mShareListener = new UMShareListener() {
@@ -112,27 +108,29 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
 
     @Override
     public void onResume() {
-        Map<String, String> map = new HashMap<>();
-        map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-        map.put("username2", mCardBean.getUSER_NAME());
-        map.put("card_id", Integer.toString(mCardBean.getCARD_ID()));
-        if (mOKCardBindApi != null) {
-            mOKCardBindApi.cancelTask();
+        OKManagerCardApi.Params params = new OKManagerCardApi.Params();
+        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setCardId(mCardBean.getCardId());
+        params.setType(OKManagerCardApi.Params.TYPE_BIND_CHECK);
+
+        if (okManagerCardApi != null) {
+            okManagerCardApi.cancelTask();
         }
-        mOKCardBindApi = new OKCardBindApi(this);
-        mOKCardBindApi.requestCardBindCheck(map, this);
+        okManagerCardApi = new OKManagerCardApi(this);
+        okManagerCardApi.requestManagerCard(params, this);
+
         super.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (mOKCardBindApi != null) {
-            mOKCardBindApi.cancelTask(); // 如果线程已经在执行则取消执行
+        if (okManagerCardApi != null) {
+            okManagerCardApi.cancelTask(); // 如果线程已经在执行则取消执行
         }
 
-        if (mOKUserOperationApi != null) {
-            mOKUserOperationApi.cancelTask(); // 如果线程已经在执行则取消执行
+        if (okManagerUserApi != null) {
+            okManagerUserApi.cancelTask(); // 如果线程已经在执行则取消执行
         }
     }
 
@@ -156,13 +154,10 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_message_jubao) {
-            Intent intent = new Intent();
-            intent.setClass(OKCardTWActivity.this, OKRePortActivity.class);
             Bundle bundle = new Bundle();
-            bundle.putString("JUBAO_TYPE", "CARD");
-            bundle.putString("JUBAO_CARD_ID", Integer.toString(mCardBean.getCARD_ID()));
-            intent.putExtras(bundle);
-            startActivity(intent);
+            bundle.putString(OKRePortActivity.KEY_TYPE, OKRePortActivity.TYPE_CARD);
+            bundle.putString(OKRePortActivity.KEY_ID, Integer.toString(mCardBean.getCardId()));
+            startUserActivity(bundle, OKRePortActivity.class);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -214,23 +209,7 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
         }
 
         // 获取内容图片信息
-        mOKCardUrlListBean = mCardBean.getBean();
-        if (mOKCardUrlListBean != null) {
-            mImageUrls = OKCardUrlListBean.toList(mOKCardUrlListBean);
-        } else {
-            mOKCardUrlListBean = fromCardUrlJson(mCardBean.getCONTENT_IMAGE_URL());
-            if (mOKCardUrlListBean != null) {
-                mCardBean.setBean(mOKCardUrlListBean);
-
-                mImageUrls = OKCardUrlListBean.toList(mOKCardUrlListBean);
-            } else {
-                mImageUrls.add(mCardBean.getCONTENT_IMAGE_URL());
-
-                mOKCardUrlListBean = new OKCardUrlListBean();
-                mOKCardUrlListBean.setCount(1);
-                mOKCardUrlListBean.setUrlImage1(mCardBean.getCONTENT_IMAGE_URL());
-            }
-        }
+        mImageUrls = mCardBean.cardImagesToUrls();
 
         mBanner.setImageLoader(new OKLoadBannerImage(false));
         mBanner.setBannerAnimation(Transformer.DepthPage);
@@ -240,22 +219,22 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
         mBanner.setImages(mImageUrls);
         startBanner();
 
-        GlideRoundApi(imageHeadPortrait, mCardBean.getTITLE_IMAGE_URL(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+        GlideRoundApi(imageHeadPortrait, mCardBean.getTitleImageUrl(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
 
-        textNickName.setText(mCardBean.getTITLE_TEXT());
+        textNickName.setText(mCardBean.getTitleText());
         textSignature.setText("这个人很懒 , 什么都没有留下!");
-        textZan.setText("" + mCardBean.getZAN_NUM());
-        textWatch.setText("" + mCardBean.getSHOUCHAN_NUM());
-        textComment.setText("" + mCardBean.getPINGLUN_NUM());
-        textTag.setText(mCardBean.getLABELLING());
-        textContentTitle.setText(mCardBean.getCONTENT_TITLE_TEXT());
-        textContent.setText(mCardBean.getCONTENT_TEXT());
-        textLink.setText(mCardBean.getMESSAGE_LINK());
-        textDate.setText(formatTime(mCardBean.getCREATE_DATE()) + " 发表");
-        if (mCardBean.getCONTENT_TITLE_TEXT().length() >= 12) {
-            mCollapsingToolbarLayout.setTitle(mCardBean.getCONTENT_TITLE_TEXT().substring(0, 12) + "...");
+        textZan.setText("" + mCardBean.getPraiseCount());
+        textWatch.setText("" + mCardBean.getWatchCount());
+        textComment.setText("" + mCardBean.getCommentCount());
+        textTag.setText(mCardBean.getLabelling());
+        textContentTitle.setText(mCardBean.getContentTitleText());
+        textContent.setText(mCardBean.getContentText());
+        textLink.setText(mCardBean.getMessageLink());
+        textDate.setText(OKDateUtil.formatTime(mCardBean.getCreateDate()) + " 发表");
+        if (mCardBean.getContentTitleText().length() >= 12) {
+            mCollapsingToolbarLayout.setTitle(mCardBean.getContentTitleText().substring(0, 12) + "...");
         } else {
-            mCollapsingToolbarLayout.setTitle(mCardBean.getCONTENT_TITLE_TEXT());
+            mCollapsingToolbarLayout.setTitle(mCardBean.getContentTitleText());
         }
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
@@ -264,7 +243,7 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
 
             @Override
             public void onClick(View v) {
-                shareImage(mOKCardUrlListBean, mShareListener);
+                shareImage(mCardBean.getImageList(), mShareListener);
             }
         });
 
@@ -273,18 +252,21 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
             @Override
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                    params.put("username2", mCardBean.getUSER_NAME());
-                    params.put("card_id", "");
-                    params.put("message", "");
-                    params.put("date", OKConstant.getNowDateByString());
-                    params.put("type", "GUANZHU");
-                    if (mOKUserOperationApi != null) {
-                        mOKUserOperationApi.cancelTask();
+                    if (mCardBindBean != null && mCardBindBean.isAttention()) {
+                        showSnackBar(v, "您已经关注了", "");
+                        return;
                     }
-                    mOKUserOperationApi = new OKUserOperationApi(OKCardTWActivity.this);
-                    mOKUserOperationApi.requestUserOperation(params, OKUserOperationApi.TYPE_ATTENTION, OKCardTWActivity.this);
+
+                    OKManagerUserApi.Params params = new OKManagerUserApi.Params();
+                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setAttentionUsername(mCardBean.getUserName());
+                    params.setType(OKManagerUserApi.Params.TYPE_ADD_ATTENTION);
+
+                    if (okManagerUserApi != null) {
+                        okManagerUserApi.cancelTask();
+                    }
+                    okManagerUserApi = new OKManagerUserApi(OKCardTWActivity.this);
+                    okManagerUserApi.requestManagerUser(params, OKCardTWActivity.this);
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
                 }
@@ -305,8 +287,8 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
             public void onClick(View v) {
                 if (mStartInterfaceType != INTERFACE_HOME) {
                     Bundle bundle = new Bundle();
-                    bundle.putString(OKUserInfoBean.KEY_USERNAME, mCardBean.getUSER_NAME());
-                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, mCardBean.getTITLE_TEXT());
+                    bundle.putString(OKUserInfoBean.KEY_USERNAME, mCardBean.getUserName());
+                    bundle.putString(OKUserInfoBean.KEY_NICKNAME, mCardBean.getTitleText());
                     startUserActivity(bundle, OKHomePageActivity.class);
                 } else {
                     finish();
@@ -319,22 +301,21 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
             @Override
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                    if (mCardBindBean != null && mCardBindBean.IS_ZAN()) {
-                        showSnackBar(v, "您已经赞过了", "");
+                    if (mCardBindBean != null && mCardBindBean.isPraise()) {
+                        showSnackBar(v, "您已经点赞了", "");
                         return;
                     }
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                    params.put("username2", "");
-                    params.put("card_id", Integer.toString(mCardBean.getCARD_ID()));
-                    params.put("message", "");
-                    params.put("date", OKConstant.getNowDateByString());
-                    params.put("type", "ZAN");
-                    if (mOKUserOperationApi != null) {
-                        mOKUserOperationApi.cancelTask();
+
+                    OKManagerCardApi.Params params = new OKManagerCardApi.Params();
+                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setCardId(mCardBean.getCardId());
+                    params.setType(OKManagerCardApi.Params.TYPE_PRAISE);
+
+                    if (okManagerCardApi != null) {
+                        okManagerCardApi.cancelTask();
                     }
-                    mOKUserOperationApi = new OKUserOperationApi(OKCardTWActivity.this);
-                    mOKUserOperationApi.requestUserOperation(params, OKUserOperationApi.TYPE_ZAN, OKCardTWActivity.this);
+                    okManagerCardApi = new OKManagerCardApi(OKCardTWActivity.this);
+                    okManagerCardApi.requestManagerCard(params, OKCardTWActivity.this);
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
                 }
@@ -346,22 +327,21 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
             @Override
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                    if (mCardBindBean != null && mCardBindBean.IS_WATCH()) {
+                    if (mCardBindBean != null && mCardBindBean.isWatch()) {
                         showSnackBar(v, "您已经收藏了", "");
                         return;
                     }
-                    Map<String, String> params = new HashMap<String, String>();
-                    params.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                    params.put("username2", "");
-                    params.put("card_id", Integer.toString(mCardBean.getCARD_ID()));
-                    params.put("message", "");
-                    params.put("date", OKConstant.getNowDateByString());
-                    params.put("type", "SHOUCHAN");
-                    if (mOKUserOperationApi != null) {
-                        mOKUserOperationApi.cancelTask();
+
+                    OKManagerCardApi.Params params = new OKManagerCardApi.Params();
+                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setCardId(mCardBean.getCardId());
+                    params.setType(OKManagerCardApi.Params.TYPE_WATCH);
+
+                    if (okManagerCardApi != null) {
+                        okManagerCardApi.cancelTask();
                     }
-                    mOKUserOperationApi = new OKUserOperationApi(OKCardTWActivity.this);
-                    mOKUserOperationApi.requestUserOperation(params, OKUserOperationApi.TYPE_WATCH, OKCardTWActivity.this);
+                    okManagerCardApi = new OKManagerCardApi(OKCardTWActivity.this);
+                    okManagerCardApi.requestManagerCard(params, OKCardTWActivity.this);
                 } else {
                     startUserActivity(null, OKLoginActivity.class);
                 }
@@ -373,8 +353,8 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putString(OKUserInfoBean.KEY_USERNAME, mCardBean.getUSER_NAME());
-                bundle.putInt(OKCardBean.KEY_CARD_ID, mCardBean.getCARD_ID());
+                bundle.putString(OKUserInfoBean.KEY_USERNAME, mCardBean.getUserName());
+                bundle.putInt(OKCardBean.KEY_CARD_ID, mCardBean.getCardId());
                 startUserActivity(bundle, OKCommentActivity.class);
             }
         });
@@ -399,7 +379,7 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
                 if (OKFileUtil.isVideoUrl(url)) {
                     Bundle bundle = new Bundle();
                     bundle.putString("URL", url);
-                    bundle.putString("TITLE", mCardBean.getTITLE_TEXT() + "发表的视频");
+                    bundle.putString("TITLE", mCardBean.getTitleText() + "发表的视频");
                     startUserActivity(bundle, OKVideoActivity.class);
                 } else {
                     int location[] = new int[2];
@@ -421,26 +401,20 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
     }
 
     private void addCardBrowsing() {
-        new Thread() {
-            @Override
-            public void run() {
-                OKDeviceInfoUtil equipmentInformation = new OKDeviceInfoUtil(OKCardTWActivity.this);
-                String equipment = equipmentInformation.getIMIE();
 
-                Date now = new Date();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
+        OKManagerCardApi.Params params = new OKManagerCardApi.Params();
+        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setCardId(mCardBean.getCardId());
+        params.setType(OKManagerCardApi.Params.TYPE_BROWSING);
 
-                Map<String, String> map = new HashMap<String, String>();
-                map.put("card_id", Integer.toString(mCardBean.getCARD_ID()));
-                map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
-                map.put("equipment", equipment);
-                map.put("date", dateFormat.format(now));
-                new OKBusinessApi().addCardBrowsing(map);
-            }
-        }.start();
+        if (okManagerCardApi != null) {
+            okManagerCardApi.cancelTask();
+        }
+        okManagerCardApi = new OKManagerCardApi(OKCardTWActivity.this);
+        okManagerCardApi.requestManagerCard(params, OKCardTWActivity.this);
 
-        mCardBean.setIS_READ(true);
-        mCardBean.setREAD_DATE_LONG(OKConstant.getNowDateByLong());
+        mCardBean.setRead(true);
+        mCardBean.setReadTime(OKConstant.getNowDateByLong());
         new Thread() {
             @Override
             public void run() {
@@ -469,75 +443,101 @@ public class OKCardTWActivity extends OKBaseActivity implements OKCardBindApi.on
     }
 
     @Override
-    public void cardBindApiComplete(OKCardBindBean bean) {
-        if (bean == null) return;
+    public void managerCardApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        if (OKManagerCardApi.Params.TYPE_BIND_CHECK.equals(type)) {
+            if (serviceResult == null || !serviceResult.isSuccess()) return;
 
-        mCardBindBean = bean;
+            mCardBindBean = new Gson().fromJson((String) serviceResult.getData(), OKCardRelatedBean.class);
 
-        if (mCardBindBean.isCardRemove()) {
-            imageViewZAN.setEnabled(false);
-            imageViewSC.setEnabled(false);
-            imageViewPL.setEnabled(false);
-            mToolbarTitle.setText("该卡片已被用户删除");
-            showSnackBar(linearLayoutZY, "该卡片已被用户删除", "");
-        }
+            if (mCardBindBean == null) return;
 
-        if (mCardBindBean.IS_ATTENTION()) {
-            buttonAttention.setText("已关注");
-            buttonAttention.setEnabled(false);
-        }
+            if (mCardBindBean.isCardRemove()) {
+                imageViewZAN.setEnabled(false);
+                imageViewSC.setEnabled(false);
+                imageViewPL.setEnabled(false);
+                mToolbarTitle.setText("该卡片已被用户删除");
+                showSnackBar(linearLayoutZY, "该卡片已被用户删除", "");
+            }
 
-        if (mCardBindBean.IS_WATCH()) {
+            if (mCardBindBean.isAttention()) {
+                buttonAttention.setText("已关注");
+                buttonAttention.setEnabled(false);
+            }
+
+            if (mCardBindBean.isWatch()) {
+                textWatch.setTextColor(getResources().getColor(R.color.fenhon));
+            }
+
+            if (mCardBindBean.isPraise()) {
+                textZan.setTextColor(getResources().getColor(R.color.fenhon));
+            }
+
+            if (TextUtils.isEmpty(mCardBindBean.getTag())) {
+                textSignature.setText("这个人很懒 , 什么都没有留下!");
+            } else {
+                textSignature.setText(mCardBindBean.getTag());
+            }
+
+            textZan.setText("" + mCardBindBean.getPraiseCount());
+            textWatch.setText("" + mCardBindBean.getWatchCount());
+            textComment.setText("" + mCardBindBean.getCommentCount());
+
+        } else if (OKManagerCardApi.Params.TYPE_WATCH.equals(type)) {
+
+            if (serviceResult == null || !serviceResult.isSuccess()) {
+                showSnackBar(mCollapsingToolbarLayout, "操作失败,请重试", "");
+                return;
+            }
+
+            if (mCardBindBean == null) {
+                mCardBindBean = new OKCardRelatedBean();
+            }
+            mCardBindBean.setWatch(true);
+
+            int count = mCardBean.getWatchCount() + 1;
+            textWatch.setText("" + count);
             textWatch.setTextColor(getResources().getColor(R.color.fenhon));
-        }
 
-        if (mCardBindBean.IS_ZAN()) {
+        } else if (OKManagerCardApi.Params.TYPE_PRAISE.equals(type)) {
+
+            if (serviceResult == null || !serviceResult.isSuccess()) {
+                showSnackBar(mCollapsingToolbarLayout, "操作失败,请重试", "");
+                return;
+            }
+
+            if (mCardBindBean == null) {
+                mCardBindBean = new OKCardRelatedBean();
+            }
+            mCardBindBean.setPraise(true);
+
+            int count = mCardBean.getPraiseCount() + 1;
+            textZan.setText("" + count);
             textZan.setTextColor(getResources().getColor(R.color.fenhon));
-        }
 
-        if (TextUtils.isEmpty(mCardBindBean.getQIANMIN()) || mCardBindBean.getQIANMIN().equals("NULL")) {
-            textSignature.setText("这个人很懒 , 什么都没有留下!");
-        } else {
-            textSignature.setText(mCardBindBean.getQIANMIN());
+        } else if (OKManagerCardApi.Params.TYPE_BROWSING.equals(type)) {
+            if (serviceResult == null || !serviceResult.isSuccess()) {
+                showSnackBar(mCollapsingToolbarLayout, "PutBrowsingFailure", "");
+            }
         }
-
-        textZan.setText("" + mCardBindBean.getZAN_COUNT());
-        textWatch.setText("" + mCardBindBean.getWATCH_COUNT());
-        textComment.setText("" + mCardBindBean.getPINLUN_COUNT());
     }
 
     @Override
-    public void userOperationApiComplete(boolean isSuccess, String type) {
-        if (isSuccess) {
-            if (type.equals(OKUserOperationApi.TYPE_ATTENTION)) {
-                if (mCardBindBean == null) {
-                    mCardBindBean = new OKCardBindBean();
-                }
-                mCardBindBean.setIS_ATTENTION(true);
+    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        if (OKManagerUserApi.Params.TYPE_ADD_ATTENTION.equals(type)) {
 
-                buttonAttention.setText("已关注");
-                buttonAttention.setEnabled(false);
-            } else if (type.equals(OKUserOperationApi.TYPE_WATCH)) {
-                if (mCardBindBean == null) {
-                    mCardBindBean = new OKCardBindBean();
-                }
-                mCardBindBean.setIS_WATCH(true);
-
-                int count = mCardBean.getSHOUCHAN_NUM() + 1;
-                textWatch.setText("" + count);
-                textWatch.setTextColor(getResources().getColor(R.color.fenhon));
-            } else if (type.equals(OKUserOperationApi.TYPE_ZAN)) {
-                if (mCardBindBean == null) {
-                    mCardBindBean = new OKCardBindBean();
-                }
-                mCardBindBean.setIS_ZAN(true);
-
-                int count = mCardBean.getZAN_NUM() + 1;
-                textZan.setText("" + count);
-                textZan.setTextColor(getResources().getColor(R.color.fenhon));
+            if (serviceResult == null || !serviceResult.isSuccess()) {
+                showSnackBar(mCollapsingToolbarLayout, "操作失败,请重试", "");
+                return;
             }
-        } else {
-            showSnackBar(mCollapsingToolbarLayout, "操作失败,请重试", "");
+
+            if (mCardBindBean == null) {
+                mCardBindBean = new OKCardRelatedBean();
+            }
+            mCardBindBean.setAttention(true);
+
+            buttonAttention.setText("已关注");
+            buttonAttention.setEnabled(false);
+
         }
     }
 }

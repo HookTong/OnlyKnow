@@ -14,7 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadGanKApi;
+import com.onlyknow.app.api.app.OKLoadGanKApi;
 import com.onlyknow.app.database.bean.OKGanKBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKBrowserActivity;
@@ -125,7 +125,7 @@ public class OKGanKResFragment extends OKBaseFragment implements OnRefreshListen
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
             page++;
-            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.RES_URL + page, this);
+            mOKLoadGanKApi.requestGanK(OKLoadGanKApi.RES_URL + page, this);
         } else {
             mRefreshLayout.finishLoadMore(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");
@@ -135,7 +135,7 @@ public class OKGanKResFragment extends OKBaseFragment implements OnRefreshListen
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
-            mOKLoadGanKApi.requestGanKBeanList(OKLoadGanKApi.RES_URL + "1", this);
+            mOKLoadGanKApi.requestGanK(OKLoadGanKApi.RES_URL + "1", this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");

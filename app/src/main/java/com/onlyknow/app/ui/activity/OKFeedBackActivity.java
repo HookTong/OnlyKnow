@@ -1,7 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatButton;
 import android.view.View;
@@ -13,7 +12,8 @@ import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKFeedBackApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.user.OKFeedBackApi;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -99,18 +99,19 @@ public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.
             public void onClick(View v) {
                 if (USER_INFO_SP.getBoolean("STATE", false)) {
                     if (mEditTextNeiRon.getText().toString().length() >= 100) {
-                        Map<String, String> map = new HashMap<String, String>();
-                        map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
-                        map.put("equipment", new OKDeviceInfoUtil(OKFeedBackActivity.this).getIMIE());
-                        map.put("message", mEditTextNeiRon.getText().toString());
-                        map.put("baseimag", mFilePath);
-                        map.put("date", OKConstant.getNowDateByString());
+
+                        OKFeedBackApi.Params params = new OKFeedBackApi.Params();
+                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
+                        params.setMessage(mEditTextNeiRon.getText().toString());
+                        params.setImage(mFilePath);
+
                         showProgressDialog("正在提交信息...");
+
                         if (mOKFeedBackApi != null) {
                             mOKFeedBackApi.cancelTask();
                         }
                         mOKFeedBackApi = new OKFeedBackApi(OKFeedBackActivity.this);
-                        mOKFeedBackApi.requestFeedBack(map, OKFeedBackActivity.this);
+                        mOKFeedBackApi.requestFeedBack(params, OKFeedBackActivity.this);
                     } else {
                         showSnackBar(v, "反馈意见必须大于100字符", "");
                     }
@@ -169,12 +170,15 @@ public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.
     }
 
     @Override
-    public void feedBackApiComplete(boolean isSuccess) {
-        if (isSuccess) {
-            showSnackBar(mAppCompatButtonSend, "反馈成功", "");
-        } else {
-            showSnackBar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
-        }
+    public void feedBackApiComplete(OKServiceResult<Object> result) {
+
         closeProgressDialog();
+
+        if (result == null || !result.isSuccess()) {
+            showSnackBar(mAppCompatButtonSend, "反馈失败,请检查网络", "");
+            return;
+        }
+
+        showSnackBar(mAppCompatButtonSend, "反馈成功", "");
     }
 }

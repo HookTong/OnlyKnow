@@ -16,21 +16,23 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKLoadSearchApi;
+import com.onlyknow.app.api.app.OKLoadSearchApi;
 import com.onlyknow.app.database.bean.OKCardBean;
 import com.onlyknow.app.database.bean.OKSearchBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.constant.RefreshState;
 import com.scwang.smartrefresh.layout.constant.SpinnerStyle;
 import com.scwang.smartrefresh.layout.footer.BallPulseFooter;
+import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
@@ -38,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OKSearchActivity extends OKBaseActivity implements OnRefreshListener, OKLoadSearchApi.onCallBack {
+public class OKSearchActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadSearchApi.onCallBack {
     private Toolbar searchToolbar;
     private OKSEImageView buttonBack;
     private EditText searchEditText;
@@ -50,7 +52,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
     private OKLoadSearchApi mOKLoadSearchApi;
     private EntryViewAdapter mEntryViewAdapter;
     private List<OKSearchBean> mOKSearchBeanList = new ArrayList<>();
-    private OKSearchBean.SEARCH_TYPE mSearchType;
+    private String mSearchType;
     private String mSearchMsg;
     private int interfaceType;
 
@@ -88,22 +90,23 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
         mRefreshLayout.setRefreshHeader(new TaurusHeader(this));
         mRefreshLayout.setRefreshFooter(new BallPulseFooter(this).setSpinnerStyle(SpinnerStyle.Scale));
         mRefreshLayout.setOnRefreshListener(this);
+        mRefreshLayout.setOnLoadMoreListener(this);
 
         switch (interfaceType) {
             case INTERFACE_EXPLORE:
-                mSearchType = OKSearchBean.SEARCH_TYPE.ALL;
+                mSearchType = OKLoadSearchApi.Params.TYPE_CARD;
                 textViewTS.setText("当前搜索位置: 探索模块");
                 break;
             case INTERFACE_NEAR:
-                mSearchType = OKSearchBean.SEARCH_TYPE.ALL;
+                mSearchType = OKLoadSearchApi.Params.TYPE_CARD;
                 textViewTS.setText("当前搜索位置: 附近模块");
                 break;
             case INTERFACE_HISTORY:
-                mSearchType = OKSearchBean.SEARCH_TYPE.ALL;
+                mSearchType = OKLoadSearchApi.Params.TYPE_CARD;
                 textViewTS.setText("当前搜索位置: 历史模块");
                 break;
             case INTERFACE_NOTICE:
-                mSearchType = OKSearchBean.SEARCH_TYPE.USER;
+                mSearchType = OKLoadSearchApi.Params.TYPE_USER;
                 textViewTS.setText("当前搜索位置: 用户查找");
                 break;
             default:
@@ -150,6 +153,35 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
         }
     }
 
+    int page = 0;
+    int size = 30;
+
+    @Override
+    public void onLoadMore(RefreshLayout refreshLayout) {
+        if (TextUtils.isEmpty(mSearchMsg)) {
+            mRefreshLayout.finishRefresh(2000);
+            return;
+        }
+
+        if (!OKNetUtil.isNet(this)) {
+            mRefreshLayout.finishRefresh(2000);
+            showSnackBar(searchEditText, "没有网络连接", "");
+            return;
+        }
+
+        OKLoadSearchApi.Params params = new OKLoadSearchApi.Params();
+        params.setSearch(mSearchMsg);
+        params.setType(mSearchType);
+        params.setPage(page + 1);
+        params.setSize(size);
+
+        if (mOKLoadSearchApi != null) {
+            mOKLoadSearchApi.cancelTask();
+        }
+        mOKLoadSearchApi = new OKLoadSearchApi(this);
+        mOKLoadSearchApi.requestSearch(params, this);
+    }
+
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         mSearchMsg = searchEditText.getText().toString();
@@ -158,19 +190,19 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
             return;
         }
         if (OKNetUtil.isNet(this)) {
-            Map<String, String> map = new HashMap<>();
-            map.put("username", "");
-            if (USER_INFO_SP.getBoolean("STATE", false)) {
-                map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-            }
-            map.put("searchMsg", mSearchMsg);
-            map.put("type", mSearchType.toString());
+
+            OKLoadSearchApi.Params params = new OKLoadSearchApi.Params();
+            params.setSearch(mSearchMsg);
+            params.setType(mSearchType);
+            params.setPage(1);
+            params.setSize(size);
 
             if (mOKLoadSearchApi != null) {
                 mOKLoadSearchApi.cancelTask();
             }
             mOKLoadSearchApi = new OKLoadSearchApi(this);
-            mOKLoadSearchApi.requestSearchBeanList(map, this);
+            mOKLoadSearchApi.requestSearch(params, this);
+
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(searchEditText, "没有网络连接", "");
@@ -180,18 +212,34 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
     @Override
     public void searchApiComplete(List<OKSearchBean> list) {
         if (list != null) {
-            mOKSearchBeanList.clear();
-            mOKSearchBeanList.addAll(list);
-            mOKRecyclerView.getAdapter().notifyDataSetChanged();
 
-            mSearchMsg = "";
-            searchEditText.setText("");
-        } else {
-            mOKSearchBeanList.clear();
+            if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                page = 1;
+
+                mOKSearchBeanList.clear();
+                mOKSearchBeanList.addAll(list);
+            } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page++;
+
+                mOKSearchBeanList.addAll(list);
+            }
+
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
+        } else {
             showSnackBar(searchEditText, "没有搜索到数据", "");
         }
-        mRefreshLayout.finishRefresh();
+
+        if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+            mRefreshLayout.finishRefresh();
+
+            if (list == null || list.size() == 0) {
+                mSearchMsg = "";
+                mOKSearchBeanList.clear();
+                mOKRecyclerView.getAdapter().notifyDataSetChanged();
+            }
+        } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+            mRefreshLayout.finishLoadMore();
+        }
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {
@@ -212,14 +260,14 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                     OKLogUtil.print("数据为空,类型不匹配!");
                     return;
                 }
-                if (bean.getCARD_TYPE().equals(OKCardBean.CardType.IMAGE.toString())) {
+                if (bean.getCardType().equals(OKCardBean.CardType.IMAGE.toString())) {
                     mEntryViewHolder.mTextViewTitle.setText("精彩图片");
-                    mEntryViewHolder.mTextViewContent.setText(bean.getTITLE_TEXT() + " 发表");
-                    mEntryViewHolder.mTextViewDate.setText(formatTime(bean.getCREATE_DATE()));
+                    mEntryViewHolder.mTextViewContent.setText(bean.getTitleText() + " 发表");
+                    mEntryViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(bean.getCreateDate()));
                 } else {
-                    mEntryViewHolder.mTextViewTitle.setText(bean.getCONTENT_TITLE_TEXT());
-                    mEntryViewHolder.mTextViewContent.setText(bean.getCONTENT_TEXT());
-                    mEntryViewHolder.mTextViewDate.setText(formatTime(bean.getCREATE_DATE()));
+                    mEntryViewHolder.mTextViewTitle.setText(bean.getContentTitleText());
+                    mEntryViewHolder.mTextViewContent.setText(bean.getContentText());
+                    mEntryViewHolder.mTextViewDate.setText(OKDateUtil.formatTime(bean.getCreateDate()));
                 }
                 mEntryViewHolder.mTextViewDate.setVisibility(View.VISIBLE);
                 GlideApi(mEntryViewHolder.mImageViewTitle, R.drawable.search_card, R.drawable.search_card, R.drawable.search_card);
@@ -229,15 +277,14 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                     OKLogUtil.print("数据为空,类型不匹配!");
                     return;
                 }
-                mEntryViewHolder.mTextViewTitle.setText(bean.getNICKNAME());
-                if (TextUtils.isEmpty(bean.getQIANMIN()) || bean.getQIANMIN().equals("NULL")) {
+                mEntryViewHolder.mTextViewTitle.setText(bean.getUserNickname());
+                if (TextUtils.isEmpty(bean.getTag())) {
                     mEntryViewHolder.mTextViewContent.setText("这个人很懒,什么都没留下!");
                 } else {
-                    mEntryViewHolder.mTextViewContent.setText(bean.getQIANMIN());
+                    mEntryViewHolder.mTextViewContent.setText(bean.getTag());
                 }
                 mEntryViewHolder.mTextViewDate.setVisibility(View.GONE);
-                String url = bean.getHEADPORTRAIT_URL();
-                GlideRoundApi(mEntryViewHolder.mImageViewTitle, url, R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
+                GlideRoundApi(mEntryViewHolder.mImageViewTitle, bean.getHeadPortraitUrl(), R.drawable.touxian_placeholder, R.drawable.touxian_placeholder);
             }
 
             mEntryViewHolder.mCardView.setOnClickListener(new OnClickListener() {
@@ -249,17 +296,17 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                             showSnackBar(mOKRecyclerView, "数据错误,无法查看", "");
                             return;
                         }
-                        if (bean.getCARD_TYPE().equals(CARD_TYPE_TW)) {
+                        if (bean.getCardType().equals(CARD_TYPE_TW)) {
                             Bundle bundle = new Bundle();
                             bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_SEARCH);
                             bundle.putSerializable(OKCardTWActivity.KEY_INTENT_IMAGE_AND_TEXT_CARD, bean);
                             startUserActivity(bundle, OKCardTWActivity.class);
-                        } else if (bean.getCARD_TYPE().equals(CARD_TYPE_TP)) {
+                        } else if (bean.getCardType().equals(CARD_TYPE_TP)) {
                             Bundle bundle = new Bundle();
                             bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_SEARCH);
                             bundle.putSerializable(OKCardTPActivity.KEY_INTENT_IMAGE_CARD, bean);
                             startUserActivity(bundle, OKCardTPActivity.class);
-                        } else if (bean.getCARD_TYPE().equals(CARD_TYPE_WZ)) {
+                        } else if (bean.getCardType().equals(CARD_TYPE_WZ)) {
                             Bundle bundle = new Bundle();
                             bundle.putInt(INTENT_KEY_INTERFACE_TYPE, INTERFACE_SEARCH);
                             bundle.putSerializable(OKCardWZActivity.KEY_INTENT_TEXT_CARD, bean);
@@ -272,8 +319,8 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
                             return;
                         }
                         Bundle mBundle = new Bundle();
-                        mBundle.putString(OKUserInfoBean.KEY_USERNAME, bean.getUSERNAME());
-                        mBundle.putString(OKUserInfoBean.KEY_NICKNAME, bean.getNICKNAME());
+                        mBundle.putString(OKUserInfoBean.KEY_USERNAME, bean.getUserName());
+                        mBundle.putString(OKUserInfoBean.KEY_NICKNAME, bean.getUserNickname());
                         startUserActivity(mBundle, OKHomePageActivity.class);
                     }
                 }

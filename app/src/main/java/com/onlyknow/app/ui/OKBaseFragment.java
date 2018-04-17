@@ -16,7 +16,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,12 +31,10 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.google.gson.Gson;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCardUrlListBean;
 import com.onlyknow.app.database.bean.OKWeatherBean;
 import com.onlyknow.app.ui.activity.OKGanKActivity;
 import com.onlyknow.app.ui.activity.OKLoginActivity;
@@ -325,92 +322,6 @@ public class OKBaseFragment extends Fragment {
         win.setAttributes(winParams);
     }
 
-    public OKCardUrlListBean fromCardUrlJson(String json) {
-
-        try {
-            OKCardUrlListBean bean = new Gson().fromJson(json, OKCardUrlListBean.class);
-            return bean;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
-
-    public String getFirstCardImageUrl(OKCardUrlListBean bean) {
-        if (!TextUtils.isEmpty(bean.getUrlImage1())) {
-            return bean.getUrlImage1();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage2())) {
-            return bean.getUrlImage2();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage3())) {
-            return bean.getUrlImage3();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage4())) {
-            return bean.getUrlImage4();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage5())) {
-            return bean.getUrlImage5();
-        }
-        return "";
-    }
-
-    public String getFirstCardImageUrl(OKCardBean cardBean) {
-        if (cardBean == null) {
-            return "";
-        }
-
-        if (cardBean.getBean() == null) {
-            OKCardUrlListBean bean = fromCardUrlJson(cardBean.getCONTENT_IMAGE_URL());
-            if (bean != null) {
-                cardBean.setBean(bean);
-                return getFirstCardImageUrl(bean);
-            } else {
-                return cardBean.getCONTENT_IMAGE_URL();
-            }
-        } else {
-            return getFirstCardImageUrl(cardBean.getBean());
-        }
-    }
-
-    public String getLastCardImageUrl(OKCardUrlListBean bean) {
-
-        if (!TextUtils.isEmpty(bean.getUrlImage5())) {
-            return bean.getUrlImage5();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage4())) {
-            return bean.getUrlImage4();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage3())) {
-            return bean.getUrlImage3();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage2())) {
-            return bean.getUrlImage2();
-        }
-        if (!TextUtils.isEmpty(bean.getUrlImage1())) {
-            return bean.getUrlImage1();
-        }
-        return "";
-    }
-
-    public String getLastCardImageUrl(OKCardBean cardBean) {
-        if (cardBean == null) {
-            return "";
-        }
-
-        if (cardBean.getBean() == null) {
-            OKCardUrlListBean bean = fromCardUrlJson(cardBean.getCONTENT_IMAGE_URL());
-            if (bean != null) {
-                cardBean.setBean(bean);
-                return getLastCardImageUrl(bean);
-            } else {
-                return cardBean.getCONTENT_IMAGE_URL();
-            }
-        } else {
-            return getLastCardImageUrl(cardBean.getBean());
-        }
-    }
-
     private View mEmptyView;
     private Button mEmptyReGetButton;
     private TextView mEmptyTextViewTitle;
@@ -514,7 +425,7 @@ public class OKBaseFragment extends Fragment {
         TextView mTextViewWenDu = headerView.findViewById(R.id.ok_menu_head_drawer_weather_wendu_text);
         TextView mTextViewNonLi = headerView.findViewById(R.id.ok_menu_head_drawer_nonli_text);
         int i = new Random().nextInt(5);
-        GlideBlurApi(mImageViewBackground, OKConstant.getHeadUrls().get(i).get("URL").toString(), R.drawable.topgd2, R.drawable.topgd2);
+        GlideBlurApi(mImageViewBackground, OKConstant.getCarouselImages().get(i).get("URL").toString(), R.drawable.topgd2, R.drawable.topgd2);
         GlideApi(mImageViewWeatherType, WEATHER_SP.getInt("WEATHER_ICON_ID", R.drawable.tianqi_other), R.drawable.tianqi_other, R.drawable.tianqi_other);
         mTextViewCity.setText(WEATHER_SP.getString("CITY_NAME", "未获取到城市"));
         mTextViewType.setText(WEATHER_SP.getString("WEATHER_TYPE", "N") + " / " + WEATHER_SP.getString("TEMPERATURE", "A"));
@@ -523,24 +434,6 @@ public class OKBaseFragment extends Fragment {
         calendar.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
         OKLunarUtil lunar = new OKLunarUtil(calendar);
         mTextViewNonLi.setText(lunar.toString() + " " + WEATHER_SP.getString("WEATHER_DATE_WEEK", ""));
-    }
-
-    public String formatTime(String date) {
-        String time[] = date.split("/");
-        if (time.length != 5) {
-            return date;
-        }
-        String nowDate = OKConstant.getNowDateByString();
-        String nowTime[] = nowDate.split("/");
-        if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (time[2].equals(nowTime[2]))) {
-            return "今天 " + time[3] + ":" + time[4];
-        } else if ((time[0].equals(nowTime[0])) && (time[1].equals(nowTime[1])) && (Integer.parseInt(nowTime[2]) - Integer.parseInt(time[2]) == 1)) {
-            return "昨天 " + time[3] + ":" + time[4];
-        } else if (time[0].equals(nowTime[0])) {
-            return time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
-        } else {
-            return time[0] + "年" + time[1] + "月" + time[2] + "日" + " " + time[3] + ":" + time[4];
-        }
     }
 
     public class BarToggle extends ActionBarDrawerToggle {

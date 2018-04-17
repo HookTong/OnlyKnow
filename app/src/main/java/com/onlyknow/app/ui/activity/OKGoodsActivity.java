@@ -2,7 +2,6 @@ package com.onlyknow.app.ui.activity;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
@@ -20,8 +19,10 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.OKGoodsBuyApi;
-import com.onlyknow.app.api.OKLoadGoodsApi;
+import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.card.OKManagerCardApi;
+import com.onlyknow.app.api.goods.OKManagerGoodsApi;
+import com.onlyknow.app.api.goods.OKLoadGoodsApi;
 import com.onlyknow.app.database.bean.OKGoodsBean;
 import com.onlyknow.app.database.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
@@ -36,12 +37,8 @@ import com.scwang.smartrefresh.layout.footer.BallPulseFooter;
 import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadGoodsApi.onCallBack {
     private RefreshLayout mRefreshLayout;
@@ -128,39 +125,40 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         mRefreshLayout.setOnLoadMoreListener(this);
     }
 
+    int page = 0;
+    int size = 30;
+
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
-        OKGoodsBean mGoodsBean = mEntryViewAdapter.getLastGoodsBean();
-        if (mGoodsBean == null) {
+        if (!OKNetUtil.isNet(this)) {
             mRefreshLayout.finishLoadMore(1500);
+            showSnackBar(mOKRecyclerView, "没有网络连接!", "");
             return;
         }
-        Map<String, String> map = new HashMap<>();// 请求参数,历史界面无需请求参数,直接获取数据库数据的
-        map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-        map.put("max_id", Integer.toString(mGoodsBean.getGD_ID()));
-        map.put("load_type", "GOODS_ENTRY");
+
+        OKLoadGoodsApi.Params params = new OKLoadGoodsApi.Params();
+        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setPage(page + 1);
+        params.setSize(size);
+
         if (mOKLoadGoodsApi == null) {
-            mOKLoadGoodsApi = new OKLoadGoodsApi(OKGoodsActivity.this, true);
+            mOKLoadGoodsApi = new OKLoadGoodsApi(OKGoodsActivity.this);
         }
-        mOKLoadGoodsApi.requestCardBeanList(map, true, this);
+        mOKLoadGoodsApi.requestGoods(params, this);
     }
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(this)) {
-            Map<String, String> map = new HashMap<>();// 请求参数
-            map.put("num", OKConstant.GOODS_LOAD_COUNT);
-            if (USER_INFO_SP.getBoolean("STATE", false)) {
-                map.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-            } else {
-                map.put("username", "");
-            }
+            OKLoadGoodsApi.Params params = new OKLoadGoodsApi.Params();
+            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setPage(1);
+            params.setSize(size);
 
             if (mOKLoadGoodsApi == null) {
-                mOKLoadGoodsApi = new OKLoadGoodsApi(this, false);
+                mOKLoadGoodsApi = new OKLoadGoodsApi(OKGoodsActivity.this);
             }
-            mOKLoadGoodsApi.requestCardBeanList(map, false, this);
-            mOKRecyclerView.setEnabled(false);
+            mOKLoadGoodsApi.requestGoods(params, this);
         } else {
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(mOKRecyclerView, "没有网络连接!", "");
@@ -171,9 +169,13 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
     public void goodsApiComplete(List<OKGoodsBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
+                page = 1;
+
                 mOKGoodsBeanList.clear();
                 mOKGoodsBeanList.addAll(list);
             } else if (mRefreshLayout.getState() == RefreshState.Loading) {
+                page++;
+
                 mOKGoodsBeanList.addAll(list);
             }
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
@@ -186,10 +188,10 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         }
     }
 
-    private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> implements OKGoodsBuyApi.onCallBack {
+    private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> implements OKManagerGoodsApi.onCallBack {
         private Context mContext;
         private List<OKGoodsBean> mBeanList;
-        private OKGoodsBuyApi mOKGoodsBuyApi;
+        private OKManagerGoodsApi mOKManagerGoodsApi;
         private EntryViewHolder viewHolder;
 
         public EntryViewAdapter(Context context, List<OKGoodsBean> list) {
@@ -199,10 +201,10 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
 
         private void initViews(final EntryViewHolder mEntryViewHolder, final OKGoodsBean okGoodsBean, final int position) {
             mEntryViewHolder.setListPosition(position);
-            GlideApi(mEntryViewHolder.mImageViewTitle, okGoodsBean.getGD_ICON_URL(), R.drawable.goods, R.drawable.goods);
-            mEntryViewHolder.mTextViewTitle.setText(okGoodsBean.getGD_NAME());
-            mEntryViewHolder.mTextViewContent.setText("该商品的价格是 : " + Integer.toString(okGoodsBean.getGD_PRICE()) + " 知值");
-            if (!okGoodsBean.IS_BUY()) {
+            GlideApi(mEntryViewHolder.mImageViewTitle, okGoodsBean.getGdIconUrl(), R.drawable.goods, R.drawable.goods);
+            mEntryViewHolder.mTextViewTitle.setText(okGoodsBean.getGdName());
+            mEntryViewHolder.mTextViewContent.setText("该商品的价格是 : " + Integer.toString(okGoodsBean.getGdPrice()) + " 知值");
+            if (!okGoodsBean.isGoodsBy()) {
                 mEntryViewHolder.mButtonOpt.setText("购买");
                 mEntryViewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.md_white_1000));
             } else {
@@ -222,7 +224,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                     mBundle.putInt("height", mEntryViewHolder.mImageViewTitle.getHeight());
                     mBundle.putInt("width", mEntryViewHolder.mImageViewTitle.getWidth());
 
-                    mBundle.putString("url", okGoodsBean.getGD_ICON_URL());
+                    mBundle.putString("url", okGoodsBean.getGdIconUrl());
 
                     startUserActivity(mBundle, OKDragPhotoActivity.class);
                     overridePendingTransition(0, 0);
@@ -232,25 +234,25 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             mEntryViewHolder.mButtonOpt.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!okGoodsBean.IS_BUY()) {
+                    if (!okGoodsBean.isGoodsBy()) {
                         showAlertDialog("购买商品", "使用积分购买该商品,是否购买 ?", "购买", "取消", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface arg0, int arg1) {
                                 if (USER_INFO_SP.getBoolean("STATE", false)) {
-                                    if (USER_INFO_SP.getInt(OKUserInfoBean.KEY_JIFENG, 0) >= okGoodsBean.getGD_PRICE()) {
+                                    if (USER_INFO_SP.getInt(OKUserInfoBean.KEY_INTEGRAL, 0) >= okGoodsBean.getGdPrice()) {
 
                                         viewHolder = mEntryViewHolder;
 
-                                        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd/HH/mm");
-                                        String date = df.format(new Date());
-                                        Map<String, String> param = new HashMap<String, String>();// 请求参数
-                                        param.put("username", USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                                        param.put("gdid", Integer.toString(okGoodsBean.getGD_ID()));
-                                        param.put("date", date);
+                                        OKManagerGoodsApi.Params params = new OKManagerGoodsApi.Params();
+                                        params.setGdId(okGoodsBean.getGdId());
+                                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                                        params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                                        params.setType(OKManagerGoodsApi.Params.TYPE_BUY);
+                                        params.setPos(position);
 
                                         cancelTask();
-                                        mOKGoodsBuyApi = new OKGoodsBuyApi(OKGoodsActivity.this);
-                                        mOKGoodsBuyApi.requestGoodsBuyApi(param, position, EntryViewAdapter.this); // 并行执行线程
+                                        mOKManagerGoodsApi = new OKManagerGoodsApi(OKGoodsActivity.this);
+                                        mOKManagerGoodsApi.requestManagerGoods(params, EntryViewAdapter.this); // 并行执行线程
                                     } else {
                                         showSnackBar(mEntryViewHolder.mCardView, "您没有足够的积分以购买该商品!", "");
                                     }
@@ -281,17 +283,9 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             }
         }
 
-        public OKGoodsBean getLastGoodsBean() {
-            if (mBeanList != null && mBeanList.size() != 0) {
-                return mBeanList.get(mBeanList.size() - 1);
-            } else {
-                return null;
-            }
-        }
-
         public void cancelTask() {
-            if (mOKGoodsBuyApi != null) {
-                mOKGoodsBuyApi.cancelTask(); // 如果线程已经在执行则取消执行
+            if (mOKManagerGoodsApi != null) {
+                mOKManagerGoodsApi.cancelTask(); // 如果线程已经在执行则取消执行
             }
         }
 
@@ -305,21 +299,21 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             final TextView mTextViewJiaGe = (TextView) dialogView.findViewById(R.id.ok_dialog_goods_jiage_text);
             final TextView mTextViewJianJIe = (TextView) dialogView.findViewById(R.id.ok_dialog_goods_jianjie_text);
             final TextView mTextViewMiaoShu = (TextView) dialogView.findViewById(R.id.ok_dialog_goods_miaoshu_text);
-            GlideApi(mImageViewBackground, bean.getGD_IMAGE_URL(), R.drawable.topgd1, R.drawable.topgd1);
-            GlideApp.with(OKGoodsActivity.this).load(bean.getGD_ICON_URL()).transform(new RoundedCorners(10)).error(R.drawable.goods).into(mImageViewIcon);
-            mTextViewName.setText(bean.getGD_NAME());
-            mTextViewJiaGe.setText("" + bean.getGD_PRICE() + " 知值");
-            mTextViewJianJIe.setText(bean.getGD_INTRODUCTION());
-            mTextViewMiaoShu.setText(bean.getGD_DESCRIBE());
+            GlideApi(mImageViewBackground, bean.getGdImageUrl(), R.drawable.topgd1, R.drawable.topgd1);
+            GlideApp.with(OKGoodsActivity.this).load(bean.getGdIconUrl()).transform(new RoundedCorners(10)).error(R.drawable.goods).into(mImageViewIcon);
+            mTextViewName.setText(bean.getGdName());
+            mTextViewJiaGe.setText("" + bean.getGdPrice() + " 知值");
+            mTextViewJianJIe.setText(bean.getGdIntroduction());
+            mTextViewMiaoShu.setText(bean.getGdDescribe());
             DialogMenu.setView(dialogView);
             final AlertDialog mAlertDialog = DialogMenu.show();
 
             mImageViewBackground.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (bean.getGD_TYPE().startsWith("http://") || bean.getGD_TYPE().startsWith("https://")) {
+                    if (bean.getGdType().startsWith("http://") || bean.getGdType().startsWith("https://")) {
                         Bundle mBundle = new Bundle();
-                        mBundle.putString("WEB_LINK", bean.getGD_TYPE());
+                        mBundle.putString("WEB_LINK", bean.getGdType());
                         startUserActivity(mBundle, OKBrowserActivity.class);
                     }
                 }
@@ -350,16 +344,18 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         }
 
         @Override
-        public void goodsBuyApiComplete(boolean isSuccess, int pos) {
+        public void managerGoodsApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+            if (!OKManagerGoodsApi.Params.TYPE_BUY.equals(type)) return;
+
             if (viewHolder == null || viewHolder.getListPosition() != pos) return;
 
-            if (isSuccess) {
+            if (serviceResult != null && serviceResult.isSuccess()) {
                 OKGoodsBean mGoodsBean = getGoodsBean(pos);
                 if (mGoodsBean == null) {
                     return;
                 }
 
-                mGoodsBean.setIS_BUY(true);
+                mGoodsBean.setGoodsBy(true);
                 mBeanList.set(pos, mGoodsBean);
                 viewHolder.mButtonOpt.setText("已购买");
                 viewHolder.mButtonOpt.setTextColor(getResources().getColor(R.color.fenhon));
