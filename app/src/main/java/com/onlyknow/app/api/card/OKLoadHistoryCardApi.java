@@ -3,6 +3,7 @@ package com.onlyknow.app.api.card;
 import android.content.Context;
 import android.os.AsyncTask;
 
+import com.j256.ormlite.stmt.QueryBuilder;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.database.OKDatabaseHelper;
 import com.onlyknow.app.database.bean.OKCardBean;
@@ -52,20 +53,25 @@ public class OKLoadHistoryCardApi extends OKBaseApi {
 
             Params mParams = params[0];
 
-            return getDBIsReadCard(mParams.getPage(), mParams.getSize());
-        }
+            long page = mParams.getPage();
 
-        private List<OKCardBean> getDBIsReadCard(int page, int size) {
+            long size = mParams.getSize();
+
             OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
-            try {
-                List<OKCardBean> dbList = null;
 
-                dbList = helper.getCardDao().queryBuilder().orderBy(OKCardBean.KEY_READ_TIME, false).offset((long) (page * size) - size).limit((long) size).where().eq(OKCardBean.KEY_IS_READ, true).query();
+            List<OKCardBean> dbList = null;
+
+            try {
+
+                QueryBuilder<OKCardBean, Integer> query = helper.getCardDao().queryBuilder();
+
+                dbList = query.orderBy(OKCardBean.KEY_READ_TIME, false).offset((page * size) - size).limit(size).where().eq(OKCardBean.KEY_IS_READ, true).query();
 
                 return dbList;
 
             } catch (SQLException e) {
                 e.printStackTrace();
+
                 return null;
             }
         }

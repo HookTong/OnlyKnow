@@ -52,8 +52,11 @@ public class OKLoadExploreCardApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
+
             Params mParams = params[0];
-            List<OKCardBean> exploreCardList = null;
+
+            List<OKCardBean> list = null;
+
             if (OKNetUtil.isNet(context)) {
 
                 Map<String, String> map = new HashMap<>();
@@ -62,20 +65,21 @@ public class OKLoadExploreCardApi extends OKBaseApi {
 
                 map.put(Params.KEY_SIZE, String.valueOf(mParams.getSize()));
 
-                exploreCardList = getExploreCard(map);
+                list = getExploreCard(map);
 
             } else if (mParams.getPage() == 1) {
-                exploreCardList = getDBCard(mParams.getSize());
+
+                list = getDBCard(mParams.getSize());
+
             }
-            return exploreCardList;
+            return list;
         }
 
-        private List<OKCardBean> getDBCard(int size) {
+        private List<OKCardBean> getDBCard(long size) {
             // 加载本地数据 随机加载num条数据
             OKDatabaseHelper helper = OKDatabaseHelper.getHelper(context);
             try {
-                List<OKCardBean> dbList = helper.getCardDao().queryBuilder().limit((long) size).query();
-                return dbList;
+                return helper.getCardDao().queryBuilder().limit(size).query();
             } catch (SQLException e) {
                 e.printStackTrace();
                 return null;
