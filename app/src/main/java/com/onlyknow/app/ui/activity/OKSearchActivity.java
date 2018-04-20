@@ -15,12 +15,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadSearchApi;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKSearchBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKSearchBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -36,9 +37,7 @@ import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKSearchActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadSearchApi.onCallBack {
     private Toolbar searchToolbar;
@@ -158,6 +157,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
 
     @Override
     public void onLoadMore(RefreshLayout refreshLayout) {
+
         if (TextUtils.isEmpty(mSearchMsg)) {
             mRefreshLayout.finishRefresh(2000);
             return;
@@ -184,11 +184,14 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
+
         mSearchMsg = searchEditText.getText().toString();
+
         if (TextUtils.isEmpty(mSearchMsg)) {
             mRefreshLayout.finishRefresh(2000);
             return;
         }
+
         if (OKNetUtil.isNet(this)) {
 
             OKLoadSearchApi.Params params = new OKLoadSearchApi.Params();
@@ -204,13 +207,15 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
             mOKLoadSearchApi.requestSearch(params, this);
 
         } else {
+
             mRefreshLayout.finishRefresh(1500);
             showSnackBar(searchEditText, "没有网络连接", "");
+
         }
     }
 
     @Override
-    public void searchApiComplete(List<OKSearchBean> list) {
+    public void loadSearchComplete(List<OKSearchBean> list) {
         if (list != null) {
 
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
@@ -252,6 +257,7 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
         }
 
         private void initViews(final EntryViewHolder mEntryViewHolder, final OKSearchBean okSearchBean, final int position) {
+
             mEntryViewHolder.setListPosition(position);
 
             if (okSearchBean.getType() == OKSearchBean.SEARCH_TYPE.CARD) {

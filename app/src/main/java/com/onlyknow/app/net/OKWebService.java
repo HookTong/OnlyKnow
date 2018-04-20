@@ -2,6 +2,7 @@ package com.onlyknow.app.net;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 
 import com.onlyknow.app.utils.OKLogUtil;
 
@@ -33,6 +34,9 @@ public class OKWebService {
             if (params != null) {
                 for (Map.Entry<String, String> entry : params.entrySet()) {
                     String value = entry.getValue();
+
+                    if (TextUtils.isEmpty(value)) continue;
+
                     if (isChinese(value)) {
                         try {
                             value = URLEncoder.encode(value, "utf-8");
@@ -66,6 +70,9 @@ public class OKWebService {
             if (params != null) {
                 for (Map.Entry<String, String> entry : params.entrySet()) {
                     String value = entry.getValue();
+
+                    if (TextUtils.isEmpty(value)) continue;
+
                     if (isChinese(value)) {
                         try {
                             value = URLEncoder.encode(value, "utf-8");
@@ -100,6 +107,9 @@ public class OKWebService {
         }
         for (Map.Entry<String, String> entry : params.entrySet()) {
             String value = entry.getValue();
+
+            if (TextUtils.isEmpty(value)) continue;
+
             if (isChinese(value)) {
                 try {
                     value = URLEncoder.encode(value, "utf-8");
@@ -158,6 +168,8 @@ public class OKWebService {
 
     // 完整的判断中文汉字和符号
     private static boolean isChinese(String strName) {
+        if (TextUtils.isEmpty(strName)) return false;
+
         char[] ch = strName.toCharArray();
         for (int i = 0; i < ch.length; i++) {
             if (isChinese(ch[i])) {

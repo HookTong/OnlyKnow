@@ -4,8 +4,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.OKDatabaseHelper;
-import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.db.OKDatabaseHelper;
+import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.sql.SQLException;
@@ -29,7 +29,7 @@ public class OKLoadExploreCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void exploreApiComplete(List<OKCardBean> list);
+        void loadExploreComplete(List<OKCardBean> list);
     }
 
     public void requestExploreCard(Params params, onCallBack mCallBack) {
@@ -93,7 +93,7 @@ public class OKLoadExploreCardApi extends OKBaseApi {
             }
 
             super.onPostExecute(okCardBeen);
-            mOnCallBack.exploreApiComplete(okCardBeen);
+            mOnCallBack.loadExploreComplete(okCardBeen);
         }
     }
 

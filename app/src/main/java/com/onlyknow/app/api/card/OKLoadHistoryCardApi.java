@@ -5,8 +5,8 @@ import android.os.AsyncTask;
 
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.OKDatabaseHelper;
-import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.db.OKDatabaseHelper;
+import com.onlyknow.app.db.bean.OKCardBean;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -27,7 +27,7 @@ public class OKLoadHistoryCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void historyApiComplete(List<OKCardBean> list);
+        void loadHistoryComplete(List<OKCardBean> list);
     }
 
     public void requestHistoryCard(Params params, onCallBack mCallBack) {
@@ -81,7 +81,7 @@ public class OKLoadHistoryCardApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.historyApiComplete(okCardBeen);
+            mOnCallBack.loadHistoryComplete(okCardBeen);
             super.onPostExecute(okCardBeen);
         }
     }

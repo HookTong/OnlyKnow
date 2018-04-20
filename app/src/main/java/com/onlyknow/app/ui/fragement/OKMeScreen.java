@@ -26,11 +26,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
 import com.onlyknow.app.ui.activity.OKGoodsActivity;
@@ -346,14 +345,14 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     }
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_GET_INFO.equals(type)) {
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(rootView, "没有获取到用户信息", "");
                 return;
             }
 
-            OKUserInfoBean userInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+            OKUserInfoBean userInfoBean = (OKUserInfoBean) result.getData();
 
             if (userInfoBean == null) return;
 

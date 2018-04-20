@@ -56,8 +56,4 @@ public class OKServiceResult<T> {
         data = null;
         time = 0;
     }
-
-    public String toJson() {
-        return new Gson().toJson(this);
-    }
 }

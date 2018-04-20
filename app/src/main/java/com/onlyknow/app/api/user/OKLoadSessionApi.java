@@ -24,7 +24,7 @@ public class OKLoadSessionApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void sessionApiComplete(List<EMMessage> list);
+        void loadSessionComplete(List<EMMessage> list);
     }
 
     public void requestMessage(String name, String topId, List<EMMessage> oldList, onCallBack mCallBack) {
@@ -93,7 +93,7 @@ public class OKLoadSessionApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.sessionApiComplete(list);
+            mOnCallBack.loadSessionComplete(list);
         }
     }
 }

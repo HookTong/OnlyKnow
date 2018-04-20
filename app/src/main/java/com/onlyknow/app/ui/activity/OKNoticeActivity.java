@@ -18,8 +18,8 @@ import android.widget.Toast;
 import com.hyphenate.chat.EMClient;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.user.OKLoadNoticeApi;
-import com.onlyknow.app.database.bean.OKNoticeBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKNoticeBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -152,7 +152,7 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
     }
 
     @Override
-    public void noticeApiComplete(List<OKNoticeBean> list) {
+    public void loadNoticeComplete(List<OKNoticeBean> list) {
         if (list != null && list.size() != 0) {
             mNoticeBeanList.clear();
             mNoticeBeanList.addAll(list);

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKAttentionBean;
+import com.onlyknow.app.db.bean.OKAttentionBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class OKLoadAttentionApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void attentionApiComplete(List<OKAttentionBean> list);
+        void loadAttentionComplete(List<OKAttentionBean> list);
     }
 
     public void requestAttention(Params params, onCallBack mCallBack) {
@@ -66,7 +66,7 @@ public class OKLoadAttentionApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.attentionApiComplete(okAttentionBeenList);
+            mOnCallBack.loadAttentionComplete(okAttentionBeenList);
             super.onPostExecute(okAttentionBeenList);
         }
     }

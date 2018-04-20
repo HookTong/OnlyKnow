@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.db.bean.OKCardRelatedBean;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.util.Date;
@@ -30,7 +31,7 @@ public class OKManagerCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void managerCardApiComplete(OKServiceResult<Object> serviceResult, String type, int pos);
+        void managerCardComplete(OKServiceResult<Object> result, String type, int pos);
     }
 
     public void requestManagerCard(Params params, onCallBack listener) {
@@ -46,7 +47,7 @@ public class OKManagerCardApi extends OKBaseApi {
             serviceResult.setData("");
             serviceResult.setMsg("没有网络连接");
             serviceResult.setTime(new Date().getTime());
-            mListener.managerCardApiComplete(serviceResult, params.getType(), params.getPos());
+            mListener.managerCardComplete(serviceResult, params.getType(), params.getPos());
         }
     }
 
@@ -66,7 +67,7 @@ public class OKManagerCardApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mListener.managerCardApiComplete(serviceResult, mType, mPosition);
+            mListener.managerCardComplete(serviceResult, mType, mPosition);
         }
 
         @Override
@@ -85,7 +86,25 @@ public class OKManagerCardApi extends OKBaseApi {
             map.put(Params.KEY_TYPE, mParams.getType());
             map.put(Params.KEY_MSG, mParams.getMsg());
 
-            return managerCard(map);
+            OKServiceResult<Object> serviceResult;
+
+            if (Params.TYPE_CARD_RELATED.equals(mType)) {
+
+                OKServiceResult<OKCardRelatedBean> result = managerCard(map, OKCardRelatedBean.class);
+
+                if (result == null) return null;
+
+                serviceResult = new OKServiceResult<>();
+                serviceResult.setSuccess(result.isSuccess());
+                serviceResult.setCode(result.getCode());
+                serviceResult.setTime(result.getTime());
+                serviceResult.setMsg(result.getMsg());
+                serviceResult.setData(result.getData());
+            } else {
+                serviceResult = managerCard(map, Object.class);
+            }
+
+            return serviceResult;
         }
     }
 
@@ -108,7 +127,7 @@ public class OKManagerCardApi extends OKBaseApi {
         public final static String TYPE_PRAISE = "praiseCard";
         public final static String TYPE_WATCH = "watchCard";
         public final static String TYPE_REMOVE_WATCH = "removeWatch";
-        public final static String TYPE_BIND_CHECK = "cardBindCheck";
+        public final static String TYPE_CARD_RELATED = "cardRelated";
         public final static String TYPE_BROWSING = "browsingCard";
 
         public String getType() {

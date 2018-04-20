@@ -17,7 +17,7 @@ import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKGenerateQrCodeApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.utils.OKBase64Util;
@@ -143,7 +143,7 @@ public class OKMeQrCodeActivity extends OKBaseActivity implements OKGenerateQrCo
     }
 
     @Override
-    public void generateQrCodeApiComplete(Bitmap bitmap) {
+    public void generateQrCodeComplete(Bitmap bitmap) {
         if (bitmap == null) {
             showSnackBar(imageViewQrCode, "二维码生成失败", "");
             return;

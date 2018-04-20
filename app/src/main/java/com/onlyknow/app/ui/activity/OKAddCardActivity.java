@@ -18,8 +18,8 @@ import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.card.OKAddCardApi;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKLogUtil;
@@ -440,7 +440,7 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
     }
 
     @Override
-    public void addCardApiComplete(OKServiceResult<Object> result) {
+    public void addCardComplete(OKServiceResult<Object> result) {
         mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
         closeProgressDialog();
 

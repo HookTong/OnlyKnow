@@ -27,9 +27,9 @@ import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.comment.OKManagerCommentApi;
 import com.onlyknow.app.api.comment.OKLoadCommentReplyApi;
 import com.onlyknow.app.api.comment.OKAddCommentApi;
-import com.onlyknow.app.database.bean.OKCommentBean;
-import com.onlyknow.app.database.bean.OKCommentReplyBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKCommentBean;
+import com.onlyknow.app.db.bean.OKCommentReplyBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -44,12 +44,8 @@ import com.scwang.smartrefresh.layout.footer.BallPulseFooter;
 import com.scwang.smartrefresh.layout.listener.OnLoadMoreListener;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshListener, OnLoadMoreListener, OKLoadCommentReplyApi.onCallBack, OKAddCommentApi.onCallBack {
     private RefreshLayout mRefreshLayout;
@@ -256,7 +252,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
     }
 
     @Override
-    public void commentReplyApiComplete(List<OKCommentReplyBean> list) {
+    public void loadCommentReplyComplete(List<OKCommentReplyBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -280,7 +276,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
     }
 
     @Override
-    public void addCommentApiComplete(OKServiceResult<Object> result, String type) {
+    public void addCommentComplete(OKServiceResult<Object> result, String type) {
         mToolBarProgressBar.setVisibility(View.GONE);
         if (result != null && result.isSuccess()) {
             editTextMsg.setText("");
@@ -462,7 +458,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
         }
 
         @Override
-        public void managerCommentApiComplete(OKServiceResult<Object> result, String type, int pos) {
+        public void managerCommentComplete(OKServiceResult<Object> result, String type, int pos) {
             if (viewHolder == null || viewHolder.getListPosition() != pos) return;
 
             if (result != null && result.isSuccess()) {

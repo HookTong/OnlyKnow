@@ -1,14 +1,10 @@
 package com.onlyknow.app.api.user;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.text.TextUtils;
 
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.utils.OKBase64Util;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.util.HashMap;
@@ -24,7 +20,7 @@ public class OKReportApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void reportApiComplete(OKServiceResult<Object> result, String type);
+        void reportComplete(OKServiceResult<Object> result, String type);
     }
 
     public void requestReport(Params params, onCallBack listener) {
@@ -34,7 +30,7 @@ public class OKReportApi extends OKBaseApi {
             mReportTask = new ReportTask();
             mReportTask.executeOnExecutor(exec, params);
         } else {
-            mListener.reportApiComplete(null, params.getType());
+            mListener.reportComplete(null, params.getType());
         }
     }
 
@@ -69,7 +65,7 @@ public class OKReportApi extends OKBaseApi {
 
             map.put(Params.KEY_MSG, mParams.getMessage());
 
-            return report(map);
+            return report(map, Object.class);
         }
 
         @Override
@@ -79,7 +75,7 @@ public class OKReportApi extends OKBaseApi {
                 return;
             }
 
-            mListener.reportApiComplete(result, mType);
+            mListener.reportComplete(result, mType);
         }
     }
 

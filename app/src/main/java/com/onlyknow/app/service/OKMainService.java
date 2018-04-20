@@ -23,21 +23,15 @@ import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.exceptions.HyphenateException;
 import com.onlyknow.app.OKConstant;
-import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.utils.OKCityUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKMainService extends OKBaseService implements AMapLocationListener, EMCallBack, EMMessageListener, OKManagerUserApi.onCallBack {
     public static boolean isEMLogIn = false;
@@ -364,9 +358,9 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
 
     // 更新用户地理位置的结果回调
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_UPDATE_LOCATION.equals(type)) {
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 OKLogUtil.print("用户地理位置更新成功!");
             } else {
                 OKLogUtil.print("用户地理位置更新失败!");

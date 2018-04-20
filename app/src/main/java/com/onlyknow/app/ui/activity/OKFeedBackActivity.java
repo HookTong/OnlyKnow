@@ -10,19 +10,15 @@ import android.widget.EditText;
 import com.dmcbig.mediapicker.PickerActivity;
 import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKFeedBackApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKDeviceInfoUtil;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.onCallBack {
     private AppCompatButton mAppCompatButtonSend;
@@ -170,7 +166,7 @@ public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.
     }
 
     @Override
-    public void feedBackApiComplete(OKServiceResult<Object> result) {
+    public void feedBackComplete(OKServiceResult<Object> result) {
 
         closeProgressDialog();
 

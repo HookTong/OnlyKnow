@@ -12,7 +12,7 @@ import android.widget.ImageView;
 
 import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.R;
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.utils.OKLogUtil;
 
 import java.util.List;

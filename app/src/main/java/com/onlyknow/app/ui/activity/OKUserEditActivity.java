@@ -21,7 +21,7 @@ import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.utils.OKDateUtil;
@@ -333,10 +333,10 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
     }
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_UPDATE_AVATAR.equals(type)) {
 
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
 
                 GlideRoundApi(mImageViewTouXian, mFilePath, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
 
@@ -347,7 +347,7 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
 
         } else if (OKManagerUserApi.Params.TYPE_UPDATE_INFO.equals(type)) {
 
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 SharedPreferences.Editor editor = USER_INFO_SP.edit();
                 editor.putString(OKUserInfoBean.KEY_NICKNAME, XG_NICKNAME);
                 editor.putString(OKUserInfoBean.KEY_PHONE, XG_PHONE);

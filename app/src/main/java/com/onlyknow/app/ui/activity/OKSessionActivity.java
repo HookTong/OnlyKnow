@@ -32,7 +32,7 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKLoadSessionApi;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -50,9 +50,7 @@ import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKSessionActivity extends OKBaseActivity implements OnRefreshListener, OKLoadSessionApi.onCallBack, OKManagerUserApi.onCallBack {
     private RefreshLayout mRefreshLayout;
@@ -314,7 +312,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     }
 
     @Override
-    public void sessionApiComplete(List<EMMessage> list) {
+    public void loadSessionComplete(List<EMMessage> list) {
         if (list == null || list.size() == 0) {// 判断是否加载到数据,若没有则直接返回
             mRefreshLayout.finishRefresh();
             showSnackBar(mOKRecyclerView, "没有新的消息了", "");
@@ -328,12 +326,12 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     }
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_GET_INFO.equals(type)) {
 
-            if (serviceResult == null || !serviceResult.isSuccess()) return;
+            if (result == null || !result.isSuccess()) return;
 
-            theUserInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+            theUserInfoBean = (OKUserInfoBean) result.getData();
 
             if (theUserInfoBean == null) return;
 

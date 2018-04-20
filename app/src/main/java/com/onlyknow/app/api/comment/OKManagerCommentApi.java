@@ -29,7 +29,7 @@ public class OKManagerCommentApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void managerCommentApiComplete(OKServiceResult<Object> result, String type, int pos);
+        void managerCommentComplete(OKServiceResult<Object> result, String type, int pos);
     }
 
     public void requestManagerComment(Params params, onCallBack listener) {
@@ -45,7 +45,7 @@ public class OKManagerCommentApi extends OKBaseApi {
             serviceResult.setData("");
             serviceResult.setMsg("没有网络连接");
             serviceResult.setTime(new Date().getTime());
-            mListener.managerCommentApiComplete(serviceResult, params.getType(), params.getPos());
+            mListener.managerCommentComplete(serviceResult, params.getType(), params.getPos());
         }
     }
 
@@ -66,7 +66,7 @@ public class OKManagerCommentApi extends OKBaseApi {
                 return;
             }
 
-            mListener.managerCommentApiComplete(result, mType, mPosition);
+            mListener.managerCommentComplete(result, mType, mPosition);
         }
 
         @Override
@@ -84,7 +84,7 @@ public class OKManagerCommentApi extends OKBaseApi {
             map.put(Params.KEY_PASS, mParams.getPassword());
             map.put(Params.KEY_ID, String.valueOf(mParams.getId()));
 
-            return managerComment(map);
+            return managerComment(map, Object.class);
         }
     }
 

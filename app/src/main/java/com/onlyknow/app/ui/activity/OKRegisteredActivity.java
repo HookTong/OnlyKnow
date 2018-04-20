@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.util.Date;
@@ -219,17 +219,17 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
     String imName, imPass;
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         closeProgressDialog();
 
         if (OKManagerUserApi.Params.TYPE_REGISTERED.equals(type)) {
 
-            if (serviceResult == null) {
+            if (result == null) {
                 showSnackBar(buttonSigNup, "注册失败,服务器未返回数据!", "");
                 return;
             }
 
-            if (serviceResult.isSuccess()) {
+            if (result.isSuccess()) {
                 // 向环信注册账号
                 Bundle mBundle = new Bundle();
                 mBundle.putString(OKUserInfoBean.KEY_USERNAME, imName);
@@ -240,7 +240,7 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
 
                 finish();
             } else {
-                showSnackBar(buttonSigNup, "注册失败," + serviceResult.getMsg(), "");
+                showSnackBar(buttonSigNup, "注册失败," + result.getMsg(), "");
             }
         }
     }

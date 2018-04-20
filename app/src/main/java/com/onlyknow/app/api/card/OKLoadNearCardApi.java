@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCardBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class OKLoadNearCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void nearApiComplete(List<OKCardBean> list);
+        void loadNearComplete(List<OKCardBean> list);
     }
 
     public void requestNearCard(Params params, onCallBack mCallBack) {
@@ -69,7 +69,7 @@ public class OKLoadNearCardApi extends OKBaseApi {
             }
 
             super.onPostExecute(okCardBeen);
-            mOnCallBack.nearApiComplete(okCardBeen);
+            mOnCallBack.loadNearComplete(okCardBeen);
         }
     }
 

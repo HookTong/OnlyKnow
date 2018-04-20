@@ -2,7 +2,6 @@ package com.onlyknow.app.ui.activity;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.widget.SwitchCompat;
@@ -20,16 +19,13 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadAppInfoApi;
-import com.onlyknow.app.database.OKDatabaseHelper;
-import com.onlyknow.app.database.bean.OKAppInfoBean;
+import com.onlyknow.app.db.OKDatabaseHelper;
+import com.onlyknow.app.db.bean.OKAppInfoBean;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKProgressButton;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKMimeTypeUtil;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import okhttp3.Request;
 
@@ -335,7 +331,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
     }
 
     @Override
-    public void appInfoApiComplete(OKAppInfoBean bean) {
+    public void loadAppInfoComplete(OKAppInfoBean bean) {
         if (bean == null) {
             showSnackBar(layoutUserXieYi, "检查失败", "");
             return;

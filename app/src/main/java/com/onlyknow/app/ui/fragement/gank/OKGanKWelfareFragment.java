@@ -14,7 +14,7 @@ import android.widget.ImageView;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadGanKApi;
-import com.onlyknow.app.database.bean.OKGanKBean;
+import com.onlyknow.app.db.bean.OKGanKBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
@@ -134,7 +134,7 @@ public class OKGanKWelfareFragment extends OKBaseFragment implements OnRefreshLi
     }
 
     @Override
-    public void ganKioApiComplete(List<OKGanKBean.Results> list) {
+    public void loadGanKComplete(List<OKGanKBean.Results> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 mGanKBeanList.clear();

@@ -19,8 +19,8 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.api.card.OKLoadHomeCardApi;
 import com.onlyknow.app.api.card.OKManagerCardApi;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -200,7 +200,7 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
     }
 
     @Override
-    public void homeApiComplete(List<OKCardBean> list) {
+    public void loadHomeComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -368,12 +368,12 @@ public class OKDynamicFragment extends OKBaseFragment implements OnRefreshListen
         }
 
         @Override
-        public void managerCardApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        public void managerCardComplete(OKServiceResult<Object> result, String type, int pos) {
             if (!OKManagerCardApi.Params.TYPE_REMOVE_CARD.equals(type)) return;
 
             if (viewHolder == null || viewHolder.getListPosition() != pos) return;
 
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 removeCardBean(pos);
                 showSnackBar(viewHolder.mCardView, "您已移除该卡片", "");
             } else {

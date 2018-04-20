@@ -20,8 +20,8 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.api.user.OKLoadAttentionApi;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKAttentionBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKAttentionBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKDragPhotoActivity;
 import com.onlyknow.app.ui.activity.OKHomePageActivity;
@@ -197,7 +197,7 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
     }
 
     @Override
-    public void attentionApiComplete(List<OKAttentionBean> list) {
+    public void loadAttentionComplete(List<OKAttentionBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -325,12 +325,12 @@ public class OKAttentionFragment extends OKBaseFragment implements OnRefreshList
         }
 
         @Override
-        public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
             if (!OKManagerUserApi.Params.TYPE_REMOVE_ATTENTION.equals(type)) return;
 
             if (viewHolder == null || viewHolder.getListPosition() != pos) return;
 
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 removeAttentionBean(pos);
                 showSnackBar(viewHolder.mCardView, "已取消关注", "");
             } else {

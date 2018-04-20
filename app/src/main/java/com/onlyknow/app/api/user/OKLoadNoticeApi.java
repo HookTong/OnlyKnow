@@ -3,15 +3,14 @@ package com.onlyknow.app.api.user;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import com.google.gson.Gson;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMConversation;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.database.bean.OKNoticeBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKNoticeBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,7 +28,7 @@ public class OKLoadNoticeApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void noticeApiComplete(List<OKNoticeBean> list);
+        void loadNoticeComplete(List<OKNoticeBean> list);
     }
 
     public void requestNotice(onCallBack mCallBack) {
@@ -106,11 +105,11 @@ public class OKLoadNoticeApi extends OKBaseApi {
             map.put(OKManagerUserApi.Params.KEY_NAME, userName);
             map.put(OKManagerUserApi.Params.KEY_TYPE, OKManagerUserApi.Params.TYPE_GET_INFO);
 
-            OKServiceResult<Object> result = managerUser(map);
+            OKServiceResult<OKUserInfoBean> result = managerUser(map, OKUserInfoBean.class);
 
             if (result == null || !result.isSuccess()) return null;
 
-            return new Gson().fromJson((String) result.getData(), OKUserInfoBean.class);
+            return result.getData();
         }
 
         @Override
@@ -118,7 +117,7 @@ public class OKLoadNoticeApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.noticeApiComplete(list);
+            mOnCallBack.loadNoticeComplete(list);
             super.onPostExecute(list);
         }
     }

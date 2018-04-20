@@ -7,16 +7,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
 
-import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.api.comment.OKAddCommentApi;
 import com.onlyknow.app.api.user.OKReportApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCallBack {
     private CheckBox checkBox1, checkBox2, checkBox3, checkBox4;
@@ -26,10 +21,10 @@ public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCa
     public final static String KEY_ID = "id";
     public final static String KEY_NAME = "username";
 
-    public final static String TYPE_CARD = "reportCard";
-    public final static String TYPE_USER = "reportUser";
-    public final static String TYPE_COMMENT = "reportComment";
-    public final static String TYPE_COMMENT_REPLY = "reportCommentReply";
+    public final static String TYPE_CARD = OKReportApi.Params.TYPE_REPORT_CARD;
+    public final static String TYPE_USER = OKReportApi.Params.TYPE_REPORT_USER;
+    public final static String TYPE_COMMENT = OKReportApi.Params.TYPE_REPORT_COMMENT;
+    public final static String TYPE_COMMENT_REPLY = OKReportApi.Params.TYPE_REPORT_COMMENT_REPLY;
 
     private final String item1 = "report_content_entry_item1";
     private final String item2 = "report_content_entry_item2";
@@ -167,7 +162,7 @@ public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCa
     }
 
     @Override
-    public void reportApiComplete(OKServiceResult<Object> result, String type) {
+    public void reportComplete(OKServiceResult<Object> result, String type) {
         closeProgressDialog();
 
         if (result == null || !result.isSuccess()) {

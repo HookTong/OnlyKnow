@@ -29,7 +29,7 @@ public class OKManagerGoodsApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void managerGoodsApiComplete(OKServiceResult<Object> serviceResult, String type, int pos);
+        void managerGoodsComplete(OKServiceResult<Object> result, String type, int pos);
     }
 
     public void requestManagerGoods(Params params, onCallBack listener) {
@@ -45,7 +45,7 @@ public class OKManagerGoodsApi extends OKBaseApi {
             serviceResult.setData("");
             serviceResult.setMsg("没有网络连接");
             serviceResult.setTime(new Date().getTime());
-            mListener.managerGoodsApiComplete(serviceResult, params.getType(), params.getPos());
+            mListener.managerGoodsComplete(serviceResult, params.getType(), params.getPos());
         }
     }
 
@@ -66,7 +66,7 @@ public class OKManagerGoodsApi extends OKBaseApi {
                 return;
             }
 
-            mListener.managerGoodsApiComplete(result, mType, mPosition);
+            mListener.managerGoodsComplete(result, mType, mPosition);
         }
 
         @Override
@@ -84,7 +84,7 @@ public class OKManagerGoodsApi extends OKBaseApi {
             map.put(Params.KEY_NAME, mParams.getUsername());
             map.put(Params.KEY_PASS, mParams.getPassword());
 
-            return managerGoods(map);
+            return managerGoods(map, Object.class);
         }
     }
 

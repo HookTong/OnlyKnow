@@ -4,8 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
-import com.onlyknow.app.utils.OKDeviceInfoUtil;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 
@@ -22,7 +21,7 @@ public class OKLoadCarouselAdApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void carouselAdApiComplete(OKCarouselAdBean bean);
+        void loadCarouselAdComplete(OKCarouselAdBean bean);
     }
 
     public void requestCarouselAd(Params params, onCallBack listener) {
@@ -32,7 +31,7 @@ public class OKLoadCarouselAdApi extends OKBaseApi {
             mLoadCarouselAdTask = new LoadCarouselAdTask();
             mLoadCarouselAdTask.executeOnExecutor(exec, params);
         } else {
-            mListener.carouselAdApiComplete(null);
+            mListener.loadCarouselAdComplete(null);
         }
     }
 
@@ -66,7 +65,7 @@ public class OKLoadCarouselAdApi extends OKBaseApi {
                 return;
             }
 
-            mListener.carouselAdApiComplete(bean);
+            mListener.loadCarouselAdComplete(bean);
         }
     }
 

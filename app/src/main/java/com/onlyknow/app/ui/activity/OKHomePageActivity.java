@@ -24,14 +24,13 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.card.OKLoadHomeCardApi;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
@@ -383,7 +382,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
     }
 
     @Override
-    public void homeApiComplete(List<OKCardBean> list) {
+    public void loadHomeComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -406,14 +405,17 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
     }
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_GET_INFO.equals(type)) {
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(mOKRecyclerView, "没有获取到用户信息", "");
                 return;
             }
 
-            mBindUserInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+            mBindUserInfoBean = (OKUserInfoBean) result.getData();
+
+            if (mBindUserInfoBean == null) return;
+
             GlideRoundApi(ImageViewTouXian, mBindUserInfoBean.getHeadPortraitUrl(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
             GlideBlurApi(mImageViewHead, mBindUserInfoBean.getHeadPortraitUrl(), R.drawable.topgd3, R.drawable.topgd3);
             mToolbarTitle.setText(mBindUserInfoBean.getUserNickname());
@@ -424,7 +426,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
             }
             bindHeaderView(mBindUserInfoBean);
         } else if (OKManagerUserApi.Params.TYPE_ADD_ATTENTION.equals(type)) {
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 showSnackBar(mOKRecyclerView, "已关注该用户", "");
             } else {
                 showSnackBar(mOKRecyclerView, "服务器错误", "ErrorCode: " + OKConstant.SERVICE_ERROR);

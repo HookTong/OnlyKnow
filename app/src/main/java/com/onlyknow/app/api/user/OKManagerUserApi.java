@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.utils.OKBase64Util;
 import com.onlyknow.app.utils.OKNetUtil;
 
@@ -35,7 +36,7 @@ public class OKManagerUserApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos);
+        void managerUserComplete(OKServiceResult<Object> result, String type, int pos);
     }
 
     public void requestManagerUser(Params params, onCallBack listener) {
@@ -51,7 +52,7 @@ public class OKManagerUserApi extends OKBaseApi {
             serviceResult.setData("");
             serviceResult.setMsg("没有网络连接");
             serviceResult.setTime(new Date().getTime());
-            mListener.managerUserApiComplete(serviceResult, params.getType(), params.getPos());
+            mListener.managerUserComplete(serviceResult, params.getType(), params.getPos());
         }
     }
 
@@ -71,7 +72,7 @@ public class OKManagerUserApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mListener.managerUserApiComplete(serviceResult, mType, mPosition);
+            mListener.managerUserComplete(serviceResult, mType, mPosition);
         }
 
         @Override
@@ -108,7 +109,28 @@ public class OKManagerUserApi extends OKBaseApi {
             map.put(Params.KEY_AVATAR_DATA, mParams.getAvatarData());
             map.put(Params.KEY_ENTITY, new Gson().toJson(mParams.getEntity()));
 
-            return managerUser(map);
+            OKServiceResult<Object> serviceResult;
+
+            if (Params.TYPE_GET_INFO.equals(mType) || Params.TYPE_LOGIN.equals(mType)) {
+
+                OKServiceResult<OKUserInfoBean> result = managerUser(map, OKUserInfoBean.class);
+
+                if (result == null) return null;
+
+                serviceResult = new OKServiceResult<>();
+                serviceResult.setSuccess(result.isSuccess());
+                serviceResult.setCode(result.getCode());
+                serviceResult.setTime(result.getTime());
+                serviceResult.setMsg(result.getMsg());
+                serviceResult.setData(result.getData());
+
+            } else {
+
+                serviceResult = managerUser(map, Object.class);
+
+            }
+
+            return serviceResult;
         }
     }
 

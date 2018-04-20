@@ -11,16 +11,15 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.card.OKManagerCardApi;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.OKDatabaseHelper;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCardRelatedBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.OKDatabaseHelper;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCardRelatedBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -101,7 +100,7 @@ public class OKCardWZActivity extends OKBaseActivity implements OKManagerCardApi
         OKManagerCardApi.Params params = new OKManagerCardApi.Params();
         params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setCardId(mCardBean.getCardId());
-        params.setType(OKManagerCardApi.Params.TYPE_BIND_CHECK);
+        params.setType(OKManagerCardApi.Params.TYPE_CARD_RELATED);
 
         if (okManagerCardApi != null) {
             okManagerCardApi.cancelTask();
@@ -378,11 +377,11 @@ public class OKCardWZActivity extends OKBaseActivity implements OKManagerCardApi
     }
 
     @Override
-    public void managerCardApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
-        if (OKManagerCardApi.Params.TYPE_BIND_CHECK.equals(type)) {
-            if (serviceResult == null || !serviceResult.isSuccess()) return;
+    public void managerCardComplete(OKServiceResult<Object> result, String type, int pos) {
+        if (OKManagerCardApi.Params.TYPE_CARD_RELATED.equals(type)) {
+            if (result == null || !result.isSuccess()) return;
 
-            mCardBindBean = new Gson().fromJson((String) serviceResult.getData(), OKCardRelatedBean.class);
+            mCardBindBean = (OKCardRelatedBean) result.getData();
 
             if (mCardBindBean == null) return;
 
@@ -416,7 +415,7 @@ public class OKCardWZActivity extends OKBaseActivity implements OKManagerCardApi
 
         } else if (OKManagerCardApi.Params.TYPE_WATCH.equals(type)) {
 
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(linearLayoutZY, "操作失败,请重试", "");
                 return;
             }
@@ -432,7 +431,7 @@ public class OKCardWZActivity extends OKBaseActivity implements OKManagerCardApi
 
         } else if (OKManagerCardApi.Params.TYPE_PRAISE.equals(type)) {
 
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(linearLayoutZY, "操作失败,请重试", "");
                 return;
             }
@@ -446,7 +445,7 @@ public class OKCardWZActivity extends OKBaseActivity implements OKManagerCardApi
             textZan.setTextColor(getResources().getColor(R.color.fenhon));
 
         } else if (OKManagerCardApi.Params.TYPE_BROWSING.equals(type)) {
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(linearLayoutZY, "PutBrowsingFailure", "");
             }
         }
@@ -454,10 +453,10 @@ public class OKCardWZActivity extends OKBaseActivity implements OKManagerCardApi
     }
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_ADD_ATTENTION.equals(type)) {
 
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(linearLayoutZY, "操作失败,请重试", "");
                 return;
             }

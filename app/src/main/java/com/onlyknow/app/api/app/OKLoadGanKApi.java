@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 
 import com.google.gson.Gson;
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKGanKBean;
+import com.onlyknow.app.db.bean.OKGanKBean;
 import com.onlyknow.app.net.OKWebService;
 
 import java.util.List;
@@ -34,7 +34,7 @@ public class OKLoadGanKApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void ganKioApiComplete(List<OKGanKBean.Results> mOKCardBeanList);
+        void loadGanKComplete(List<OKGanKBean.Results> mOKCardBeanList);
     }
 
     public void requestGanK(String url, onCallBack mCallBack) {
@@ -75,7 +75,7 @@ public class OKLoadGanKApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.ganKioApiComplete(mOKCardBeanList);
+            mOnCallBack.loadGanKComplete(mOKCardBeanList);
             super.onPostExecute(mOKCardBeanList);
         }
     }

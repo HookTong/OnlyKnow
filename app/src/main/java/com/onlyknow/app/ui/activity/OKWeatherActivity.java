@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadWeatherApi;
-import com.onlyknow.app.database.bean.OKWeatherBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKLoadBannerImage;
@@ -368,7 +368,7 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
     }
 
     @Override
-    public void weatherApiComplete(OKWeatherBean weatherBean) {
+    public void loadWeatherComplete(OKWeatherBean weatherBean) {
         if (weatherBean == null) {
             mProgressBar.setVisibility(View.GONE);
             showSnackBar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);

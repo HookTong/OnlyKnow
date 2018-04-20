@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKAppInfoBean;
+import com.onlyknow.app.db.bean.OKAppInfoBean;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class OKLoadAppInfoApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void appInfoApiComplete(OKAppInfoBean bean);
+        void loadAppInfoComplete(OKAppInfoBean bean);
     }
 
     public void requestAppInfo(Params params, onCallBack listener) {
@@ -30,7 +30,7 @@ public class OKLoadAppInfoApi extends OKBaseApi {
             mLoadAppInfoTask = new LoadAppInfoTask();
             mLoadAppInfoTask.executeOnExecutor(exec, params);
         } else {
-            mListener.appInfoApiComplete(null);
+            mListener.loadAppInfoComplete(null);
         }
     }
 
@@ -61,7 +61,7 @@ public class OKLoadAppInfoApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mListener.appInfoApiComplete(bean);
+            mListener.loadAppInfoComplete(bean);
         }
     }
 

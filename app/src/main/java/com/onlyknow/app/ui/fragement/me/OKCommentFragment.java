@@ -14,10 +14,10 @@ import android.widget.TextView;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.card.OKLoadMeCommentCardApi;
-import com.onlyknow.app.database.bean.OKMeCommentCardBean;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCommentBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKMeCommentCardBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCommentBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -195,7 +195,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
     }
 
     @Override
-    public void cardAndCommentApiComplete(List<OKMeCommentCardBean> list) {
+    public void loadMeCommentComplete(List<OKMeCommentCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;

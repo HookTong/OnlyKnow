@@ -20,11 +20,10 @@ import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.api.card.OKManagerCardApi;
 import com.onlyknow.app.api.goods.OKManagerGoodsApi;
 import com.onlyknow.app.api.goods.OKLoadGoodsApi;
-import com.onlyknow.app.database.bean.OKGoodsBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKGoodsBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -166,7 +165,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
     }
 
     @Override
-    public void goodsApiComplete(List<OKGoodsBean> list) {
+    public void loadGoodsComplete(List<OKGoodsBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -344,12 +343,12 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         }
 
         @Override
-        public void managerGoodsApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+        public void managerGoodsComplete(OKServiceResult<Object> result, String type, int pos) {
             if (!OKManagerGoodsApi.Params.TYPE_BUY.equals(type)) return;
 
             if (viewHolder == null || viewHolder.getListPosition() != pos) return;
 
-            if (serviceResult != null && serviceResult.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 OKGoodsBean mGoodsBean = getGoodsBean(pos);
                 if (mGoodsBean == null) {
                     return;

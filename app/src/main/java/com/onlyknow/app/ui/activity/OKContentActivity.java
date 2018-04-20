@@ -1,7 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -9,11 +8,8 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadAppInfoApi;
-import com.onlyknow.app.database.bean.OKAppInfoBean;
+import com.onlyknow.app.db.bean.OKAppInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class OKContentActivity extends OKBaseActivity implements OKLoadAppInfoApi.onCallBack {
     private TextView textViewContent;
@@ -91,7 +87,7 @@ public class OKContentActivity extends OKBaseActivity implements OKLoadAppInfoAp
     }
 
     @Override
-    public void appInfoApiComplete(OKAppInfoBean bean) {
+    public void loadAppInfoComplete(OKAppInfoBean bean) {
         closeProgressDialog();
 
         if (bean == null) {

@@ -2,7 +2,7 @@ package com.onlyknow.app;
 
 import android.os.Environment;
 
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public final class OKConstant {
     public final static String ONLY_KNOW_OFFICIAL_WEBSITE_URL = SERVICE_ROOT_URL + "/index.jsp"; // 唯知官网
     public final static String ONLY_KNOW_SOURCE_CODE_URL = "https://github.com/TongXingWen22/OnlyKnow"; // 源代码GitHub主页
 
-    public final static String EXPLORE_FIND_URL = "http://m.neihanshequ.com/"; // 发现url
+    public final static String EXPLORE_FIND_URL = "http://101.132.168.25:8090/onlyknow/Page/index.html"; // 发现url
 
     // 错误对照码
     public final static String WEATHER_BEAN_ERROR = "0x00000";

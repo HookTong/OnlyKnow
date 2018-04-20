@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKSearchBean;
+import com.onlyknow.app.db.bean.OKSearchBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class OKLoadSearchApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void searchApiComplete(List<OKSearchBean> list);
+        void loadSearchComplete(List<OKSearchBean> list);
     }
 
     public void requestSearch(Params params, onCallBack mCallBack) {
@@ -64,7 +64,7 @@ public class OKLoadSearchApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.searchApiComplete(list);
+            mOnCallBack.loadSearchComplete(list);
             super.onPostExecute(list);
         }
     }

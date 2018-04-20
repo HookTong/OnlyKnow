@@ -3,15 +3,10 @@ package com.onlyknow.app.api.comment;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.database.bean.OKCommentReplyBean;
+import com.onlyknow.app.db.bean.OKCommentReplyBean;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +27,7 @@ public class OKLoadCommentReplyApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void commentReplyApiComplete(List<OKCommentReplyBean> list);
+        void loadCommentReplyComplete(List<OKCommentReplyBean> list);
     }
 
     public void requestCommentReply(Params params, onCallBack mCallBack) {
@@ -65,26 +60,11 @@ public class OKLoadCommentReplyApi extends OKBaseApi {
             map.put(Params.KEY_PAGE, String.valueOf(mParams.getPage()));
             map.put(Params.KEY_SIZE, String.valueOf(mParams.getSize()));
 
-            OKServiceResult<Object> serviceResult = getCommentOrReply(map);
+            OKServiceResult<List<OKCommentReplyBean>> serviceResult = getCommentOrReply(map, OKCommentReplyBean.class);
 
             if (serviceResult == null || !serviceResult.isSuccess()) return null;
 
-            JsonParser parser = new JsonParser();
-            JsonArray jsonArray = parser.parse((String) serviceResult.getData()).getAsJsonArray();
-
-            Gson gson = new Gson();
-            List<OKCommentReplyBean> list = new ArrayList<>();
-
-            for (JsonElement cardJson : jsonArray) {
-                try {
-                    OKCommentReplyBean bean = gson.fromJson(cardJson, OKCommentReplyBean.class);
-                    list.add(bean);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-
-            return list;
+            return serviceResult.getData();
         }
 
         @Override
@@ -92,7 +72,7 @@ public class OKLoadCommentReplyApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.commentReplyApiComplete(result);
+            mOnCallBack.loadCommentReplyComplete(result);
             super.onPostExecute(result);
         }
     }

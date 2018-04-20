@@ -1,32 +1,27 @@
 package com.onlyknow.app.api;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.onlyknow.app.database.bean.OKAppInfoBean;
-import com.onlyknow.app.database.bean.OKAttentionBean;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
-import com.onlyknow.app.database.bean.OKGoodsBean;
-import com.onlyknow.app.database.bean.OKMeCommentCardBean;
-import com.onlyknow.app.database.bean.OKSearchBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKAppInfoBean;
+import com.onlyknow.app.db.bean.OKAttentionBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
+import com.onlyknow.app.db.bean.OKGoodsBean;
+import com.onlyknow.app.db.bean.OKMeCommentCardBean;
+import com.onlyknow.app.db.bean.OKSearchBean;
+import com.onlyknow.app.utils.OKGsonUtil;
 
 import java.io.File;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.onlyknow.app.net.OKWebService.OKHttpApiGet;
 import static com.onlyknow.app.net.OKWebService.OKHttpApiPostFromFile;
 import static com.onlyknow.app.net.OKWebService.OkHttpApiPost;
 
 public class OKBaseApi {
     public final ExecutorService exec = Executors.newFixedThreadPool(100);
 
-    private final String IP = "101.132.168.25:8090";
+    private final String IP = "101.132.168.25:8090/onlyknow";
 
     private final String ExploreCard_URL = "http://" + IP + "/OKExploreCardApi";
 
@@ -73,7 +68,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
+        OKServiceResult<List<OKCardBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -87,7 +82,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
+        OKServiceResult<List<OKCardBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -101,7 +96,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
+        OKServiceResult<List<OKCardBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -115,7 +110,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
+        OKServiceResult<List<OKCardBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -129,7 +124,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKAttentionBean>> okServiceResult = fromJsonList(json, OKAttentionBean.class);
+        OKServiceResult<List<OKAttentionBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKAttentionBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -143,7 +138,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKMeCommentCardBean>> okServiceResult = fromJsonList(json, OKMeCommentCardBean.class);
+        OKServiceResult<List<OKMeCommentCardBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKMeCommentCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -157,7 +152,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKGoodsBean>> okServiceResult = fromJsonList(json, OKGoodsBean.class);
+        OKServiceResult<List<OKGoodsBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKGoodsBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -171,7 +166,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKCardBean>> okServiceResult = fromJsonList(json, OKCardBean.class);
+        OKServiceResult<List<OKCardBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKCardBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
             return okServiceResult.getData();
@@ -185,10 +180,10 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        OKServiceResult<List<OKSearchBean>> okServiceResult = fromJsonList(json, OKSearchBean.class);
+        OKServiceResult<List<OKSearchBean>> okServiceResult = OKGsonUtil.fromServiceResultJsonByList(json, OKSearchBean.class);
 
         if (okServiceResult != null && okServiceResult.isSuccess()) {
-            okServiceResult.getData();
+            return okServiceResult.getData();
         }
 
         return null;
@@ -196,123 +191,78 @@ public class OKBaseApi {
 
     // --------------------------管理接口方法--------------------------
 
-    protected OKServiceResult<Object> managerGoods(Map<String, String> params) {
+    protected <T> OKServiceResult<T> managerGoods(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(ManagerGoods_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
-    protected OKServiceResult<Object> managerCard(Map<String, String> params) {
+    protected <T> OKServiceResult<T> managerCard(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(ManagerCard_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
-    protected OKServiceResult<Object> managerUser(Map<String, String> params) {
+    protected <T> OKServiceResult<T> managerUser(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(ManagerUser_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
-    protected OKServiceResult<Object> managerComment(Map<String, String> params) {
+    protected <T> OKServiceResult<T> managerComment(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(ManagerComment_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
     // --------------------------管理接口方法--------------------------
 
-    protected OKServiceResult<Object> getCommentOrReply(Map<String, String> params) {
+    protected <T> OKServiceResult<List<T>> getCommentOrReply(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(CommentCard_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByList(json, clazz);
     }
 
-    protected OKServiceResult<Object> addCard(Map<String, File> fileMap, Map<String, String> params) {
+    protected <T> OKServiceResult<T> addCard(Map<String, File> fileMap, Map<String, String> params, Class<T> clazz) {
         String json = OKHttpApiPostFromFile(AddCard_URL, fileMap, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
-    protected OKServiceResult<Object> addCommentOrReply(Map<String, String> params) {
+    protected <T> OKServiceResult<T> addCommentOrReply(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(AddComment_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
-    protected OKServiceResult<Object> feedBack(Map<String, String> params) {
+    protected <T> OKServiceResult<T> feedBack(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(FeedBack_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
-    protected OKServiceResult<Object> report(Map<String, String> params) {
+    protected <T> OKServiceResult<T> report(Map<String, String> params, Class<T> clazz) {
         String json = OkHttpApiPost(Report_URL, params);
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<Object>>() {
-        }.getType();
-
-        return gson.fromJson(json, type);
+        return OKGsonUtil.fromServiceResultJsonByObject(json, clazz);
     }
 
     protected OKAppInfoBean getAppInfo(Map<String, String> params) {
@@ -320,12 +270,7 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<OKAppInfoBean>>() {
-        }.getType();
-
-        OKServiceResult<OKAppInfoBean> serviceResult = gson.fromJson(json, type);
+        OKServiceResult<OKAppInfoBean> serviceResult = OKGsonUtil.fromServiceResultJsonByObject(json, OKAppInfoBean.class);
 
         if (serviceResult == null || !serviceResult.isSuccess()) return null;
 
@@ -337,53 +282,10 @@ public class OKBaseApi {
 
         if (json == null) return null;
 
-        Gson gson = new Gson();
-
-        Type type = new TypeToken<OKServiceResult<OKCarouselAdBean>>() {
-        }.getType();
-
-        OKServiceResult<OKCarouselAdBean> serviceResult = gson.fromJson(json, type);
+        OKServiceResult<OKCarouselAdBean> serviceResult = OKGsonUtil.fromServiceResultJsonByObject(json, OKCarouselAdBean.class);
 
         if (serviceResult == null || !serviceResult.isSuccess()) return null;
 
         return serviceResult.getData();
-    }
-
-    private <T> OKServiceResult<T> fromJsonObject(String json, Class<T> clazz) {
-        Type type = new AppType(OKServiceResult.class, new Class[]{clazz});
-        return new Gson().fromJson(json, type);
-    }
-
-    private <T> OKServiceResult<List<T>> fromJsonList(String json, Class<T> clazz) {
-        // 生成List<T> 中的 List<T>
-        Type listType = new AppType(List.class, new Class[]{clazz});
-        // 根据List<T>生成完整的Result<List<T>>
-        Type type = new AppType(OKServiceResult.class, new Type[]{listType});
-        return new Gson().fromJson(json, type);
-    }
-
-    private class AppType implements ParameterizedType {
-        private final Class raw;
-        private final Type[] args;
-
-        AppType(Class raw, Type[] args) {
-            this.raw = raw;
-            this.args = args != null ? args : new Type[0];
-        }
-
-        @Override
-        public Type[] getActualTypeArguments() {
-            return args;
-        }
-
-        @Override
-        public Type getRawType() {
-            return raw;
-        }
-
-        @Override
-        public Type getOwnerType() {
-            return null;
-        }
     }
 }

@@ -24,7 +24,7 @@ public class OKFeedBackApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void feedBackApiComplete(OKServiceResult<Object> result);
+        void feedBackComplete(OKServiceResult<Object> result);
     }
 
     public void requestFeedBack(Params params, onCallBack listener) {
@@ -34,7 +34,7 @@ public class OKFeedBackApi extends OKBaseApi {
             mFeedBackTask = new FeedBackTask();
             mFeedBackTask.executeOnExecutor(exec, params);
         } else {
-            mListener.feedBackApiComplete(null);
+            mListener.feedBackComplete(null);
         }
     }
 
@@ -71,7 +71,7 @@ public class OKFeedBackApi extends OKBaseApi {
                 map.put(Params.KEY_IMAGE, OKBase64Util.BitmapToBase64(bitmap));
             }
 
-            return feedBack(map);
+            return feedBack(map, Object.class);
         }
 
         @Override
@@ -81,7 +81,7 @@ public class OKFeedBackApi extends OKBaseApi {
                 return;
             }
 
-            mListener.feedBackApiComplete(result);
+            mListener.feedBackComplete(result);
         }
     }
 

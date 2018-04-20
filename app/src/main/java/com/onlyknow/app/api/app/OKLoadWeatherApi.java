@@ -6,7 +6,7 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKWeatherBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
 import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.utils.OKNetUtil;
 
@@ -24,7 +24,7 @@ public class OKLoadWeatherApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void weatherApiComplete(OKWeatherBean weather);
+        void loadWeatherComplete(OKWeatherBean weather);
     }
 
     public void requestWeather(String cityId, onCallBack listener) {
@@ -78,7 +78,7 @@ public class OKLoadWeatherApi extends OKBaseApi {
         @Override
         protected void onPostExecute(OKWeatherBean result) {
             if (mListener != null) {
-                mListener.weatherApiComplete(result);
+                mListener.loadWeatherComplete(result);
             }
             super.onPostExecute(result);
         }

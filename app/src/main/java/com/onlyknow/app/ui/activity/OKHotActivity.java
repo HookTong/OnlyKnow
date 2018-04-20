@@ -15,8 +15,8 @@ import android.widget.TextView;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.card.OKLoadHotCardApi;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.utils.OKDateUtil;
@@ -129,7 +129,7 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
     }
 
     @Override
-    public void hotApiComplete(List<OKCardBean> list) {
+    public void loadHotComplete(List<OKCardBean> list) {
         if (list != null) {
             mCardBeanList.clear();
             mCardBeanList.addAll(list);

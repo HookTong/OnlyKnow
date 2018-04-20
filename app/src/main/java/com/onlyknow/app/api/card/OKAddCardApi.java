@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.utils.OKFileUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
@@ -29,7 +29,7 @@ public class OKAddCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void addCardApiComplete(OKServiceResult<Object> result);
+        void addCardComplete(OKServiceResult<Object> result);
     }
 
     public void requestAddCard(Params params, onCallBack listener) {
@@ -39,7 +39,7 @@ public class OKAddCardApi extends OKBaseApi {
             mAddCardTask = new AddCardTask();
             mAddCardTask.executeOnExecutor(exec, params);
         } else {
-            mListener.addCardApiComplete(null);
+            mListener.addCardComplete(null);
         }
     }
 
@@ -90,7 +90,7 @@ public class OKAddCardApi extends OKBaseApi {
             Map<String, String> textMap = new HashMap<>(); // 文章文字内容参数
             textMap.put(Params.KEY_ENTITY, new Gson().toJson(mCardBean));
 
-            return addCard(fileMap, textMap);
+            return addCard(fileMap, textMap, Object.class);
         }
 
         @Override
@@ -100,7 +100,7 @@ public class OKAddCardApi extends OKBaseApi {
                 return;
             }
 
-            mListener.addCardApiComplete(result);
+            mListener.addCardComplete(result);
         }
     }
 

@@ -9,11 +9,10 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.utils.OKDateUtil;
 
@@ -91,17 +90,17 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
     }
 
     @Override
-    public void managerUserApiComplete(OKServiceResult<Object> serviceResult, String type, int pos) {
+    public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         closeProgressDialog();
 
         if (OKManagerUserApi.Params.TYPE_LOGIN.equals(type)) {
 
-            if (serviceResult == null || !serviceResult.isSuccess()) {
+            if (result == null || !result.isSuccess()) {
                 showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");
                 return;
             }
 
-            OKUserInfoBean userInfoBean = new Gson().fromJson((String) serviceResult.getData(), OKUserInfoBean.class);
+            OKUserInfoBean userInfoBean = (OKUserInfoBean) result.getData();
 
             if (userInfoBean == null) {
                 showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");

@@ -21,7 +21,7 @@ public class OKAddCommentApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void addCommentApiComplete(OKServiceResult<Object> result, String type);
+        void addCommentComplete(OKServiceResult<Object> result, String type);
     }
 
     public void requestAddComment(Params params, onCallBack listener) {
@@ -38,7 +38,7 @@ public class OKAddCommentApi extends OKBaseApi {
             serviceResult.setMsg("没有网络连接");
             serviceResult.setTime(new Date().getTime());
 
-            mListener.addCommentApiComplete(serviceResult, params.getType());
+            mListener.addCommentComplete(serviceResult, params.getType());
         }
     }
 
@@ -65,7 +65,7 @@ public class OKAddCommentApi extends OKBaseApi {
             map.put(Params.KEY_TYPE, mParams.getType());
             map.put(Params.KEY_MSG, mParams.getMessage());
 
-            return addCommentOrReply(map);
+            return addCommentOrReply(map, Object.class);
         }
 
         @Override
@@ -75,7 +75,7 @@ public class OKAddCommentApi extends OKBaseApi {
                 return;
             }
 
-            mListener.addCommentApiComplete(result, this.mType);
+            mListener.addCommentComplete(result, this.mType);
         }
     }
 

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKGoodsBean;
+import com.onlyknow.app.db.bean.OKGoodsBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class OKLoadGoodsApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void goodsApiComplete(List<OKGoodsBean> list);
+        void loadGoodsComplete(List<OKGoodsBean> list);
     }
 
     public void requestGoods(Params params, onCallBack mCallBack) {
@@ -65,7 +65,7 @@ public class OKLoadGoodsApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.goodsApiComplete(mOKGoodsBeanList);
+            mOnCallBack.loadGoodsComplete(mOKGoodsBeanList);
             super.onPostExecute(mOKGoodsBeanList);
         }
     }

@@ -1,10 +1,7 @@
 package com.onlyknow.app.ui.fragement;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -32,9 +29,9 @@ import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
 import com.onlyknow.app.api.card.OKLoadHistoryCardApi;
-import com.onlyknow.app.database.OKDatabaseHelper;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
+import com.onlyknow.app.db.OKDatabaseHelper;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -44,7 +41,6 @@ import com.onlyknow.app.ui.activity.OKSettingActivity;
 import com.onlyknow.app.ui.view.OKKenBurnsView;
 import com.onlyknow.app.ui.view.OKRecyclerView;
 import com.onlyknow.app.utils.OKDateUtil;
-import com.onlyknow.app.utils.OKLogUtil;
 import com.scwang.smartrefresh.header.TaurusHeader;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.constant.RefreshState;
@@ -313,7 +309,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     @Override
-    public void historyApiComplete(List<OKCardBean> list) {
+    public void loadHistoryComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -335,7 +331,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     @Override
-    public void carouselAdApiComplete(OKCarouselAdBean bean) {
+    public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
         mHeaderPicture.setUrl(this.getActivity(), bean.getCarouselImage());

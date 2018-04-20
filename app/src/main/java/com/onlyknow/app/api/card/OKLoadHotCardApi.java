@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCardBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class OKLoadHotCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void hotApiComplete(List<OKCardBean> list);
+        void loadHotComplete(List<OKCardBean> list);
     }
 
     public void requestHotCard(Params params, onCallBack mCallBack) {
@@ -64,7 +64,7 @@ public class OKLoadHotCardApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.hotApiComplete(mOKCardBeanList);
+            mOnCallBack.loadHotComplete(mOKCardBeanList);
             super.onPostExecute(mOKCardBeanList);
         }
     }

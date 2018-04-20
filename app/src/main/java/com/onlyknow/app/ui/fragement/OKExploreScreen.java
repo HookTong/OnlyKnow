@@ -32,10 +32,10 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
 import com.onlyknow.app.api.card.OKLoadExploreCardApi;
 import com.onlyknow.app.api.app.OKLoadWeatherApi;
-import com.onlyknow.app.database.bean.OKCardBean;
-import com.onlyknow.app.database.bean.OKCarouselAdBean;
-import com.onlyknow.app.database.bean.OKUserInfoBean;
-import com.onlyknow.app.database.bean.OKWeatherBean;
+import com.onlyknow.app.db.bean.OKCardBean;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
+import com.onlyknow.app.db.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
 import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKBrowserActivity;
@@ -491,7 +491,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     @Override
-    public void weatherApiComplete(OKWeatherBean weatherBean) {
+    public void loadWeatherComplete(OKWeatherBean weatherBean) {
         if (weatherBean == null) {
             showSnackBar(rootView, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
             return;
@@ -503,7 +503,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     @Override
-    public void exploreApiComplete(List<OKCardBean> list) {
+    public void loadExploreComplete(List<OKCardBean> list) {
         if (list != null) {
             if (mRefreshLayout.getState() == RefreshState.Refreshing) {
                 page = 1;
@@ -525,7 +525,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     @Override
-    public void carouselAdApiComplete(OKCarouselAdBean bean) {
+    public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
         mHeaderPicture.setUrl(getActivity(), bean.getCarouselImage());

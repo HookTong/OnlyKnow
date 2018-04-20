@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.onlyknow.app.api.OKBaseApi;
-import com.onlyknow.app.database.bean.OKMeCommentCardBean;
+import com.onlyknow.app.db.bean.OKMeCommentCardBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public class OKLoadMeCommentCardApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void cardAndCommentApiComplete(List<OKMeCommentCardBean> list);
+        void loadMeCommentComplete(List<OKMeCommentCardBean> list);
     }
 
     public void requestMeCommentCard(Params params, onCallBack mCallBack) {
@@ -66,7 +66,7 @@ public class OKLoadMeCommentCardApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mOnCallBack.cardAndCommentApiComplete(list);
+            mOnCallBack.loadMeCommentComplete(list);
             super.onPostExecute(list);
         }
     }

@@ -20,7 +20,7 @@ public class OKGenerateQrCodeApi extends OKBaseApi {
     }
 
     public interface onCallBack {
-        void generateQrCodeApiComplete(Bitmap bitmap);
+        void generateQrCodeComplete(Bitmap bitmap);
     }
 
     public void requestGenerateQrCode(Bitmap bitmapTx, int mWidth, String msg, onCallBack listener) {
@@ -65,7 +65,7 @@ public class OKGenerateQrCodeApi extends OKBaseApi {
             if (isCancelled()) {
                 return;
             }
-            mListener.generateQrCodeApiComplete(bitmap);
+            mListener.generateQrCodeComplete(bitmap);
         }
     }
 
