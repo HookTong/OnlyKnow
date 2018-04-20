@@ -218,7 +218,7 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
 
             @Override
             public void onClick(View v) {
-                if (imageList != null && imageList.size() == 5) {
+                if (imageList != null && imageList.size() > 0) {
                     imageList.set(0, null);
                     GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
                     mClearImage1.setVisibility(View.GONE);
@@ -230,10 +230,10 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
 
             @Override
             public void onClick(View v) {
-                if (imageList != null && imageList.size() == 5) {
+                if (imageList != null && imageList.size() > 1) {
                     imageList.set(1, null);
-                    GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage1.setVisibility(View.GONE);
+                    GlideApi(mAddImage2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage2.setVisibility(View.GONE);
                 }
             }
         });
@@ -242,10 +242,10 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
 
             @Override
             public void onClick(View v) {
-                if (imageList != null && imageList.size() == 5) {
+                if (imageList != null && imageList.size() > 2) {
                     imageList.set(2, null);
-                    GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage1.setVisibility(View.GONE);
+                    GlideApi(mAddImage3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage3.setVisibility(View.GONE);
                 }
             }
         });
@@ -254,10 +254,10 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
 
             @Override
             public void onClick(View v) {
-                if (imageList != null && imageList.size() == 5) {
+                if (imageList != null && imageList.size() > 3) {
                     imageList.set(3, null);
-                    GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage1.setVisibility(View.GONE);
+                    GlideApi(mAddImage4, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage4.setVisibility(View.GONE);
                 }
             }
         });
@@ -266,10 +266,10 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
 
             @Override
             public void onClick(View v) {
-                if (imageList != null && imageList.size() == 5) {
+                if (imageList != null && imageList.size() > 4) {
                     imageList.set(4, null);
-                    GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
-                    mClearImage1.setVisibility(View.GONE);
+                    GlideApi(mAddImage5, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
+                    mClearImage5.setVisibility(View.GONE);
                 }
             }
         });
@@ -362,21 +362,22 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
     private ArrayList<MediaBean> mSelectMediaBean;
     private final int SELECT_MEDIA_REQUEST_CODE = 200;
 
-    private void dealWith(ArrayList<MediaBean> listMediaBean) {
-        if (listMediaBean == null || listMediaBean.size() == 0) {
+    private void dealWith(ArrayList<MediaBean> medias) {
+        if (medias == null || medias.size() == 0) {
             showSnackBar(mToolbarAddImage, "未获选择图片", "");
             return;
         }
         long size = 0;
-        for (MediaBean item : listMediaBean) { // 文件大小检查
+        for (MediaBean item : medias) { // 文件大小检查
             size += item.size;
         }
         if (size > 15 * 1024 * 1024) {
             showSnackBar(mToolbarAddImage, "一次上传的文件总量不能超过15MB", "");
             return;
         }
+
         imageList.clear();
-        int count = 0;
+
         GlideApi(mAddImage1, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
         GlideApi(mAddImage2, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
         GlideApi(mAddImage3, R.drawable.add_image_black, R.drawable.add_image_black, R.drawable.add_image_black);
@@ -389,36 +390,39 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
         mClearImage5.setVisibility(View.GONE);
 
         OKCardBean.CardImage image = null;
-        for (int i = 0; i < listMediaBean.size(); i++) {
-            MediaBean item = listMediaBean.get(i);
-            String path = item.path; // 文件路径
+        for (int i = 0; i < medias.size(); i++) {
 
-            OKLogUtil.print("Select File Path:" + path);
-            OKLogUtil.print("Select File Size:" + item.size);
+            if (i > 4) {
+                break;
+            }
+
+            MediaBean item = medias.get(i);
+
+            if (item == null) continue;
 
             image = new OKCardBean.CardImage();
-            image.setUrl(path);
+            image.setUrl(item.path);
             image.setSize(item.size);
             imageList.add(image);
 
             if (i == 0) {
-                GlideApi(mAddImage1, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                GlideApi(mAddImage1, item.path, R.drawable.add_image_black, R.drawable.add_image_black);
                 mClearImage1.setVisibility(View.VISIBLE);
             }
             if (i == 1) {
-                GlideApi(mAddImage2, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                GlideApi(mAddImage2, item.path, R.drawable.add_image_black, R.drawable.add_image_black);
                 mClearImage2.setVisibility(View.VISIBLE);
             }
             if (i == 2) {
-                GlideApi(mAddImage3, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                GlideApi(mAddImage3, item.path, R.drawable.add_image_black, R.drawable.add_image_black);
                 mClearImage3.setVisibility(View.VISIBLE);
             }
             if (i == 3) {
-                GlideApi(mAddImage4, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                GlideApi(mAddImage4, item.path, R.drawable.add_image_black, R.drawable.add_image_black);
                 mClearImage4.setVisibility(View.VISIBLE);
             }
             if (i == 4) {
-                GlideApi(mAddImage5, path, R.drawable.add_image_black, R.drawable.add_image_black);
+                GlideApi(mAddImage5, item.path, R.drawable.add_image_black, R.drawable.add_image_black);
                 mClearImage5.setVisibility(View.VISIBLE);
             }
         }

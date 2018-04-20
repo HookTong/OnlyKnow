@@ -159,12 +159,12 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
     public void onLoadMore(RefreshLayout refreshLayout) {
 
         if (TextUtils.isEmpty(mSearchMsg)) {
-            mRefreshLayout.finishRefresh(2000);
+            mRefreshLayout.finishLoadMore(2000);
             return;
         }
 
         if (!OKNetUtil.isNet(this)) {
-            mRefreshLayout.finishRefresh(2000);
+            mRefreshLayout.finishLoadMore(2000);
             showSnackBar(searchEditText, "没有网络连接", "");
             return;
         }
@@ -192,26 +192,25 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
             return;
         }
 
-        if (OKNetUtil.isNet(this)) {
+        if (!OKNetUtil.isNet(this)) {
 
-            OKLoadSearchApi.Params params = new OKLoadSearchApi.Params();
-            params.setSearch(mSearchMsg);
-            params.setType(mSearchType);
-            params.setPage(1);
-            params.setSize(size);
-
-            if (mOKLoadSearchApi != null) {
-                mOKLoadSearchApi.cancelTask();
-            }
-            mOKLoadSearchApi = new OKLoadSearchApi(this);
-            mOKLoadSearchApi.requestSearch(params, this);
-
-        } else {
-
-            mRefreshLayout.finishRefresh(1500);
+            mRefreshLayout.finishRefresh(2000);
             showSnackBar(searchEditText, "没有网络连接", "");
-
+            return;
         }
+
+        OKLoadSearchApi.Params params = new OKLoadSearchApi.Params();
+        params.setSearch(mSearchMsg);
+        params.setType(mSearchType);
+        params.setPage(1);
+        params.setSize(size);
+
+        if (mOKLoadSearchApi != null) {
+            mOKLoadSearchApi.cancelTask();
+        }
+        mOKLoadSearchApi = new OKLoadSearchApi(this);
+        mOKLoadSearchApi.requestSearch(params, this);
+
     }
 
     @Override

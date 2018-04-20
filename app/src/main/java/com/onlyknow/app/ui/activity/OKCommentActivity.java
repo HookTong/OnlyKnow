@@ -247,7 +247,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         mToolBarProgressBar.setVisibility(View.GONE);
         if (result != null && result.isSuccess()) {
             editTextMsg.setText("");
-            if (mCommentBeanList.size() == 0) {
+            if (mCommentBeanList.size() < size) {
                 mRefreshLayout.autoRefresh();
             } else {
                 mRefreshLayout.autoLoadMore();
