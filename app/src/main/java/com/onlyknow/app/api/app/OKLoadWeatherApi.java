@@ -4,13 +4,11 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 
-import com.google.gson.Gson;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.db.bean.OKWeatherBean;
 import com.onlyknow.app.net.OKWebService;
+import com.onlyknow.app.utils.OKGsonUtil;
 import com.onlyknow.app.utils.OKNetUtil;
-
-import java.io.IOException;
 
 public class OKLoadWeatherApi extends OKBaseApi {
     private Context context;
@@ -52,27 +50,13 @@ public class OKLoadWeatherApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
-            return getWeatherBean(params[0]);
-        }
 
-        /**
-         * 通过网络，得到JSON，解析成对象
-         *
-         * @throws IOException
-         */
-        private OKWeatherBean getWeatherBean(String webUrl) {
-            String json = OKWebService.OKHttpApiGet(webUrl);
-            if (json == null) {
+            String json = OKWebService.OKHttpApiGet(params[0]);
+            if (TextUtils.isEmpty(json)) {
                 return null;
             }
 
-            try {
-                Gson gson = new Gson();
-                return gson.fromJson(json, OKWeatherBean.class);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return null;
-            }
+            return OKGsonUtil.fromJson(json, OKWeatherBean.class);
         }
 
         @Override

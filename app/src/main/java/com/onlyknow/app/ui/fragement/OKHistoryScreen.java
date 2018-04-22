@@ -166,6 +166,12 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
 
+        mHeaderPicture.setCarouselByUrl(this.getActivity(), OKConstant.getCarouselImages());
+
+        mEntryViewAdapter = new EntryViewAdapter(getActivity(), mCardBeanList);
+        mRecyclerView.setAdapter(mEntryViewAdapter);
+
+        // 请求轮播图片
         OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
         params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
         if (carouselAdApi != null) {
@@ -173,11 +179,6 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
         carouselAdApi = new OKLoadCarouselAdApi(getActivity());
         carouselAdApi.requestCarouselAd(params, this);
-
-        mHeaderPicture.setUrl(this.getActivity(), OKConstant.getCarouselImages());
-
-        mEntryViewAdapter = new EntryViewAdapter(getActivity(), mCardBeanList);
-        mRecyclerView.setAdapter(mEntryViewAdapter);
 
         floatingActionButton.setOnClickListener(new OnClickListener() {
 
@@ -334,7 +335,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
-        mHeaderPicture.setUrl(this.getActivity(), bean.getCarouselImage());
+        mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImage());
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {

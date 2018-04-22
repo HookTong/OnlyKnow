@@ -62,7 +62,7 @@ public class OKKenBurnsView extends FrameLayout {
         mHandler = new Handler();
     }
 
-    public void setResourceIds(Context context, int... resourceIds) {
+    public void setCarouselById(Context context, int... resourceIds) {
         this.context = context;
         this.mResourceIds = resourceIds;
         fillImageViewsResIds();
@@ -74,7 +74,7 @@ public class OKKenBurnsView extends FrameLayout {
         }
     }
 
-    public void setUrl(Context context, List<Map<String, Object>> UrlList) {
+    public void setCarouselByUrl(Context context, List<Map<String, Object>> UrlList) {
         this.context = context;
         this.mapArrayList = UrlList;
         fillImageViewsUrls();

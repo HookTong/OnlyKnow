@@ -172,6 +172,12 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
 
+        mHeaderPicture.setCarouselByUrl(this.getActivity(), OKConstant.getCarouselImages());
+
+        mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
+        mRecyclerView.setAdapter(mCardViewAdapter);
+
+        // 请求轮播图片
         OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
         params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
         if (carouselAdApi != null) {
@@ -179,11 +185,6 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         }
         carouselAdApi = new OKLoadCarouselAdApi(getActivity());
         carouselAdApi.requestCarouselAd(params, this);
-
-        mHeaderPicture.setUrl(this.getActivity(), OKConstant.getCarouselImages());
-
-        mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
-        mRecyclerView.setAdapter(mCardViewAdapter);
 
         fabReGet.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -328,7 +329,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
-        mHeaderPicture.setUrl(this.getActivity(), bean.getCarouselImage());
+        mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImage());
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

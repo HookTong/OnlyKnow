@@ -3,10 +3,10 @@ package com.onlyknow.app.api.app;
 import android.content.Context;
 import android.os.AsyncTask;
 
-import com.google.gson.Gson;
 import com.onlyknow.app.api.OKBaseApi;
 import com.onlyknow.app.db.bean.OKGanKBean;
 import com.onlyknow.app.net.OKWebService;
+import com.onlyknow.app.utils.OKGsonUtil;
 
 import java.util.List;
 
@@ -57,16 +57,17 @@ public class OKLoadGanKApi extends OKBaseApi {
             if (isCancelled()) {
                 return null;
             }
+
             OKGanKBean bean;
+
             String json = OKWebService.OKHttpApiGet(params[0]);
-            try {
-                bean = new Gson().fromJson(json, OKGanKBean.class);
-                if (bean != null) {
-                    return bean.getResults();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+
+            bean = OKGsonUtil.fromJson(json, OKGanKBean.class);
+
+            if (bean != null) {
+                return bean.getResults();
             }
+
             return null;
         }
 

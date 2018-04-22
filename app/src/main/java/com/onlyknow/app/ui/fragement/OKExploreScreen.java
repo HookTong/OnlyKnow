@@ -207,6 +207,13 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         mCollapsingToolbarLayout.setExpandedTitleColor(Color.WHITE);
         mCollapsingToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
 
+        mHeaderPicture.setCarouselByUrl(getActivity(), OKConstant.getCarouselImages());
+
+        bindWeatherView();
+
+        mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
+        mRecyclerView.setAdapter(mCardViewAdapter);
+
         // 请求轮播广告
         OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
         params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
@@ -222,13 +229,6 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
         mWeatherApi = new OKLoadWeatherApi(getActivity());
         mWeatherApi.requestWeather(USER_INFO_SP.getString("CITY_ID", ""), this);
-
-        mHeaderPicture.setUrl(getActivity(), OKConstant.getCarouselImages());
-
-        bindWeatherView();
-
-        mCardViewAdapter = new CardViewAdapter(getActivity(), mCardBeanList);
-        mRecyclerView.setAdapter(mCardViewAdapter);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -528,7 +528,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
-        mHeaderPicture.setUrl(getActivity(), bean.getCarouselImage());
+        mHeaderPicture.setCarouselByUrl(getActivity(), bean.getCarouselImage());
         stopBanner();
         mBanner.setImages(bean.getAdImage());
         startBanner();
