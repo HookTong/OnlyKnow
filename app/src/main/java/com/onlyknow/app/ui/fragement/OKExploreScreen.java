@@ -272,7 +272,16 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                 mWeatherApi = new OKLoadWeatherApi(getActivity());
                 mWeatherApi.requestWeather(USER_INFO_SP.getString("CITY_ID", ""), OKExploreScreen.this);
 
-                showSnackBar(v, "重新获取天气", "");
+                // 请求轮播广告
+                OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
+                params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
+                if (carouselAdApi != null) {
+                    carouselAdApi.cancelTask();
+                }
+                carouselAdApi = new OKLoadCarouselAdApi(getActivity());
+                carouselAdApi.requestCarouselAd(params, OKExploreScreen.this);
+
+                showSnackBar(v, "重新获取天气与轮播图片!", "");
             }
         });
 

@@ -116,8 +116,7 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putString("TYPE", "AGREEMENT_VERSION_CHECK");
-                bundle.putString("VALUE", "");
+                bundle.putString(OKContentActivity.KEY_TYPE, OKContentActivity.TYPE_AGREEMENT);
                 startUserActivity(bundle, OKContentActivity.class);
             }
         });

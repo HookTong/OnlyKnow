@@ -25,11 +25,11 @@ public final class OKConstant {
     public final static String ACTION_RESET_LOCATION = "com.onlyknow.app.ACTION_RE_LOCATION";
 
     // app本地路径
-    public final static String IMAGE_PATH = Environment.getExternalStorageDirectory().getPath() + "/WeiZhi/Image/";
-    public final static String GLIDE_PATH = Environment.getExternalStorageDirectory().getPath() + "/WeiZhi/Cache/";
+    public final static String IMAGE_PATH = Environment.getExternalStorageDirectory().getPath() + "/OnlyKnow/Image/";
+    public final static String GLIDE_PATH = Environment.getExternalStorageDirectory().getPath() + "/OnlyKnow/Cache/";
 
     // app网址
-    public final static String SERVICE_ROOT_URL = "http://101.132.168.25:8090/WeiZhiService/";
+    public final static String SERVICE_ROOT_URL = "http://101.132.168.25:8090/onlyknow/";
     public final static String ONLY_KNOW_RESOURCES_CARD_IMAGE_URL = SERVICE_ROOT_URL + "CardImage/";
     public final static String ONLY_KNOW_RESOURCES_USER_HEAD_PORTRAIT_URL = SERVICE_ROOT_URL + "UserHeadPortrait/";
     public final static String ONLY_KNOW_RESOURCES_USER_HEAD_URL = SERVICE_ROOT_URL + "UserHead/";

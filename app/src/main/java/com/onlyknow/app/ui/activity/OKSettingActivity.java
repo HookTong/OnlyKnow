@@ -25,6 +25,7 @@ import com.onlyknow.app.net.OKWebService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKProgressButton;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.app.utils.OKGlideCacheUtil;
 import com.onlyknow.app.utils.OKMimeTypeUtil;
 
 import okhttp3.Request;
@@ -33,7 +34,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
     private LinearLayout layoutFontSet, layoutCacheQk, layoutVersionUpdate, layoutVersionJieSao, layoutUserXieYi;
     private LinearLayout layoutYiJianFanKui, layoutDiBuDaoHan, mLinearLayoutAbout;
     private SwitchCompat switchCompat;
-    private TextView textViewVersionID;
+    private TextView textViewVersionID, textViewCacheSize;
 
     private int dbPos = 0;
 
@@ -73,7 +74,9 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
     private void init() {
         setSupportActionBar(mToolbar);
 
-        textViewVersionID.setText("当前APP版本 : Version :" + OKConstant.APP_VERSION);
+        textViewCacheSize.setText(OKGlideCacheUtil.getCacheSize(this));
+
+        textViewVersionID.setText("当前APP版本 :" + OKConstant.APP_VERSION);
         if (SETTING_SP.getBoolean("AUTO_UPDATE", true)) {
             switchCompat.setChecked(true);
         } else {
@@ -96,8 +99,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder DialogMenu = new AlertDialog.Builder(OKSettingActivity.this);
-                final View dialogview = LayoutInflater.from(OKSettingActivity.this).inflate(R.layout.ok_dialog_font_setting,
-                        null);
+                final View dialogview = LayoutInflater.from(OKSettingActivity.this).inflate(R.layout.ok_dialog_font_setting, null);
                 final RadioGroup radioGroup = (RadioGroup) dialogview.findViewById(R.id.setting_ddalog_rg);
                 final RadioButton radioButton = (RadioButton) dialogview.findViewById(R.id.setting_ddalog_rb1);
                 final RadioButton radioButton2 = (RadioButton) dialogview.findViewById(R.id.setting_ddalog_rb2);
@@ -144,8 +146,13 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
                 AlertDialog.setPositiveButton("清空", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
+
+                        OKGlideCacheUtil.clearImageDiskCache(OKSettingActivity.this);
+
                         OKDatabaseHelper helper = OKDatabaseHelper.getHelper(OKSettingActivity.this);
                         helper.onUpgrade(helper.getWritableDatabase(), helper.getConnectionSource(), 2, 3);
+
+                        textViewCacheSize.setText(OKGlideCacheUtil.getCacheSize(OKSettingActivity.this));
                     }
                 });
                 AlertDialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -268,6 +275,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
         layoutDiBuDaoHan = (LinearLayout) findViewById(R.id.setting_layout_shezhidibudaohan);
         mLinearLayoutAbout = (LinearLayout) findViewById(R.id.setting_layout_about);
         textViewVersionID = (TextView) findViewById(R.id.setting_text_banbenID);
+        textViewCacheSize = (TextView) findViewById(R.id.setting_cache_size_text);
     }
 
     private void showUpdateAppDialog(final OKAppInfoBean bean) {

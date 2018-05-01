@@ -143,6 +143,16 @@
                         android:textSize="12sp" />
                 </LinearLayout>
 
+                <TextView
+                    android:id="@+id/setting_cache_size_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginRight="10dp"
+                    android:text="120MB"
+                    android:textColor="@color/md_white_1000"
+                    android:textSize="16sp" />
+
                 <ImageView
                     android:layout_width="25dp"
                     android:layout_height="25dp"

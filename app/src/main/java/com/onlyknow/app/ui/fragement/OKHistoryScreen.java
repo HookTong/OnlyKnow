@@ -71,6 +71,8 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
 
     private OKLoadCarouselAdApi carouselAdApi;
 
+    private long touch_image_time = 0;
+
     private View rootView;
 
     @Override
@@ -238,6 +240,28 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                 mRefreshLayout.autoRefresh();
             }
         }));
+
+        mHeaderPicture.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (System.currentTimeMillis() - touch_image_time > 2000l) {
+                    touch_image_time = System.currentTimeMillis();
+
+                    showSnackBar(v, "再点一次获取轮播图片!", "");
+                } else {
+                    // 请求轮播图片
+                    OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
+                    params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
+                    if (carouselAdApi != null) {
+                        carouselAdApi.cancelTask();
+                    }
+                    carouselAdApi = new OKLoadCarouselAdApi(getActivity());
+                    carouselAdApi.requestCarouselAd(params, OKHistoryScreen.this);
+
+                    showSnackBar(v, "重新获取轮播图片", "");
+                }
+            }
+        });
 
         mRefreshLayout.autoRefresh();
     }
