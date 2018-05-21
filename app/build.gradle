@@ -25,7 +25,7 @@ android {
     }
     signingConfigs {
         debug {
-            storeFile file('F:/onlyknow/OnlyKnow/debug.keystore')
+            storeFile file('/Users/tongxingwen/Desktop/onlyknow/OnlyKnow/onlyknow.keystore')
             storePassword "android"
             keyAlias "androiddebugkey"
             keyPassword "android"
