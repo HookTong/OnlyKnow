@@ -42,7 +42,7 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_hot);
-        initSystemBar(this);
+        initStatusBar();
         findView();
         init();
     }
@@ -71,7 +71,7 @@ public class OKHotActivity extends OKBaseActivity implements OnRefreshListener, 
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);

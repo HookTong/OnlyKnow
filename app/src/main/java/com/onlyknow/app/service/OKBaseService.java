@@ -1,5 +1,6 @@
 package com.onlyknow.app.service;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,64 +12,75 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
+import com.hyphenate.EMCallBack;
+import com.hyphenate.EMMessageListener;
+import com.hyphenate.chat.EMMessage;
 import com.onlyknow.app.R;
+import com.onlyknow.app.utils.OKLogUtil;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.List;
 
 /**
- * Created by Administrator on 2017/12/13.
+ * 服务基类(基本服务能力);
+ * <p>
+ * Created by Reset on 2018/05/24.
  */
 
-public class OKBaseService extends Service {
-    public NotificationManager mNotificationManager;
-    public NotificationCompat.Builder mBuilder;
-    public SharedPreferences USER_INFO_SP, SETTING_SP, WEATHER_SP;
-    public final String ACTION_MAIN_SERVICE_SHOW_NOTICE = "ACTION_MAIN_SERVICE_SHOW_NOTICE";
-    public final String ACTION_MAIN_SERVICE_LOGIN_IM = "ACTION_MAIN_SERVICE_LOGIN_IM";
-    public final String ACTION_MAIN_SERVICE_LOGOUT_IM = "ACTION_MAIN_SERVICE_LOGOUT_IM";
-    public final String ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM = "ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM";
-    public final String ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM";
-    public final String ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM";
+public class OKBaseService extends Service implements EMCallBack, EMMessageListener {
+    private final String TAG = "OKBaseService";
 
-    public final ExecutorService exec = Executors.newFixedThreadPool(100);
+    protected NotificationManager mNotificationManager;
+    protected NotificationCompat.Builder mBuilder;
 
-    public SharedPreferences initUserInfoSp() {
-        if (USER_INFO_SP == null) {
-            USER_INFO_SP = this.getApplicationContext().getSharedPreferences("userInfo", Context.MODE_PRIVATE);
+    protected SharedPreferences USER_BODY, SETTING_BODY, WEATHER_BODY;
+
+    protected final String ACTION_MAIN_SERVICE_LOGIN_IM = "ACTION_MAIN_SERVICE_LOGIN_IM";
+    protected final String ACTION_MAIN_SERVICE_LOGOUT_IM = "ACTION_MAIN_SERVICE_LOGOUT_IM";
+    protected final String ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM = "ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM";
+    protected final String ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM";
+    protected final String ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM";
+
+    protected final void initUserBody() {
+        if (USER_BODY == null) {
+            USER_BODY = this.getSharedPreferences("userInfo", Context.MODE_PRIVATE);
         }
-        return USER_INFO_SP;
     }
 
-    public SharedPreferences initSettingSp() {
-        if (SETTING_SP == null) {
-            SETTING_SP = this.getApplicationContext().getSharedPreferences("setting", Context.MODE_PRIVATE);
+    protected final void initSettingBody() {
+        if (SETTING_BODY == null) {
+            SETTING_BODY = this.getSharedPreferences("setting", Context.MODE_PRIVATE);
         }
-        return SETTING_SP;
     }
 
-    public SharedPreferences initWeatherSp() {
-        if (WEATHER_SP == null) {
-            WEATHER_SP = this.getApplicationContext().getSharedPreferences("weather", Context.MODE_PRIVATE);
+    protected final void initWeatherBody() {
+        if (WEATHER_BODY == null) {
+            WEATHER_BODY = this.getSharedPreferences("weather", Context.MODE_PRIVATE);
         }
-        return WEATHER_SP;
     }
 
     // 注册通知信息
-    public void initNotice(String title, String content) {
+    protected final void initNotice(String title, String content) {
+
         mBuilder = new NotificationCompat.Builder(this);
+
+        @SuppressLint("WrongConstant")
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, new Intent(), Notification.FLAG_AUTO_CANCEL);
-        mBuilder.setContentTitle(title).setContentText(content).setContentIntent(pendingIntent)
+
+        mBuilder.setContentTitle(title)
+                .setContentText(content)
+                .setContentIntent(pendingIntent)
                 .setTicker(title)// 通知首次出现在通知栏，带上升动画效果的
                 .setWhen(System.currentTimeMillis())// 通知产生的时间，会在通知信息里显示
                 .setPriority(Notification.PRIORITY_DEFAULT)// 设置该通知优先级
-                .setAutoCancel(true).setOngoing(false)// TURE是设置他为一个正在进行的通知
+                .setAutoCancel(true)
+                .setOngoing(false)// TURE是设置他为一个正在进行的通知
                 .setDefaults(Notification.DEFAULT_VIBRATE)// 向通知添加通知效果
                 .setSmallIcon(R.drawable.ic_launcher);
+
     }
 
     // 显示通知信息
-    public void showNotice(String title) {
+    protected final void showNotice(String title) {
         Notification mNotification = mBuilder.build();
         // 设置通知 消息 图标
         mNotification.icon = R.drawable.ic_launcher;
@@ -87,5 +99,50 @@ public class OKBaseService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onSuccess() {
+        OKLogUtil.print(TAG, "onSuccess");
+    }
+
+    @Override
+    public void onError(int i, String s) {
+        OKLogUtil.print(TAG, "onError:" + i + " Msg:" + s);
+    }
+
+    @Override
+    public void onProgress(int i, String s) {
+        OKLogUtil.print(TAG, "onProgress:" + i + " Msg:" + s);
+    }
+
+    @Override
+    public void onMessageReceived(List<EMMessage> list) {
+        OKLogUtil.print(TAG, "onMessageReceived");
+    }
+
+    @Override
+    public void onCmdMessageReceived(List<EMMessage> list) {
+        OKLogUtil.print(TAG, "onCmdMessageReceived");
+    }
+
+    @Override
+    public void onMessageRead(List<EMMessage> list) {
+        OKLogUtil.print(TAG, "onMessageRead");
+    }
+
+    @Override
+    public void onMessageDelivered(List<EMMessage> list) {
+        OKLogUtil.print(TAG, "onMessageDelivered");
+    }
+
+    @Override
+    public void onMessageRecalled(List<EMMessage> list) {
+        OKLogUtil.print(TAG, "onMessageRecalled");
+    }
+
+    @Override
+    public void onMessageChanged(EMMessage emMessage, Object o) {
+        OKLogUtil.print(TAG, "onMessageChanged");
     }
 }

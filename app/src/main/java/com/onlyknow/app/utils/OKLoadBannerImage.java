@@ -8,8 +8,6 @@ import com.onlyknow.app.R;
 import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.youth.banner.loader.ImageLoader;
 
-import java.util.Map;
-
 public class OKLoadBannerImage extends ImageLoader {
     private boolean isLink = false;
 
@@ -21,8 +19,8 @@ public class OKLoadBannerImage extends ImageLoader {
     public void displayImage(Context context, Object path, ImageView imageView) {
         if (isLink) {
             try {
-                Map<String, String> map = (Map<String, String>) path;// 广告轮播图片加载
-                GlideApp.with(context).load(map.get(OKCarouselAdBean.KEY_URL)).error(R.drawable.topgd2).placeholder(R.drawable.topgd2).into(imageView);
+                OKCarouselAdBean.ADImage adImage = (OKCarouselAdBean.ADImage) path;// 广告轮播图片加载
+                GlideApp.with(context).load(adImage.getUrl()).error(R.drawable.topgd2).placeholder(R.drawable.topgd2).into(imageView);
             } catch (Exception ex) {
                 GlideApp.with(context).load(R.drawable.topgd2).into(imageView);
                 ex.printStackTrace();

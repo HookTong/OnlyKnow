@@ -76,11 +76,11 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_home_page);
-        initUserInfoSharedPreferences();
+        initUserBody();
 
         USERNAME = getIntent().getExtras().getString(OKUserInfoBean.KEY_USERNAME);
         NICKNAME = getIntent().getExtras().getString(OKUserInfoBean.KEY_NICKNAME);
-        if (USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "").equals(USERNAME)) {
+        if (USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "").equals(USERNAME)) {
             WhetherThis = true;
         }
 
@@ -127,7 +127,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
     }
 
     private void findView() {
-        super.findCollapsingToolbarView(this);
+        super.findCollapsingToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -179,7 +179,7 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (!WhetherThis) {
                         if (OKMainService.isEMLogIn && OKNetUtil.isNet(OKHomePageActivity.this)) {
                             Bundle bundle = new Bundle();
@@ -258,9 +258,9 @@ public class OKHomePageActivity extends OKBaseActivity implements OnOffsetChange
                         popWindow.dismiss();
                         break;
                     case R.id.SHOW_POP_GUANZHU_LAYOU: // 关注该用户
-                        if (USER_INFO_SP.getBoolean("STATE", false)) {
+                        if (USER_BODY.getBoolean("STATE", false)) {
                             if (!WhetherThis) {
-                                String usernameThis = USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "");
+                                String usernameThis = USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "");
 
                                 OKManagerUserApi.Params params = new OKManagerUserApi.Params();
                                 params.setType(OKManagerUserApi.Params.TYPE_ADD_ATTENTION);

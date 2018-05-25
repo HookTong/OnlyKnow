@@ -59,7 +59,7 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.ok_activity_welcome);
         ButterKnife.bind(this);
-        initSettingSharedPreferences();
+        initSettingBody();
         bindWelcomeTP();
 
         checkSelfPermission();
@@ -242,7 +242,7 @@ public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallb
             if (bean.isAppIsMandatory()) {
                 showUpdateAppDialog(bean); // 强制更新
                 return;
-            } else if (SETTING_SP.getBoolean("AUTO_UPDATE", true)) {
+            } else if (SETTING_BODY.getBoolean("AUTO_UPDATE", true)) {
                 showUpdateAppDialog(bean);
                 return;
             }

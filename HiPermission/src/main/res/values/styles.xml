@@ -37,7 +37,7 @@
         <item name="PermissionIconFilterColor">@color/permissionColorWhite</item>
     </style>
 
-    <style name="PermissionDefaultNormalStyle" >
+    <style name="PermissionDefaultNormalStyle">
         <item name="PermissionTitleColor">#737373</item>
         <item name="PermissionMsgColor">#737373</item>
         <item name="PermissionItemTextColor">#737373</item>

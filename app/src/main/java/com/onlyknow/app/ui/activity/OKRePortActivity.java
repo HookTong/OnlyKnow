@@ -40,8 +40,8 @@ public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_report);
-        initUserInfoSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initStatusBar();
         mBundle = getIntent().getExtras();
 
         RePortType = mBundle.getString(KEY_TYPE);
@@ -83,7 +83,7 @@ public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCa
                 }
 
                 if (!TextUtils.isEmpty(msg)) {
-                    if (USER_INFO_SP.getBoolean("STATE", false)) {
+                    if (USER_BODY.getBoolean("STATE", false)) {
                         if (TYPE_USER.equals(RePortType)) {
 
                             report(TYPE_USER, msg, -1, mBundle.getString(KEY_NAME));
@@ -120,7 +120,7 @@ public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCa
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
 
@@ -142,7 +142,7 @@ public class OKRePortActivity extends OKBaseActivity implements OKReportApi.onCa
         params.setType(type);
         params.setMessage(msg);
 
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
 
         showProgressDialog("正在提交举报信息");
 

@@ -11,18 +11,15 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 
 /**
- * Created by Administrator on 2017/12/7.
+ * 获取城市ID;
+ * <p>
+ * Created by Reset on 2018/05/24.
  */
 
 public class OKCityUtil {
-    private final String TAG = "OKCityUtil";
-    private Context context;
+    private final static String TAG = "OKCityUtil";
 
-    public OKCityUtil(Context con) {
-        this.context = con;
-    }
-
-    public String getCityID(String cityName) {
+    public static String getCityID(Context context, String cityName) {
         XmlResourceParser xmlParser = context.getResources().getXml(R.xml.ok_citys);
 
         try {

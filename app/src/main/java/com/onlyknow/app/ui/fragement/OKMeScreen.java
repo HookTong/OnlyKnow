@@ -13,7 +13,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -62,7 +61,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     private LinearLayout linearLayoutJiFeng;
     private OKSEImageView menu_OKSEImageView, edit_OKSEImageView;
     private DrawerLayout mDrawerLayout;
-    private ActionBarDrawerToggle mBarToggle;
+    private DrawerToggle mDrawerToggle;
     private NavigationView mNavigationView;
 
     private OKFragmentPagerAdapter mFragmentPagerAdapter;
@@ -84,7 +83,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.ok_fragment_me, container, false);
-            initUserInfoSharedPreferences();
+            initUserBody();
             findView(rootView);
 
             init();
@@ -101,15 +100,15 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         super.onResume();
         appBarLayout.addOnOffsetChangedListener(this);
 
-        if (USER_INFO_SP.getBoolean("STATE_CHANGE", false)) {
+        if (USER_BODY.getBoolean("STATE_CHANGE", false)) {
             bindUserInfo();
-            USER_INFO_SP.edit().putBoolean("STATE_CHANGE", false).commit();
+            USER_BODY.edit().putBoolean("STATE_CHANGE", false).commit();
         }
 
-        if (USER_INFO_SP.getBoolean("STATE", false) && !TextUtils.isEmpty(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
+        if (USER_BODY.getBoolean("STATE", false) && !TextUtils.isEmpty(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""))) {
             OKManagerUserApi.Params params = new OKManagerUserApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-            params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
             params.setType(OKManagerUserApi.Params.TYPE_GET_INFO);
 
             okManagerUserApi = new OKManagerUserApi(getActivity());
@@ -137,28 +136,28 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
     }
 
     private void bindUserInfo() {
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             // 用户信息设置
-            String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+            String url = USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
             GlideRoundApi(imageViewTX, url, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
             GlideBlurApi(mImageViewHead, url, R.drawable.topgd3, R.drawable.topgd3);
-            if (USER_INFO_SP.getString(OKUserInfoBean.KEY_SEX, "").equals("NAN")) {
+            if (USER_BODY.getString(OKUserInfoBean.KEY_SEX, "").equals("NAN")) {
                 imageViewSex.setVisibility(View.VISIBLE);
                 GlideApi(imageViewSex, R.drawable.nan, R.drawable.nan, R.drawable.nan);
             } else {
                 imageViewSex.setVisibility(View.VISIBLE);
                 GlideApi(imageViewSex, R.drawable.nv, R.drawable.nv, R.drawable.nv);
             }
-            textViewName.setText(USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "您还未登录"));
-            String qm = USER_INFO_SP.getString(OKUserInfoBean.KEY_TAG, "");
+            textViewName.setText(USER_BODY.getString(OKUserInfoBean.KEY_NICKNAME, "您还未登录"));
+            String qm = USER_BODY.getString(OKUserInfoBean.KEY_TAG, "");
             if (!TextUtils.isEmpty(qm) && !qm.equals("NULL")) {
                 textViewQianMin.setText(qm);
             } else {
                 textViewQianMin.setText("这个人很懒，什么都没有留下 !");
             }
-            textViewGuanZhu.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_ME_ATTENTION, 0));
-            textViewShouChan.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_ME_WATCH, 0));
-            textViewJiFeng.setText("" + USER_INFO_SP.getInt(OKUserInfoBean.KEY_INTEGRAL, 0));
+            textViewGuanZhu.setText("" + USER_BODY.getInt(OKUserInfoBean.KEY_ME_ATTENTION, 0));
+            textViewShouChan.setText("" + USER_BODY.getInt(OKUserInfoBean.KEY_ME_WATCH, 0));
+            textViewJiFeng.setText("" + USER_BODY.getInt(OKUserInfoBean.KEY_INTEGRAL, 0));
         } else {
             imageViewSex.setVisibility(View.INVISIBLE);
             textViewName.setText("您还未登录");
@@ -197,9 +196,9 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
         mViewPager.setOffscreenPageLimit(5);
         mTabLayout.setupWithViewPager(mViewPager);
         mNavigationView.setNavigationItemSelectedListener(this);
-        mBarToggle = new ActionBarDrawerToggle(getActivity(), mDrawerLayout, toolbar, R.drawable.ok_toolbar_menu, R.drawable.ok_toolbar_back);
-        mBarToggle.syncState();
-        mDrawerLayout.addDrawerListener(mBarToggle);
+        mDrawerToggle = new DrawerToggle(mDrawerLayout, toolbar);
+        mDrawerToggle.syncState();
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
         bindNavigationHeadView(mNavigationView.getHeaderView(0));
 
         // 监听器
@@ -207,7 +206,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     int location[] = new int[2];
                     imageViewTX.getLocationOnScreen(location);
 
@@ -216,7 +215,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
                     mBundle.putInt("top", location[1]);
                     mBundle.putInt("height", imageViewTX.getHeight());
                     mBundle.putInt("width", imageViewTX.getWidth());
-                    String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+                    String url = USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
                     mBundle.putString("url", url);
 
                     startUserActivity(mBundle, OKDragPhotoActivity.class);
@@ -233,7 +232,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     Intent intent = new Intent();
                     intent.setClass(getActivity(), OKGoodsActivity.class);
                     getActivity().startActivity(intent);
@@ -249,7 +248,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     Intent intent = new Intent();
                     intent.setClass(getActivity(), OKUserEditActivity.class);
                     getActivity().startActivity(intent);
@@ -265,7 +264,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
 
             @Override
             public void onClick(View v) {
-                showMenu(getActivity());
+                showMainMenu();
             }
         });
     }
@@ -356,7 +355,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
 
             if (userInfoBean == null) return;
 
-            if (!userInfoBean.getHeadPortraitUrl().equals(USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, ""))) {
+            if (!userInfoBean.getHeadPortraitUrl().equals(USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, ""))) {
                 GlideRoundApi(imageViewTX, userInfoBean.getHeadPortraitUrl(), R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
                 GlideBlurApi(mImageViewHead, userInfoBean.getHeadPortraitUrl(), R.drawable.topgd3, R.drawable.topgd3);
             }
@@ -381,7 +380,7 @@ public class OKMeScreen extends OKBaseFragment implements AppBarLayout.OnOffsetC
             textViewJiFeng.setText("" + userInfoBean.getMeIntegral());
 
             // 保存用户信息
-            SharedPreferences.Editor editor = USER_INFO_SP.edit();
+            SharedPreferences.Editor editor = USER_BODY.edit();
             editor.putInt(OKUserInfoBean.KEY_USER_ID, userInfoBean.getUserId());
             editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUserName());
             editor.putString(OKUserInfoBean.KEY_NICKNAME, userInfoBean.getUserNickname());

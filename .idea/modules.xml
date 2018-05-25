@@ -2,11 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/BottomNavigationBar/BottomNavigationBar.iml" filepath="$PROJECT_DIR$/BottomNavigationBar/BottomNavigationBar.iml" />
       <module fileurl="file://$PROJECT_DIR$/HiPermission/HiPermission.iml" filepath="$PROJECT_DIR$/HiPermission/HiPermission.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MediaPicker/MediaPicker.iml" filepath="$PROJECT_DIR$/MediaPicker/MediaPicker.iml" />
       <module fileurl="file://$PROJECT_DIR$/OnlyKnow.iml" filepath="$PROJECT_DIR$/OnlyKnow.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/bottom-navigation-bar/bottom-navigation-bar.iml" filepath="$PROJECT_DIR$/bottom-navigation-bar/bottom-navigation-bar.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mediapicker/mediapicker.iml" filepath="$PROJECT_DIR$/mediapicker/mediapicker.iml" />
     </modules>
   </component>
 </project>

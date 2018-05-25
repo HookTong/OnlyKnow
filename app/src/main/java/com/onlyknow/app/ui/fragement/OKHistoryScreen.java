@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.fragement;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
@@ -62,7 +63,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     private OKRecyclerView mRecyclerView;
     private FloatingActionButton floatingActionButton;
     private DrawerLayout mDrawerLayout;
-    private BarToggle mBarToggle;
+    private DrawerToggle mDrawerToggle;
     private NavigationView mNavigationView;
     private EntryViewAdapter mEntryViewAdapter;
 
@@ -157,9 +158,9 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setOnLoadMoreListener(this);
         mNavigationView.setNavigationItemSelectedListener(this);
-        mBarToggle = new BarToggle(getActivity(), mDrawerLayout, R.drawable.ok_toolbar_menu, R.drawable.ok_toolbar_back);
-        mBarToggle.syncState();
-        mDrawerLayout.addDrawerListener(mBarToggle);
+        mDrawerToggle = new DrawerToggle(mDrawerLayout);
+        mDrawerToggle.syncState();
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
         bindNavigationHeadView(mNavigationView.getHeaderView(0));
     }
 
@@ -186,7 +187,11 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
 
             @Override
             public void onClick(View v) {
-                showAlertDialog("历史记录", "确定清空所有历史记录?", "确认", "取消", new DialogInterface.OnClickListener() {
+                AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+                dialog.setIcon(R.drawable.ic_launcher);
+                dialog.setTitle("历史记录");
+                dialog.setMessage("确定清空所有历史记录 ?");
+                dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         if (mCardBeanList.size() == 0) {
@@ -213,6 +218,12 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                         mRecyclerView.getAdapter().notifyDataSetChanged();
                     }
                 });
+                dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                    }
+                });
+                dialog.show();
             }
         });
 
@@ -230,7 +241,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
 
             @Override
             public void onClick(View v) {
-                showMenu(getActivity());
+                showMainMenu();
             }
         });
 
@@ -359,7 +370,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
-        mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImage());
+        mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImages());
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {

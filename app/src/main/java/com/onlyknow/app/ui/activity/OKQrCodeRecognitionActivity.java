@@ -35,7 +35,7 @@ public class OKQrCodeRecognitionActivity extends OKBaseActivity implements QRCod
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_qrcode_rec);
         ButterKnife.bind(this);
-        initSystemBar(this);
+        initStatusBar();
 
         init();
     }

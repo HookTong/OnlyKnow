@@ -119,7 +119,7 @@ public class OKBrowserActivity extends OKBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_browser);
         ButterKnife.bind(this);
-        initSystemBar(this);
+        initStatusBar();
         setSupportActionBar(mWebToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mProgressBar.setVisibility(View.GONE);

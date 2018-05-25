@@ -67,7 +67,7 @@ public class OKGanKActivity extends OKBaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_gank);
         ButterKnife.bind(this);
-        initSystemBar(this);
+        initStatusBar();
         switch (getIntent().getExtras().getInt(INTENT_KEY_GAN_KIO, -1)) {
             case GAN_KIO_TYPE_FL:
                 page = 0;

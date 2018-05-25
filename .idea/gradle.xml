@@ -8,10 +8,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/BottomNavigationBar" />
             <option value="$PROJECT_DIR$/HiPermission" />
+            <option value="$PROJECT_DIR$/MediaPicker" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/bottom-navigation-bar" />
-            <option value="$PROJECT_DIR$/mediapicker" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

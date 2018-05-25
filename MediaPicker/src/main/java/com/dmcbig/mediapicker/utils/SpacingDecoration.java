@@ -8,14 +8,14 @@ import android.view.View;
  * Created by dmcBig on 2017/7/11.
  */
 
-public class SpacingDecoration  extends RecyclerView.ItemDecoration {
+public class SpacingDecoration extends RecyclerView.ItemDecoration {
 
     private int space;
     private int spanCount;
 
-    public SpacingDecoration(int spanCount,int space) {
-        this.spanCount=spanCount;
-        this.space=space;
+    public SpacingDecoration(int spanCount, int space) {
+        this.spanCount = spanCount;
+        this.space = space;
     }
 
     @Override
@@ -24,7 +24,7 @@ public class SpacingDecoration  extends RecyclerView.ItemDecoration {
         outRect.left = space;
         outRect.bottom = space;
         int position = parent.getChildLayoutPosition(view);
-        if(position%spanCount==0){
+        if (position % spanCount == 0) {
             outRect.left = 0;
         }
     }

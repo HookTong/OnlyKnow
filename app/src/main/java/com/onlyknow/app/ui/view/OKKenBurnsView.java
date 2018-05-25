@@ -16,7 +16,6 @@ import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.utils.OKLogUtil;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -30,7 +29,7 @@ public class OKKenBurnsView extends FrameLayout {
     private Context context;
     private final Handler mHandler;
     private int[] mResourceIds;
-    private List<Map<String, Object>> mapArrayList;
+    private List<OKCarouselAdBean.CarouselImage> carouselImages;
     private ImageView[] mImageViews;
     private int mActiveImageIndex = -1;
 
@@ -74,17 +73,17 @@ public class OKKenBurnsView extends FrameLayout {
         }
     }
 
-    public void setCarouselByUrl(Context context, List<Map<String, Object>> UrlList) {
+    public void setCarouselByUrl(Context context, List<OKCarouselAdBean.CarouselImage> UrlList) {
         this.context = context;
-        this.mapArrayList = UrlList;
+        this.carouselImages = UrlList;
         fillImageViewsUrls();
     }
 
     private void fillImageViewsUrls() {
-        for (int i = 0; i < mapArrayList.size(); i++) {
-            Map<String, Object> map = this.mapArrayList.get(i);
-            String url = map.get(OKCarouselAdBean.KEY_URL).toString();
-            int placeholderId = Integer.parseInt(map.get(OKCarouselAdBean.KEY_RID).toString());
+        for (int i = 0; i < carouselImages.size(); i++) {
+            OKCarouselAdBean.CarouselImage carouselImage = this.carouselImages.get(i);
+            String url = carouselImage.getUrl();
+            int placeholderId = carouselImage.getResId();
             GlideApi(mImageViews[i], url, placeholderId);
         }
     }

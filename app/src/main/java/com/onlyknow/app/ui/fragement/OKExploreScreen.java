@@ -30,8 +30,8 @@ import com.google.gson.Gson;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
-import com.onlyknow.app.api.card.OKLoadExploreCardApi;
 import com.onlyknow.app.api.app.OKLoadWeatherApi;
+import com.onlyknow.app.api.card.OKLoadExploreCardApi;
 import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
@@ -69,7 +69,6 @@ import com.youth.banner.listener.OnBannerListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener,
         OKLoadExploreCardApi.onCallBack, OKLoadWeatherApi.onCallBack, OnNavigationItemSelectedListener, OKLoadCarouselAdApi.onCallBack {
@@ -83,7 +82,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mRecyclerView;
     private DrawerLayout mDrawerLayout;
-    private BarToggle mBarToggle;
+    private DrawerToggle mDrawerToggle;
     private NavigationView mNavigationView;
     private CardViewAdapter mCardViewAdapter;
 
@@ -101,9 +100,9 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.ok_fragment_explore, container, false);
-            initUserInfoSharedPreferences();
-            initWeatherSharedPreferences();
-            initSettingSharedPreferences();
+            initUserBody();
+            initWeatherBody();
+            initSettingBody();
 
             findView(rootView);
             init();
@@ -196,9 +195,9 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setOnLoadMoreListener(this);
         mNavigationView.setNavigationItemSelectedListener(this);
-        mBarToggle = new BarToggle(getActivity(), mDrawerLayout, R.drawable.ok_toolbar_menu, R.drawable.ok_toolbar_back);
-        mBarToggle.syncState();
-        mDrawerLayout.addDrawerListener(mBarToggle);
+        mDrawerToggle = new DrawerToggle(mDrawerLayout);
+        mDrawerToggle.syncState();
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
         bindNavigationHeadView(mNavigationView.getHeaderView(0));
     }
 
@@ -227,13 +226,17 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         if (mWeatherApi != null) {
             mWeatherApi.cancelTask();
         }
+        OKLoadWeatherApi.Params weatherParams = new OKLoadWeatherApi.Params();
+        weatherParams.setCityId(USER_BODY.getString("CITY_ID", ""));
+        weatherParams.setCityName(USER_BODY.getString("CITY_NAME", ""));
+        weatherParams.setDistrict(USER_BODY.getString("DISTRICT", ""));
         mWeatherApi = new OKLoadWeatherApi(getActivity());
-        mWeatherApi.requestWeather(USER_INFO_SP.getString("CITY_ID", ""), this);
+        mWeatherApi.requestWeather(weatherParams, this);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (OKMainService.isEMLogIn && OKNetUtil.isNet(getActivity())) {
                         startUserActivity(null, OKNoticeActivity.class);
                     } else {
@@ -259,7 +262,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
 
             @Override
             public void onClick(View v) {
-                showMenu(getActivity());
+                showMainMenu();
             }
         });
 
@@ -269,8 +272,14 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
                 if (mWeatherApi != null) {
                     mWeatherApi.cancelTask();
                 }
+
+                OKLoadWeatherApi.Params weatherParams = new OKLoadWeatherApi.Params();
+                weatherParams.setCityId(USER_BODY.getString("CITY_ID", ""));
+                weatherParams.setCityName(USER_BODY.getString("CITY_NAME", ""));
+                weatherParams.setDistrict(USER_BODY.getString("DISTRICT", ""));
+
                 mWeatherApi = new OKLoadWeatherApi(getActivity());
-                mWeatherApi.requestWeather(USER_INFO_SP.getString("CITY_ID", ""), OKExploreScreen.this);
+                mWeatherApi.requestWeather(weatherParams, OKExploreScreen.this);
 
                 // 请求轮播广告
                 OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
@@ -318,10 +327,10 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         mBanner.setOnBannerListener(new OnBannerListener() {
             @Override
             public void OnBannerClick(int position) {
-                Map<String, String> map = OKConstant.getAdImages().get(position);
-                if (!TextUtils.isEmpty(map.get(OKCarouselAdBean.KEY_LINK))) {
+                OKCarouselAdBean.ADImage adImage = OKConstant.getAdImages().get(position);
+                if (!TextUtils.isEmpty(adImage.getLink())) {
                     Bundle bundle = new Bundle();
-                    bundle.putString("WEB_LINK", map.get(OKCarouselAdBean.KEY_LINK));
+                    bundle.putString("WEB_LINK", adImage.getLink());
                     startUserActivity(bundle, OKBrowserActivity.class);
                 } else {
                     showSnackBar(rootView, "没有发现链接", "");
@@ -378,15 +387,15 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     private void bindWeatherView() {
-        String Type = WEATHER_SP.getString("WEATHER_TYPE", "N/A");// 天气类型;如雷阵雨
+        String Type = WEATHER_BODY.getString("WEATHER_TYPE", "N/A");// 天气类型;如雷阵雨
 
-        textViewCityName.setText(WEATHER_SP.getString("CITY_NAME", "未获取到城市"));
-        textViewDate.setText(WEATHER_SP.getString("WEATHER_DATE_WEEK", "N/A"));
+        textViewCityName.setText(WEATHER_BODY.getString("CITY_NAME", "未获取到城市"));
+        textViewDate.setText(WEATHER_BODY.getString("WEATHER_DATE_WEEK", "N/A"));
         textViewTianQi.setText(Type);
-        textViewWenDu.setText(WEATHER_SP.getString("TEMPERATURE", "N/A"));
-        textViewWenDuLow.setText(WEATHER_SP.getString("TEMPERATURE_LOW", "N/A"));
-        textViewWenDuHig.setText(WEATHER_SP.getString("TEMPERATURE_HIG", "N/A"));
-        textViewDistrict.setText(WEATHER_SP.getString("DISTRICT", "N/A"));
+        textViewWenDu.setText(WEATHER_BODY.getString("TEMPERATURE", "N/A"));
+        textViewWenDuLow.setText(WEATHER_BODY.getString("TEMPERATURE_LOW", "N/A"));
+        textViewWenDuHig.setText(WEATHER_BODY.getString("TEMPERATURE_HIG", "N/A"));
+        textViewDistrict.setText(WEATHER_BODY.getString("DISTRICT", "N/A"));
 
         int resId;
         if (Type.indexOf("晴") != -1) {
@@ -434,7 +443,7 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
         }
 
         GlideApi(imageViewWeatherIcon, resId, R.drawable.tianqi_other, R.drawable.tianqi_other);
-        WEATHER_SP.edit().putInt("WEATHER_ICON_ID", resId).commit();
+        WEATHER_BODY.edit().putInt("WEATHER_ICON_ID", resId).commit();
     }
 
     private int page = 0;
@@ -537,9 +546,9 @@ public class OKExploreScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
-        mHeaderPicture.setCarouselByUrl(getActivity(), bean.getCarouselImage());
+        mHeaderPicture.setCarouselByUrl(getActivity(), bean.getCarouselImages());
         stopBanner();
-        mBanner.setImages(bean.getAdImage());
+        mBanner.setImages(bean.getAdImages());
         startBanner();
     }
 

@@ -54,7 +54,14 @@ public class OKLoadCarouselAdApi extends OKBaseApi {
             Map<String, String> map = new HashMap<>();
             map.put(Params.KEY_TYPE, mParams.getType());
 
-            return getCarouselAd(map);
+            OKCarouselAdBean bean = getCarouselAd(map);
+
+            if (bean != null) {
+                bean.getCarouselImages();
+                bean.getAdImages();
+            }
+
+            return bean;
         }
 
         @Override

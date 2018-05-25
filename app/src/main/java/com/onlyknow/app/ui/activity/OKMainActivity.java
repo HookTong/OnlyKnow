@@ -35,8 +35,8 @@ public class OKMainActivity extends OKBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_main);
-        initUserInfoSharedPreferences();
-        initSettingSharedPreferences();
+        initUserBody();
+        initSettingBody();
         findView();
         init();
     }
@@ -44,7 +44,7 @@ public class OKMainActivity extends OKBaseActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (NarPos != SETTING_SP.getInt("BottomNnavigation", 1)) {
+        if (NarPos != SETTING_BODY.getInt("BottomNnavigation", 1)) {
             initBottomNavigationBar();
         }
     }
@@ -58,7 +58,7 @@ public class OKMainActivity extends OKBaseActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        NarPos = SETTING_SP.getInt("BottomNnavigation", 1);
+        NarPos = SETTING_BODY.getInt("BottomNnavigation", 1);
         if (NarPos == 0) {
             bottomNavigationBar.setMode(BottomNavigationBar.MODE_FIXED);
             bottomNavigationBar.setBackgroundStyle(BottomNavigationBar.BACKGROUND_STYLE_RIPPLE);
@@ -126,7 +126,7 @@ public class OKMainActivity extends OKBaseActivity {
         but.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     startUserActivity(null, OKAddCardActivity.class);
                 } else {
                     startUserActivity(null, OKLoginActivity.class);

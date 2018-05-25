@@ -24,9 +24,9 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.api.comment.OKManagerCommentApi;
-import com.onlyknow.app.api.comment.OKLoadCommentReplyApi;
 import com.onlyknow.app.api.comment.OKAddCommentApi;
+import com.onlyknow.app.api.comment.OKLoadCommentReplyApi;
+import com.onlyknow.app.api.comment.OKManagerCommentApi;
 import com.onlyknow.app.db.bean.OKCommentBean;
 import com.onlyknow.app.db.bean.OKCommentReplyBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
@@ -67,8 +67,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_comment_reply);
-        initUserInfoSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initStatusBar();
 
         mCommentBean = (OKCommentBean) getIntent().getExtras().getSerializable(KEY_BUNDLE);
         if (mCommentBean == null) {
@@ -110,7 +110,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -163,7 +163,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
             public void onClick(View v) {
                 String Msg = editTextMsg.getText().toString();
                 if (!TextUtils.isEmpty(Msg)) {
-                    if (!USER_INFO_SP.getBoolean("STATE", false)) {
+                    if (!USER_BODY.getBoolean("STATE", false)) {
                         startUserActivity(null, OKLoginActivity.class);
                         return;
                     }
@@ -171,7 +171,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                     mToolBarProgressBar.setVisibility(View.VISIBLE);
 
                     OKAddCommentApi.Params params = new OKAddCommentApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setId(mCommentBean.getComId());
                     params.setType(OKAddCommentApi.Params.TYPE_COMMENT_REPLY);
                     params.setMessage(Msg);
@@ -218,7 +218,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
         OKLoadCommentReplyApi.Params params = new OKLoadCommentReplyApi.Params();
         params.setId(mCommentBean.getComId());
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setType(OKLoadCommentReplyApi.Params.TYPE_COMMENT_REPLY);
         params.setPage(page + 1);
         params.setSize(size);
@@ -235,7 +235,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
 
             OKLoadCommentReplyApi.Params params = new OKLoadCommentReplyApi.Params();
             params.setId(mCommentBean.getComId());
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setType(OKLoadCommentReplyApi.Params.TYPE_COMMENT_REPLY);
             params.setPage(1);
             params.setSize(size);
@@ -337,7 +337,7 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
             mViewHolder.mImageViewZ.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!USER_INFO_SP.getBoolean("STATE", false)) {
+                    if (!USER_BODY.getBoolean("STATE", false)) {
                         startUserActivity(null, OKLoginActivity.class);
                         return;
                     }
@@ -346,8 +346,8 @@ public class OKCommentReplyActivity extends OKBaseActivity implements OnRefreshL
                         viewHolder = mViewHolder;
 
                         OKManagerCommentApi.Params params = new OKManagerCommentApi.Params();
-                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                        params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                        params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                         params.setId(bean.getComrId());
                         params.setType(OKManagerCommentApi.Params.TYPE_PRAISE_COMMENT_REPLY);
                         params.setPos(position);

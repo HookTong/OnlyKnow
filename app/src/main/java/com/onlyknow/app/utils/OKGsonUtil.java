@@ -35,7 +35,7 @@ public class OKGsonUtil {
     public static <T> OKServiceResult<List<T>> fromServiceResultJsonByList(String json, Class<T> clazz) {
 
         if (TextUtils.isEmpty(json)) return null;
-        
+
         Type listType = new AppType(List.class, new Class[]{clazz});
 
         Type type = new AppType(OKServiceResult.class, new Type[]{listType});

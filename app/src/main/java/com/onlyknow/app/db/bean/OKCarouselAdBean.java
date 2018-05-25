@@ -5,12 +5,9 @@ import com.onlyknow.app.R;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class OKCarouselAdBean {
-    public final static String KEY_GROUP_ID = "groupId";
     private int groupId;
 
     // 轮播图片
@@ -31,6 +28,10 @@ public class OKCarouselAdBean {
     private String adLinkUrl3;
 
     private Date groupDate;
+
+    // 需要转化成可直接使用的List;
+    private List<CarouselImage> carouselImages;
+    private List<ADImage> adImages;
 
     public int getGroupId() {
         return groupId;
@@ -136,67 +137,107 @@ public class OKCarouselAdBean {
         this.groupDate = groupDate;
     }
 
-    public final static String KEY_URL = "URL";
-    public final static String KEY_RID = "RID";
-    public final static String KEY_LINK = "LINK";
+    public List<CarouselImage> getCarouselImages() {
+        if (carouselImages != null) return carouselImages;
 
-    public List<Map<String, Object>> getCarouselImage() {
-        // 更新轮播图片,RES_ID为错图替代
-        List<Map<String, Object>> headList = new ArrayList<>();
+        carouselImages = new ArrayList<>();
 
-        Map<String, Object> map1 = new HashMap<>();
-        map1.put(KEY_URL, getHpImageUrl1());
-        map1.put(KEY_RID, R.drawable.topgd1);
+        CarouselImage carouselImage1 = new CarouselImage();
+        carouselImage1.setUrl(getHpImageUrl1());
+        carouselImage1.setResId(R.drawable.topgd1);
 
-        Map<String, Object> map2 = new HashMap<>();
-        map2.put(KEY_URL, getHpImageUrl2());
-        map2.put(KEY_RID, R.drawable.topgd2);
+        CarouselImage carouselImage2 = new CarouselImage();
+        carouselImage2.setUrl(getHpImageUrl2());
+        carouselImage2.setResId(R.drawable.topgd2);
 
-        Map<String, Object> map3 = new HashMap<>();
-        map3.put(KEY_URL, getHpImageUrl3());
-        map3.put(KEY_RID, R.drawable.topgd3);
+        CarouselImage carouselImage3 = new CarouselImage();
+        carouselImage3.setUrl(getHpImageUrl3());
+        carouselImage3.setResId(R.drawable.topgd3);
 
-        Map<String, Object> map4 = new HashMap<>();
-        map4.put(KEY_URL, getHpImageUrl4());
-        map4.put(KEY_RID, R.drawable.topgd4);
+        CarouselImage carouselImage4 = new CarouselImage();
+        carouselImage4.setUrl(getHpImageUrl4());
+        carouselImage4.setResId(R.drawable.topgd4);
 
-        Map<String, Object> map5 = new HashMap<>();
-        map5.put(KEY_URL, getHpImageUrl5());
-        map5.put(KEY_RID, R.drawable.topgd5);
+        CarouselImage carouselImage5 = new CarouselImage();
+        carouselImage5.setUrl(getHpImageUrl5());
+        carouselImage5.setResId(R.drawable.topgd5);
 
-        headList.add(map1);
-        headList.add(map2);
-        headList.add(map3);
-        headList.add(map4);
-        headList.add(map5);
+        carouselImages.add(carouselImage1);
+        carouselImages.add(carouselImage2);
+        carouselImages.add(carouselImage3);
+        carouselImages.add(carouselImage4);
+        carouselImages.add(carouselImage5);
 
-        OKConstant.setCarouselImages(headList);
+        OKConstant.setCarouselImages(carouselImages);
 
-        return headList;
+        return carouselImages;
     }
 
-    public List<Map<String, String>> getAdImage() {
-        // 更新广告URL
-        List<Map<String, String>> adList = new ArrayList<>();
+    public List<ADImage> getAdImages() {
+        if (adImages != null) return adImages;
 
-        Map<String, String> adMap1 = new HashMap<>();
-        adMap1.put(KEY_URL, getAdImageUrl1());
-        adMap1.put(KEY_LINK, getAdLinkUrl1());
+        adImages = new ArrayList<>();
 
-        Map<String, String> adMap2 = new HashMap<>();
-        adMap2.put(KEY_URL, getAdImageUrl2());
-        adMap2.put(KEY_LINK, getAdLinkUrl2());
+        ADImage adImage1 = new ADImage();
+        adImage1.setUrl(getAdImageUrl1());
+        adImage1.setLink(getAdLinkUrl1());
 
-        Map<String, String> adMap3 = new HashMap<>();
-        adMap3.put(KEY_URL, getAdImageUrl3());
-        adMap3.put(KEY_LINK, getAdLinkUrl3());
+        ADImage adImage2 = new ADImage();
+        adImage2.setUrl(getAdImageUrl2());
+        adImage2.setLink(getAdLinkUrl2());
 
-        adList.add(adMap1);
-        adList.add(adMap2);
-        adList.add(adMap3);
+        ADImage adImage3 = new ADImage();
+        adImage3.setUrl(getAdImageUrl3());
+        adImage3.setLink(getAdLinkUrl3());
 
-        OKConstant.setAdImages(adList);
+        adImages.add(adImage1);
+        adImages.add(adImage2);
+        adImages.add(adImage3);
 
-        return adList;
+        OKConstant.setAdImages(adImages);
+
+        return adImages;
+    }
+
+    public static class CarouselImage {
+        private String url = "";
+        private int resId;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public int getResId() {
+            return resId;
+        }
+
+        public void setResId(int resId) {
+            this.resId = resId;
+        }
+    }
+
+    public static class ADImage {
+        private String url = "";
+        private String link = "";
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getLink() {
+            return link;
+        }
+
+        public void setLink(String link) {
+            this.link = link;
+        }
     }
 }

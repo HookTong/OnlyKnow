@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -53,8 +54,8 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
             return;
         }
 
-        initSystemBar(this);
-        initUserInfoSharedPreferences();
+        initStatusBar();
+        initUserBody();
 
         EMClient.getInstance().groupManager().loadAllGroups();
         EMClient.getInstance().chatManager().loadAllConversations();
@@ -85,7 +86,7 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -132,14 +133,14 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
             }
         }));
 
-        setEmptyTextTitle("您还没有会话消息");
+        setEmptyTxtTitle("您还没有会话消息");
 
         mRefreshLayout.autoRefresh();
     }
 
     @Override
     public void onRefresh(RefreshLayout refreshLayout) {
-        if (OKNetUtil.isNet(this) && USER_INFO_SP.getBoolean("STATE", false)) {
+        if (OKNetUtil.isNet(this) && USER_BODY.getBoolean("STATE", false)) {
             if (mOKLoadNoticeApi != null) {
                 mOKLoadNoticeApi.cancelTask();
             }
@@ -205,22 +206,31 @@ public class OKNoticeActivity extends OKBaseActivity implements OnRefreshListene
             mEntryViewHolder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    showAlertDialog("删除会话", getResources().getString(R.string.dialog_remove_session), "删除", "取消",
-                            new DialogInterface.OnClickListener() {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(OKNoticeActivity.this);
+                    dialog.setIcon(R.drawable.ic_launcher);
+                    dialog.setTitle("删除会话");
+                    dialog.setMessage(getResources().getString(R.string.dialog_remove_session));
+                    dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            new Thread() {
                                 @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    new Thread() {
-                                        @Override
-                                        public void run() {
-                                            super.run();
-                                            EMClient.getInstance().chatManager().deleteConversation(okNoticeBean.getUserName(), true);
-                                        }
-                                    }.start();
-
-                                    mBeanList.remove(position);
-                                    mOKRecyclerView.getAdapter().notifyDataSetChanged();
+                                public void run() {
+                                    super.run();
+                                    EMClient.getInstance().chatManager().deleteConversation(okNoticeBean.getUserName(), true);
                                 }
-                            });
+                            }.start();
+
+                            mBeanList.remove(position);
+                            mOKRecyclerView.getAdapter().notifyDataSetChanged();
+                        }
+                    });
+                    dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface arg0, int arg1) {
+                        }
+                    });
+                    dialog.show();
                     return false;
                 }
             });

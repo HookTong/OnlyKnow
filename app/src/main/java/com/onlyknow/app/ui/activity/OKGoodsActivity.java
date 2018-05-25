@@ -20,8 +20,8 @@ import com.onlyknow.app.GlideApp;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.api.goods.OKManagerGoodsApi;
 import com.onlyknow.app.api.goods.OKLoadGoodsApi;
+import com.onlyknow.app.api.goods.OKManagerGoodsApi;
 import com.onlyknow.app.db.bean.OKGoodsBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
@@ -51,8 +51,8 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_goods);
-        initSystemBar(this);
-        initUserInfoSharedPreferences();
+        initStatusBar();
+        initUserBody();
         findView();
         init();
     }
@@ -107,7 +107,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -136,7 +136,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
         }
 
         OKLoadGoodsApi.Params params = new OKLoadGoodsApi.Params();
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setPage(page + 1);
         params.setSize(size);
 
@@ -150,7 +150,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(this)) {
             OKLoadGoodsApi.Params params = new OKLoadGoodsApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setPage(1);
             params.setSize(size);
 
@@ -234,18 +234,22 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                 @Override
                 public void onClick(View v) {
                     if (!okGoodsBean.isGoodsBy()) {
-                        showAlertDialog("购买商品", "使用积分购买该商品,是否购买 ?", "购买", "取消", new DialogInterface.OnClickListener() {
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(OKGoodsActivity.this);
+                        dialog.setIcon(R.drawable.ic_launcher);
+                        dialog.setTitle("购买商品");
+                        dialog.setMessage("使用积分购买该商品,是否购买 ?");
+                        dialog.setPositiveButton("购买", new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface arg0, int arg1) {
-                                if (USER_INFO_SP.getBoolean("STATE", false)) {
-                                    if (USER_INFO_SP.getInt(OKUserInfoBean.KEY_INTEGRAL, 0) >= okGoodsBean.getGdPrice()) {
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                if (USER_BODY.getBoolean("STATE", false)) {
+                                    if (USER_BODY.getInt(OKUserInfoBean.KEY_INTEGRAL, 0) >= okGoodsBean.getGdPrice()) {
 
                                         viewHolder = mEntryViewHolder;
 
                                         OKManagerGoodsApi.Params params = new OKManagerGoodsApi.Params();
                                         params.setGdId(okGoodsBean.getGdId());
-                                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                                        params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                                        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                                        params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                                         params.setType(OKManagerGoodsApi.Params.TYPE_BUY);
                                         params.setPos(position);
 
@@ -260,6 +264,12 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
                                 }
                             }
                         });
+                        dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface arg0, int arg1) {
+                            }
+                        });
+                        dialog.show();
                     } else {
                         showSnackBar(mEntryViewHolder.mCardView, "您已经购买过该商品了不能重复购买!", "");
                     }
@@ -269,7 +279,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             mEntryViewHolder.mCardView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    showDialog(okGoodsBean);
+                    showGoodsDetails(okGoodsBean);
                 }
             });
         }
@@ -288,7 +298,7 @@ public class OKGoodsActivity extends OKBaseActivity implements OnRefreshListener
             }
         }
 
-        public void showDialog(final OKGoodsBean bean) {
+        public void showGoodsDetails(final OKGoodsBean bean) {
             AlertDialog.Builder DialogMenu = new AlertDialog.Builder(OKGoodsActivity.this);
             final View dialogView = LayoutInflater.from(OKGoodsActivity.this).inflate(R.layout.ok_dialog_goods, null);
             final ImageView mImageViewBackground = (ImageView) dialogView.findViewById(R.id.ok_dialog_goods_background_image);

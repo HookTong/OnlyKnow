@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.fragement.me;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -16,8 +17,8 @@ import android.widget.TextView;
 
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
-import com.onlyknow.app.api.card.OKLoadWatchCardApi;
 import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.card.OKLoadWatchCardApi;
 import com.onlyknow.app.api.card.OKManagerCardApi;
 import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
@@ -57,7 +58,7 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.ok_fragment_universal, container, false);
-            initUserInfoSharedPreferences();
+            initUserBody();
 
             findView(rootView);
             init();
@@ -71,19 +72,19 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
     public void onResume() {
         super.onResume();
         isPause = false;
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             if (isInitLoad && mRefreshLayout.getState() != RefreshState.Refreshing && mOKRecyclerView.getAdapter().getItemCount() == 0) {
                 mRefreshLayout.autoRefresh();
             }
-            setEmptyButtonTag(RE_GET);
-            setEmptyButtonTitle("重  试");
-            setEmptyTextTitle(getResources().getString(R.string.ListView_NoData));
+            setEmptyTag(TAG_RETRY);
+            setEmptyButTitle("重  试");
+            setEmptyTxtTitle(getResources().getString(R.string.ListView_NoData));
         } else {
             mCardBeanList.clear();
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            setEmptyButtonTag(LOG_IN);
-            setEmptyButtonTitle("登  录");
-            setEmptyTextTitle("未登录,登录后查看!");
+            setEmptyTag(TAG_LOGIN);
+            setEmptyButTitle("登  录");
+            setEmptyTxtTitle("未登录,登录后查看!");
         }
     }
 
@@ -135,16 +136,16 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
         mOKRecyclerView.setEmptyView(initCollapsingEmptyView(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                int tag = getEmptyButtonTag();
-                if (tag == RE_GET) {
+                int tag = getEmptyTag();
+                if (tag == TAG_RETRY) {
                     mRefreshLayout.autoRefresh();
-                } else if (tag == LOG_IN) {
+                } else if (tag == TAG_LOGIN) {
                     startUserActivity(null, OKLoginActivity.class);
                 }
             }
         }));
 
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             mRefreshLayout.autoRefresh();
         }
     }
@@ -159,9 +160,9 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
             showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             OKLoadWatchCardApi.Params params = new OKLoadWatchCardApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setPage(page + 1);
             params.setSize(size);
 
@@ -182,9 +183,9 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
             showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             OKLoadWatchCardApi.Params params = new OKLoadWatchCardApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setPage(1);
             params.setSize(size);
 
@@ -296,18 +297,21 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
 
                 @Override
                 public void onClick(View v) {
-                    showAlertDialog("删除收藏", "是否删除该条收藏 ?", "确定", "取消", new DialogInterface.OnClickListener() {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+                    dialog.setIcon(R.drawable.ic_launcher);
+                    dialog.setTitle("删除收藏");
+                    dialog.setMessage("是否删除该条收藏 ?");
+                    dialog.setPositiveButton("删除", new DialogInterface.OnClickListener() {
                         @Override
-                        public void onClick(DialogInterface arg0, int arg1) {
-                            if (USER_INFO_SP.getBoolean("STATE", false)) {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if (USER_BODY.getBoolean("STATE", false)) {
 
                                 viewHolder = mCardViewHolder;
 
-
                                 OKManagerCardApi.Params params = new OKManagerCardApi.Params();
                                 params.setType(OKManagerCardApi.Params.TYPE_REMOVE_WATCH);
-                                params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                                params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                                params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                                params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                                 params.setCardId(okCardBean.getCardId());
                                 params.setPos(position);
                                 params.setMsg("");
@@ -320,6 +324,12 @@ public class OKWatchFragment extends OKBaseFragment implements OnRefreshListener
                             }
                         }
                     });
+                    dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface arg0, int arg1) {
+                        }
+                    });
+                    dialog.show();
                 }
             });
 

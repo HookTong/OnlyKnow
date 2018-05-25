@@ -27,7 +27,7 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_login);
-        initUserInfoSharedPreferences();
+        initUserBody();
         findView();
         init();
     }
@@ -107,7 +107,7 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
                 return;
             }
 
-            SharedPreferences.Editor editor = USER_INFO_SP.edit();
+            SharedPreferences.Editor editor = USER_BODY.edit();
             editor.putInt(OKUserInfoBean.KEY_USER_ID, userInfoBean.getUserId());
             editor.putString(OKUserInfoBean.KEY_USERNAME, userInfoBean.getUserName());
             editor.putString(OKUserInfoBean.KEY_PASSWORD, userInfoBean.getUserPassword());

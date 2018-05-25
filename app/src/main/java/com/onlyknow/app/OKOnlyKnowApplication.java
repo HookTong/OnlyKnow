@@ -2,13 +2,11 @@ package com.onlyknow.app;
 
 import android.app.ActivityManager;
 import android.app.Application;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 
 import com.bumptech.glide.request.target.ViewTarget;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMOptions;
-import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.umeng.socialize.PlatformConfig;
 import com.umeng.socialize.UMShareAPI;

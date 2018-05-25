@@ -23,7 +23,6 @@ import android.widget.Toast;
 import com.dmcbig.mediapicker.PickerActivity;
 import com.dmcbig.mediapicker.PickerConfig;
 import com.dmcbig.mediapicker.bean.MediaBean;
-import com.google.gson.Gson;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMImageMessageBody;
 import com.hyphenate.chat.EMMessage;
@@ -111,13 +110,13 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             return;
         }
 
-        initSystemBar(this);
-        initUserInfoSharedPreferences();
+        initStatusBar();
+        initUserBody();
 
         sendUserBroadcast(ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM, null); // 移除服务中的消息接收监听器
 
-        meUserName = USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "");
-        meNickName = USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "");
+        meUserName = USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "");
+        meNickName = USER_BODY.getString(OKUserInfoBean.KEY_NICKNAME, "");
         theUserName = getIntent().getExtras().getString(OKUserInfoBean.KEY_USERNAME);
         theNickName = getIntent().getExtras().getString(OKUserInfoBean.KEY_NICKNAME);
 
@@ -176,7 +175,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -219,7 +218,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
             public void onClick(View v) {
                 final String content = editTextMsg.getText().toString();
                 if (!TextUtils.isEmpty(content)) {
-                    final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+                    final String headPortraitUrl = USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
                     mToolBarProgressBar.setVisibility(View.VISIBLE);
                     new Thread() {
                         @Override
@@ -287,7 +286,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         final MediaBean item = imageItems.get(0);
-        final String headPortraitUrl = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+        final String headPortraitUrl = USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
         mToolBarProgressBar.setVisibility(View.VISIBLE);
         new Thread() {
             @Override
@@ -405,7 +404,7 @@ public class OKSessionActivity extends OKBaseActivity implements OnRefreshListen
         }
 
         public void initRightViews(final SessionViewHolder viewHolder, final EMMessage mMessage, final int position) {
-            String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+            String url = USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
 
             if (TextUtils.isEmpty(url)) {
                 url = mMessage.getStringAttribute(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");

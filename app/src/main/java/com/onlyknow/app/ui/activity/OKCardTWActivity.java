@@ -95,8 +95,8 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_card_graphic);
-        initUserInfoSharedPreferences();
-        initSettingSharedPreferences();
+        initUserBody();
+        initSettingBody();
         mStartInterfaceType = getIntent().getExtras().getInt(INTENT_KEY_INTERFACE_TYPE);
         mCardBean = (OKCardBean) getIntent().getExtras().getSerializable(KEY_INTENT_IMAGE_AND_TEXT_CARD);
 
@@ -108,7 +108,7 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
     @Override
     public void onResume() {
         OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setCardId(mCardBean.getCardId());
         params.setType(OKManagerCardApi.Params.TYPE_CARD_RELATED);
 
@@ -169,7 +169,7 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
     }
 
     private void findView() {
-        super.findCollapsingToolbarView(this);
+        super.findCollapsingToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -197,11 +197,11 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
 
     private void init() {
         // 字体设置
-        if (SETTING_SP.getString("FONT", "NORM").equals("MAX")) {
+        if (SETTING_BODY.getString("FONT", "NORM").equals("MAX")) {
             textContent.setTextSize(25);
-        } else if (SETTING_SP.getString("FONT", "NORM").equals("CENTRE")) {
+        } else if (SETTING_BODY.getString("FONT", "NORM").equals("CENTRE")) {
             textContent.setTextSize(22);
-        } else if (SETTING_SP.getString("FONT", "NORM").equals("MIN")) {
+        } else if (SETTING_BODY.getString("FONT", "NORM").equals("MIN")) {
             textContent.setTextSize(16);
         } else {
             textContent.setTextSize(20);
@@ -250,14 +250,14 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.isAttention()) {
                         showSnackBar(v, "您已经关注了", "");
                         return;
                     }
 
                     OKManagerUserApi.Params params = new OKManagerUserApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setAttentionUsername(mCardBean.getUserName());
                     params.setType(OKManagerUserApi.Params.TYPE_ADD_ATTENTION);
 
@@ -299,14 +299,14 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.isPraise()) {
                         showSnackBar(v, "您已经点赞了", "");
                         return;
                     }
 
                     OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setCardId(mCardBean.getCardId());
                     params.setType(OKManagerCardApi.Params.TYPE_PRAISE);
 
@@ -325,14 +325,14 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.isWatch()) {
                         showSnackBar(v, "您已经收藏了", "");
                         return;
                     }
 
                     OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setCardId(mCardBean.getCardId());
                     params.setType(OKManagerCardApi.Params.TYPE_WATCH);
 
@@ -402,7 +402,7 @@ public class OKCardTWActivity extends OKBaseActivity implements OKManagerCardApi
     private void addCardBrowsing() {
 
         OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setCardId(mCardBean.getCardId());
         params.setType(OKManagerCardApi.Params.TYPE_BROWSING);
 

@@ -23,7 +23,7 @@ public class OKQrCodeResultActivity extends OKBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_qrcode_result);
-        initSystemBar(this);
+        initStatusBar();
         bundle = this.getIntent().getExtras();
         findView();
         init();
@@ -84,7 +84,7 @@ public class OKQrCodeResultActivity extends OKBaseActivity {
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
 
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);

@@ -33,8 +33,8 @@ public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_feedback);
-        initUserInfoSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initStatusBar();
         findView();
         init();
     }
@@ -93,11 +93,11 @@ public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mEditTextNeiRon.getText().toString().length() >= 100) {
 
                         OKFeedBackApi.Params params = new OKFeedBackApi.Params();
-                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
+                        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "Anonymous"));
                         params.setMessage(mEditTextNeiRon.getText().toString());
                         params.setImage(mFilePath);
 
@@ -136,7 +136,7 @@ public class OKFeedBackActivity extends OKBaseActivity implements OKFeedBackApi.
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);

@@ -7,9 +7,7 @@ import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /*
 *  2018-02-05 15:14
@@ -55,63 +53,61 @@ public final class OKConstant {
     public final static String NOT_INIT_ERROR = "0x00008"; // 对象未实例化
     public final static String DATA_SOURCE_ERROR = "0x00009";
 
-    private final static List<Map<String, Object>> carouselImages = new ArrayList<>();
+    private final static List<OKCarouselAdBean.CarouselImage> carouselImages = new ArrayList<>();
 
-    private final static List<Map<String, String>> adImages = new ArrayList<>();
+    private final static List<OKCarouselAdBean.ADImage> adImages = new ArrayList<>();
 
-    public static List<Map<String, Object>> getCarouselImages() {
+    // 操作方法
+    public static List<OKCarouselAdBean.CarouselImage> getCarouselImages() {
         if (carouselImages.size() == 0) {
-            Map<String, Object> map0 = new HashMap<>();
-            map0.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head001.jpg");
-            map0.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd1);
+            OKCarouselAdBean.CarouselImage carouselImage1 = new OKCarouselAdBean.CarouselImage();
+            carouselImage1.setUrl(ONLY_KNOW_RESOURCES_CAROUSEL_URL + "def001.jpg");
+            carouselImage1.setResId(R.drawable.topgd1);
 
-            Map<String, Object> map1 = new HashMap<>();
-            map1.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head002.jpg");
-            map1.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd2);
+            OKCarouselAdBean.CarouselImage carouselImage2 = new OKCarouselAdBean.CarouselImage();
+            carouselImage2.setUrl(ONLY_KNOW_RESOURCES_CAROUSEL_URL + "def002.jpg");
+            carouselImage2.setResId(R.drawable.topgd2);
 
-            Map<String, Object> map2 = new HashMap<>();
-            map2.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head003.jpg");
-            map2.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd3);
+            OKCarouselAdBean.CarouselImage carouselImage3 = new OKCarouselAdBean.CarouselImage();
+            carouselImage3.setUrl(ONLY_KNOW_RESOURCES_CAROUSEL_URL + "def003.jpg");
+            carouselImage3.setResId(R.drawable.topgd3);
 
-            Map<String, Object> map3 = new HashMap<>();
-            map3.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head004.jpg");
-            map3.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd4);
+            OKCarouselAdBean.CarouselImage carouselImage4 = new OKCarouselAdBean.CarouselImage();
+            carouselImage4.setUrl(ONLY_KNOW_RESOURCES_CAROUSEL_URL + "def004.jpg");
+            carouselImage4.setResId(R.drawable.topgd4);
 
-            Map<String, Object> map4 = new HashMap<>();
-            map4.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_CAROUSEL_URL + "head005.jpg");
-            map4.put(OKCarouselAdBean.KEY_RID, R.drawable.topgd5);
+            OKCarouselAdBean.CarouselImage carouselImage5 = new OKCarouselAdBean.CarouselImage();
+            carouselImage5.setUrl(ONLY_KNOW_RESOURCES_CAROUSEL_URL + "def005.jpg");
+            carouselImage5.setResId(R.drawable.topgd5);
 
-            carouselImages.add(map0);
-            carouselImages.add(map1);
-            carouselImages.add(map2);
-            carouselImages.add(map3);
-            carouselImages.add(map4);
+            carouselImages.add(carouselImage1);
+            carouselImages.add(carouselImage2);
+            carouselImages.add(carouselImage3);
+            carouselImages.add(carouselImage4);
+            carouselImages.add(carouselImage5);
         }
         return carouselImages;
     }
 
-    public static void setCarouselImages(List<Map<String, Object>> list) {
-        if (list != null && list.size() != 0) {
-            carouselImages.clear();
-            carouselImages.addAll(list);
-        }
+    public static void setCarouselImages(List<OKCarouselAdBean.CarouselImage> list) {
+        carouselImages.clear();
+        carouselImages.addAll(list);
     }
 
-    public static List<Map<String, String>> getAdImages() {
+    public static List<OKCarouselAdBean.ADImage> getAdImages() {
         if (adImages.size() == 0) {
-            Map<String, String> map = new HashMap<>();
-            map.put(OKCarouselAdBean.KEY_URL, ONLY_KNOW_RESOURCES_AD_URL + "onlyKnowAd.jpg");
-            map.put(OKCarouselAdBean.KEY_LINK, ONLY_KNOW_OFFICIAL_WEBSITE_URL);
-            adImages.add(map);
+            OKCarouselAdBean.ADImage adImage = new OKCarouselAdBean.ADImage();
+            adImage.setUrl(ONLY_KNOW_RESOURCES_AD_URL + "onlyKnowAd.jpg");
+            adImage.setLink(ONLY_KNOW_OFFICIAL_WEBSITE_URL);
+
+            adImages.add(adImage);
         }
         return adImages;
     }
 
-    public static void setAdImages(List<Map<String, String>> list) {
-        if (list != null && list.size() != 0) {
-            adImages.clear();
-            adImages.addAll(list);
-        }
+    public static void setAdImages(List<OKCarouselAdBean.ADImage> list) {
+        adImages.clear();
+        adImages.addAll(list);
     }
 
     public static String getNowDateByString() {

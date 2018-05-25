@@ -14,9 +14,9 @@ import android.widget.TextView;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.card.OKLoadMeCommentCardApi;
-import com.onlyknow.app.db.bean.OKMeCommentCardBean;
 import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKCommentBean;
+import com.onlyknow.app.db.bean.OKMeCommentCardBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
@@ -55,7 +55,7 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.ok_fragment_universal, container, false);
-            initUserInfoSharedPreferences();
+            initUserBody();
 
             findView(rootView);
             init();
@@ -69,19 +69,19 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
     public void onResume() {
         super.onResume();
         isPause = false;
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             if (isInitLoad && mRefreshLayout.getState() != RefreshState.Refreshing && mOKRecyclerView.getAdapter().getItemCount() == 0) {
                 mRefreshLayout.autoRefresh();
             }
-            setEmptyButtonTag(RE_GET);
-            setEmptyButtonTitle("重  试");
-            setEmptyTextTitle(getResources().getString(R.string.ListView_NoData));
+            setEmptyTag(TAG_RETRY);
+            setEmptyButTitle("重  试");
+            setEmptyTxtTitle(getResources().getString(R.string.ListView_NoData));
         } else {
             mOKMeCommentCardBeanList.clear();
             mOKRecyclerView.getAdapter().notifyDataSetChanged();
-            setEmptyButtonTag(LOG_IN);
-            setEmptyButtonTitle("登  录");
-            setEmptyTextTitle("未登录,登录后查看!");
+            setEmptyTag(TAG_LOGIN);
+            setEmptyButTitle("登  录");
+            setEmptyTxtTitle("未登录,登录后查看!");
         }
     }
 
@@ -129,16 +129,16 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
         mOKRecyclerView.setEmptyView(initCollapsingEmptyView(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int tag = getEmptyButtonTag();
-                if (tag == RE_GET) {
+                int tag = getEmptyTag();
+                if (tag == TAG_RETRY) {
                     mRefreshLayout.autoRefresh();
-                } else if (tag == LOG_IN) {
+                } else if (tag == TAG_LOGIN) {
                     startUserActivity(null, OKLoginActivity.class);
                 }
             }
         }));
 
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
             mRefreshLayout.autoRefresh();
         }
     }
@@ -153,10 +153,10 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
 
             OKLoadMeCommentCardApi.Params params = new OKLoadMeCommentCardApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setPage(page + 1);
             params.setSize(size);
 
@@ -177,10 +177,10 @@ public class OKCommentFragment extends OKBaseFragment implements OnRefreshListen
             showSnackBar(mOKRecyclerView, "请检查网络设置!", "");
             return;
         }
-        if (USER_INFO_SP.getBoolean("STATE", false)) {
+        if (USER_BODY.getBoolean("STATE", false)) {
 
             OKLoadMeCommentCardApi.Params params = new OKLoadMeCommentCardApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setPage(1);
             params.setSize(size);
 

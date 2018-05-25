@@ -24,9 +24,9 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
-import com.onlyknow.app.api.comment.OKManagerCommentApi;
-import com.onlyknow.app.api.comment.OKLoadCommentApi;
 import com.onlyknow.app.api.comment.OKAddCommentApi;
+import com.onlyknow.app.api.comment.OKLoadCommentApi;
+import com.onlyknow.app.api.comment.OKManagerCommentApi;
 import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKCommentBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
@@ -63,8 +63,8 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_comment);
-        initUserInfoSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initStatusBar();
 
         mCardId = getIntent().getExtras().getInt(OKCardBean.KEY_CARD_ID);
 
@@ -102,7 +102,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -132,7 +132,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
             public void onClick(View v) {
                 String Msg = editTextMsg.getText().toString();
                 if (!TextUtils.isEmpty(Msg)) {
-                    if (!USER_INFO_SP.getBoolean("STATE", false)) {
+                    if (!USER_BODY.getBoolean("STATE", false)) {
                         startUserActivity(null, OKLoginActivity.class);
                         return;
                     }
@@ -141,7 +141,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
 
                     OKAddCommentApi.Params params = new OKAddCommentApi.Params();
                     params.setId(mCardId);
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setType(OKAddCommentApi.Params.TYPE_COMMENT);
                     params.setMessage(Msg);
 
@@ -188,7 +188,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
         OKLoadCommentApi.Params params = new OKLoadCommentApi.Params();
 
         params.setId(mCardId);
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setPage(page + 1);
         params.setSize(size);
 
@@ -204,7 +204,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
             OKLoadCommentApi.Params params = new OKLoadCommentApi.Params();
 
             params.setId(mCardId);
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
             params.setPage(1);
             params.setSize(size);
 
@@ -308,7 +308,7 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
             mCommentViewHolder.mImageViewZ.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!USER_INFO_SP.getBoolean("STATE", false)) {
+                    if (!USER_BODY.getBoolean("STATE", false)) {
                         startUserActivity(null, OKLoginActivity.class);
                         return;
                     }
@@ -318,8 +318,8 @@ public class OKCommentActivity extends OKBaseActivity implements OnRefreshListen
 
                         OKManagerCommentApi.Params params = new OKManagerCommentApi.Params();
                         params.setId(bean.getComId());
-                        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                        params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                        params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                         params.setType(OKManagerCommentApi.Params.TYPE_PRAISE_COMMENT);
                         params.setPos(position);
 

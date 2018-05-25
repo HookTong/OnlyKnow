@@ -22,7 +22,6 @@ import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
-import com.onlyknow.app.utils.OKLogUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -71,9 +70,9 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_release);
         ButterKnife.bind(this);
-        initUserInfoSharedPreferences();
-        initArticleSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initArticleBody();
+        initStatusBar();
         findView();
         loadData();
         init();
@@ -117,14 +116,14 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
     private void init() {
         mToolbarSend.setTag(R.id.uploadButton, TAG_NORMAL);
 
-        if (ARTICLE_SP.getBoolean("NEW_ARTICLE", true)) {
+        if (ARTICLE_BODY.getBoolean("NEW_ARTICLE", true)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(OKAddCardActivity.this);
             builder.setTitle("您必须要知道");
             builder.setMessage(getResources().getString(R.string.articleDialog));
             builder.setPositiveButton("我知道了", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
-                    ARTICLE_SP.edit().putBoolean("NEW_ARTICLE", false).commit();
+                    ARTICLE_BODY.edit().putBoolean("NEW_ARTICLE", false).commit();
                 }
             });
             AlertDialog dialog = builder.show();
@@ -153,8 +152,8 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
                 if (isUpload()) {
 
                     OKCardBean cardBean = new OKCardBean();
-                    cardBean.setUserName(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                    cardBean.setTitleText(USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, ""));
+                    cardBean.setUserName(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    cardBean.setTitleText(USER_BODY.getString(OKUserInfoBean.KEY_NICKNAME, ""));
 
                     if (imageList != null && imageList.size() != 0) {
                         cardBean.setImageList(imageList);
@@ -189,8 +188,8 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
                     if (imageList != null && imageList.size() != 0) {
 
                         OKCardBean cardBean = new OKCardBean();
-                        cardBean.setUserName(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                        cardBean.setTitleText(USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, ""));
+                        cardBean.setUserName(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                        cardBean.setTitleText(USER_BODY.getString(OKUserInfoBean.KEY_NICKNAME, ""));
                         cardBean.setCardType(CARD_TYPE_TP);
                         cardBean.setCreateDate(new Date());
                         cardBean.setImageList(imageList);
@@ -293,7 +292,7 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarSend.setVisibility(View.VISIBLE);
@@ -307,20 +306,30 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
     }
 
     private void loadData() {
-        mEditTag.setText(ARTICLE_SP.getString("TAG", "##"));
-        mEditTitle.setText(ARTICLE_SP.getString("TITLE", "##"));
-        mEditLink.setText(ARTICLE_SP.getString("LINK", "##"));
-        mEditContent.setText(ARTICLE_SP.getString("CONTENT", "##"));
+        mEditTag.setText(ARTICLE_BODY.getString("TAG", "##"));
+        mEditTitle.setText(ARTICLE_BODY.getString("TITLE", "##"));
+        mEditLink.setText(ARTICLE_BODY.getString("LINK", "##"));
+        mEditContent.setText(ARTICLE_BODY.getString("CONTENT", "##"));
     }
 
     private void backFinish() {
         if ((int) mToolbarSend.getTag(R.id.uploadButton) == TAG_UPLOAD) {
-            showAlertDialog("文章发表", "当前有文章正在后台上传,确定要退出?", "退出", "取消", new DialogInterface.OnClickListener() {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            dialog.setIcon(R.drawable.ic_launcher);
+            dialog.setTitle("文章发表");
+            dialog.setMessage("当前有文章正在后台上传,确定要退出?");
+            dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     finish();
                 }
             });
+            dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface arg0, int arg1) {
+                }
+            });
+            dialog.show();
             return;
         }
 
@@ -338,7 +347,7 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
             alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "确定", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    Editor editor = ARTICLE_SP.edit();
+                    Editor editor = ARTICLE_BODY.edit();
                     if (!TextUtils.isEmpty(mEditTitle.getText().toString()) && mEditTitle.getText().toString().equals("##")) {
                         editor.putString("TITLE", mEditTitle.getText().toString());
                     }
@@ -459,7 +468,7 @@ public class OKAddCardActivity extends OKBaseActivity implements OKAddCardApi.on
         mEditTag.setText("##");
         mEditLink.setText("##");
         mEditContent.setText("##");
-        SharedPreferences.Editor editor = ARTICLE_SP.edit();
+        SharedPreferences.Editor editor = ARTICLE_BODY.edit();
         editor.putString("TAG", "##");
         editor.putString("TITLE", "##");
         editor.putString("LINK", "##");

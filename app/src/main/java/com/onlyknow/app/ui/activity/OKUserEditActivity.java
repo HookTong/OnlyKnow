@@ -1,5 +1,6 @@
 package com.onlyknow.app.ui.activity;
 
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -51,23 +52,23 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_user_edit);
-        initUserInfoSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initStatusBar();
         findView();
         loadData();
         init();
     }
 
     private void loadData() {
-        USERNAME = USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "");
-        NICKNAME = USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, "");
-        PHONE = USER_INFO_SP.getString(OKUserInfoBean.KEY_PHONE, "");
-        EMAIL = USER_INFO_SP.getString(OKUserInfoBean.KEY_EMAIL, "");
-        USER_TAG = USER_INFO_SP.getString(OKUserInfoBean.KEY_TAG, "");
-        SEX = USER_INFO_SP.getString(OKUserInfoBean.KEY_SEX, "");
-        BIRTH_DATE = USER_INFO_SP.getString(OKUserInfoBean.KEY_BIRTH_DATE, "");
+        USERNAME = USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "");
+        NICKNAME = USER_BODY.getString(OKUserInfoBean.KEY_NICKNAME, "");
+        PHONE = USER_BODY.getString(OKUserInfoBean.KEY_PHONE, "");
+        EMAIL = USER_BODY.getString(OKUserInfoBean.KEY_EMAIL, "");
+        USER_TAG = USER_BODY.getString(OKUserInfoBean.KEY_TAG, "");
+        SEX = USER_BODY.getString(OKUserInfoBean.KEY_SEX, "");
+        BIRTH_DATE = USER_BODY.getString(OKUserInfoBean.KEY_BIRTH_DATE, "");
 
-        String url = USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
+        String url = USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, "");
 
         GlideRoundApi(mImageViewTouXian, url, R.drawable.touxian_placeholder_hd, R.drawable.touxian_placeholder_hd);
 
@@ -140,7 +141,7 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
 
                     OKManagerUserApi.Params params = new OKManagerUserApi.Params();
                     params.setUsername(USERNAME);
-                    params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                    params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                     params.setAvatarData(mFilePath);
                     params.setType(OKManagerUserApi.Params.TYPE_UPDATE_AVATAR);
 
@@ -216,7 +217,7 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
 
                 OKManagerUserApi.Params params = new OKManagerUserApi.Params();
                 params.setUsername(USERNAME);
-                params.setPassword(USER_INFO_SP.getString(OKUserInfoBean.KEY_PASSWORD, ""));
+                params.setPassword(USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, ""));
                 params.setType(OKManagerUserApi.Params.TYPE_UPDATE_INFO);
                 params.setEntity(bean);
 
@@ -247,15 +248,25 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
         mToolbarLogout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAlertDialog("用户管理", "是否退出当前账号?退出之后将无法使用部分功能!", "退出", "取消", new DialogInterface.OnClickListener() {
+                AlertDialog.Builder dialog = new AlertDialog.Builder(OKUserEditActivity.this);
+                dialog.setIcon(R.drawable.ic_launcher);
+                dialog.setTitle("用户管理");
+                dialog.setMessage("是否登出当前账号?退出之后将无法使用部分功能 !");
+                dialog.setPositiveButton("登出", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        USER_INFO_SP.edit().putBoolean("STATE", false).commit();
-                        USER_INFO_SP.edit().putBoolean("STATE_CHANGE", true).commit();
+                        USER_BODY.edit().putBoolean("STATE", false).commit();
+                        USER_BODY.edit().putBoolean("STATE_CHANGE", true).commit();
                         sendUserBroadcast(ACTION_MAIN_SERVICE_LOGOUT_IM, null);
                         finish();
                     }
                 });
+                dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface arg0, int arg1) {
+                    }
+                });
+                dialog.show();
             }
         });
 
@@ -264,10 +275,10 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
             @Override
             public void onClick(View v) {
                 Bundle bundle = new Bundle();
-                bundle.putString(OKUserInfoBean.KEY_USERNAME, USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
-                bundle.putString(OKUserInfoBean.KEY_NICKNAME, USER_INFO_SP.getString(OKUserInfoBean.KEY_NICKNAME, ""));
-                bundle.putString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, USER_INFO_SP.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, ""));
-                bundle.putString(OKUserInfoBean.KEY_TAG, USER_INFO_SP.getString(OKUserInfoBean.KEY_TAG, "这个人很懒 , 什么都没有留下!"));
+                bundle.putString(OKUserInfoBean.KEY_USERNAME, USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                bundle.putString(OKUserInfoBean.KEY_NICKNAME, USER_BODY.getString(OKUserInfoBean.KEY_NICKNAME, ""));
+                bundle.putString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, USER_BODY.getString(OKUserInfoBean.KEY_HEAD_PORTRAIT_URL, ""));
+                bundle.putString(OKUserInfoBean.KEY_TAG, USER_BODY.getString(OKUserInfoBean.KEY_TAG, "这个人很懒 , 什么都没有留下!"));
                 startUserActivity(bundle, OKMeQrCodeActivity.class);
             }
         });
@@ -294,7 +305,7 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
         mToolbarLogout.setVisibility(View.VISIBLE);
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -348,7 +359,7 @@ public class OKUserEditActivity extends OKBaseActivity implements OKManagerUserA
         } else if (OKManagerUserApi.Params.TYPE_UPDATE_INFO.equals(type)) {
 
             if (result != null && result.isSuccess()) {
-                SharedPreferences.Editor editor = USER_INFO_SP.edit();
+                SharedPreferences.Editor editor = USER_BODY.edit();
                 editor.putString(OKUserInfoBean.KEY_NICKNAME, XG_NICKNAME);
                 editor.putString(OKUserInfoBean.KEY_PHONE, XG_PHONE);
                 editor.putString(OKUserInfoBean.KEY_EMAIL, XG_EMAIL);

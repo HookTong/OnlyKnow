@@ -1,6 +1,5 @@
 package com.onlyknow.app.ui.activity;
 
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,6 +15,7 @@ import android.widget.TextView;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadWeatherApi;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKWeatherBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
@@ -28,7 +28,6 @@ import com.youth.banner.Transformer;
 import com.youth.banner.listener.OnBannerListener;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import butterknife.Bind;
@@ -142,8 +141,8 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
             finish();
             return;
         }
-        initUserInfoSharedPreferences();
-        initWeatherSharedPreferences();
+        initUserBody();
+        initWeatherBody();
         init();
     }
 
@@ -185,10 +184,10 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         mBanner.setOnBannerListener(new OnBannerListener() {
             @Override
             public void OnBannerClick(int position) {
-                Map<String, String> map = OKConstant.getAdImages().get(position);
-                if (!TextUtils.isEmpty(map.get("LINK"))) {
+                OKCarouselAdBean.ADImage adImage = OKConstant.getAdImages().get(position);
+                if (!TextUtils.isEmpty(adImage.getLink())) {
                     Bundle bundle = new Bundle();
-                    bundle.putString("WEB_LINK", map.get("LINK"));
+                    bundle.putString("WEB_LINK", adImage.getLink());
                     startUserActivity(bundle, OKBrowserActivity.class);
                 } else {
                     showSnackBar(okCollapsingToolbar, "没有发现链接", "");
@@ -216,9 +215,9 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
 
         int i = new Random().nextInt(5);
         if (i < OKConstant.getCarouselImages().size()) {
-            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getCarouselImages().get(i).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getCarouselImages().get(i).getUrl(), R.drawable.topgd1, R.drawable.topgd1);
         } else if (OKConstant.getCarouselImages().size() != 0) {
-            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getCarouselImages().get(0).get("URL").toString(), R.drawable.topgd1, R.drawable.topgd1);
+            GlideBlurApi(okActivityWeatherHeadImage, OKConstant.getCarouselImages().get(0).getUrl(), R.drawable.topgd1, R.drawable.topgd1);
         } else {
             GlideBlurApi(okActivityWeatherHeadImage, R.drawable.topgd1, R.drawable.topgd1, R.drawable.topgd1);
         }
@@ -353,15 +352,21 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         }
     }
 
+    private OKLoadWeatherApi mWeatherApi;
+
     private void getWeatherInfo() {
         if (OKNetUtil.isNet(this)) {
-            String city_id = USER_INFO_SP.getString("CITY_ID", "");
-            if (TextUtils.isEmpty(city_id)) {
-                showSnackBar(okActivityWeatherCollapsingToolbarLayout, "未获取到城市", "");
-                return;
+            if (mWeatherApi != null) {
+                mWeatherApi.cancelTask();
             }
-            OKLoadWeatherApi mWeatherApi = new OKLoadWeatherApi(this);
-            mWeatherApi.requestWeather(city_id, this);
+
+            OKLoadWeatherApi.Params params = new OKLoadWeatherApi.Params();
+            params.setCityId(USER_BODY.getString("CITY_ID", ""));
+            params.setCityName(USER_BODY.getString("CITY_NAME", ""));
+            params.setDistrict(USER_BODY.getString("DISTRICT", ""));
+
+            mWeatherApi = new OKLoadWeatherApi(this);
+            mWeatherApi.requestWeather(params, this);
         } else {
             showSnackBar(okActivityWeatherCollapsingToolbarLayout, "没有网络连接", "");
         }
@@ -374,21 +379,13 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
             showSnackBar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
             return;
         }
-        OKWeatherBean.Forecast forecast = weatherBean.data.forecast.get(0);
-        SharedPreferences.Editor editor = WEATHER_SP.edit();
-        editor.putString("CITY_NAME", USER_INFO_SP.getString("CITY_NAME", ""));
-        editor.putString("CITY_ID", USER_INFO_SP.getString("CITY_ID", ""));
-        editor.putString("DISTRICT", USER_INFO_SP.getString("DISTRICT", ""));
-        editor.putString("TEMPERATURE", weatherBean.data.wendu + " ℃");
-        editor.putString("TEMPERATURE_LOW", forecast.low);
-        editor.putString("TEMPERATURE_HIG", forecast.high);
-        editor.putString("WEATHER_TYPE", forecast.type);
-        editor.putString("GAN_MAO", weatherBean.data.ganmao);
-        editor.putString("WEATHER_DATE", forecast.date);
-        editor.putString("WEATHER_DATE_WEEK", forecast.date.substring(forecast.date.indexOf("日") + 1));
-        editor.commit();
+
         mOKWeatherBean = weatherBean;
+
+        saveWeatherInfo(mOKWeatherBean);
+
         bindWeatherInfo();
+
         mProgressBar.setVisibility(View.GONE);
     }
 }

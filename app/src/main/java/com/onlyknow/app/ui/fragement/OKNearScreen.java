@@ -64,7 +64,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     private RefreshLayout mRefreshLayout;
     private OKRecyclerView mRecyclerView;
     private DrawerLayout mDrawerLayout;
-    private BarToggle mBarToggle;
+    private DrawerToggle mDrawerToggle;
     private NavigationView mNavigationView;
     private CardViewAdapter mCardViewAdapter;
 
@@ -83,8 +83,8 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.ok_fragment_near, container, false);
-            initUserInfoSharedPreferences();
-            initWeatherSharedPreferences();
+            initUserBody();
+            initWeatherBody();
 
             findView(rootView);
             init();
@@ -163,9 +163,9 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mRefreshLayout.setOnRefreshListener(this);
         mRefreshLayout.setOnLoadMoreListener(this);
         mNavigationView.setNavigationItemSelectedListener(this);
-        mBarToggle = new BarToggle(getActivity(), mDrawerLayout, R.drawable.ok_toolbar_menu, R.drawable.ok_toolbar_back);
-        mBarToggle.syncState();
-        mDrawerLayout.addDrawerListener(mBarToggle);
+        mDrawerToggle = new DrawerToggle(mDrawerLayout);
+        mDrawerToggle.syncState();
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
         bindNavigationHeadView(mNavigationView.getHeaderView(0));
     }
 
@@ -216,7 +216,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
 
             @Override
             public void onClick(View v) {
-                showMenu(getActivity());
+                showMainMenu();
             }
         });
 
@@ -259,11 +259,11 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void onLoadMore(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
             OKLoadNearCardApi.Params params = new OKLoadNearCardApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "anonymous"));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "anonymous"));
             params.setPage(page + 1);
             params.setSize(size);
-            params.setLongitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LONGITUDE, -1));
-            params.setLatitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LATITUDE, -1));
+            params.setLongitude(USER_BODY.getFloat(OKManagerUserApi.Params.KEY_LONGITUDE, -1));
+            params.setLatitude(USER_BODY.getFloat(OKManagerUserApi.Params.KEY_LATITUDE, -1));
 
             if (mOKLoadNearCardApi == null) {
                 mOKLoadNearCardApi = new OKLoadNearCardApi(getActivity());
@@ -279,11 +279,11 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void onRefresh(RefreshLayout refreshLayout) {
         if (OKNetUtil.isNet(getActivity())) {
             OKLoadNearCardApi.Params params = new OKLoadNearCardApi.Params();
-            params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, "anonymous"));
+            params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "anonymous"));
             params.setPage(1);
             params.setSize(size);
-            params.setLongitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LONGITUDE, -1));
-            params.setLatitude(USER_INFO_SP.getFloat(OKManagerUserApi.Params.KEY_LATITUDE, -1));
+            params.setLongitude(USER_BODY.getFloat(OKManagerUserApi.Params.KEY_LONGITUDE, -1));
+            params.setLatitude(USER_BODY.getFloat(OKManagerUserApi.Params.KEY_LATITUDE, -1));
 
             if (mOKLoadNearCardApi == null) {
                 mOKLoadNearCardApi = new OKLoadNearCardApi(getActivity());
@@ -353,7 +353,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void loadCarouselAdComplete(OKCarouselAdBean bean) {
         if (bean == null) return;
 
-        mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImage());
+        mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImages());
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

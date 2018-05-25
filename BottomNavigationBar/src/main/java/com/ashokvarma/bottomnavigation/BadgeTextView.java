@@ -57,7 +57,7 @@ class BadgeTextView extends AppCompatTextView {
     /**
      * if width and height of the view needs to be changed
      *
-     * @param width new width that needs to be set
+     * @param width  new width that needs to be set
      * @param height new height that needs to be set
      */
     void setDimens(int width, int height) {

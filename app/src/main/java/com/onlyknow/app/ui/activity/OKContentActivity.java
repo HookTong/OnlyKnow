@@ -26,7 +26,7 @@ public class OKContentActivity extends OKBaseActivity implements OKLoadAppInfoAp
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_content);
-        initSystemBar(this);
+        initStatusBar();
         mBundle = this.getIntent().getExtras();
         findView();
         init();
@@ -78,7 +78,7 @@ public class OKContentActivity extends OKBaseActivity implements OKLoadAppInfoAp
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
         mToolbarTitle.setText("内容查看器");

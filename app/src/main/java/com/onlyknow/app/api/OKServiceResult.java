@@ -1,7 +1,5 @@
 package com.onlyknow.app.api;
 
-import com.google.gson.Gson;
-
 public class OKServiceResult<T> {
     private boolean isSuccess = false;
     private int code = 0;

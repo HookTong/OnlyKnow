@@ -44,8 +44,8 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_setting);
-        initSettingSharedPreferences();
-        initSystemBar(this);
+        initSettingBody();
+        initStatusBar();
         findView();
         init();
     }
@@ -77,7 +77,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
         textViewCacheSize.setText(OKGlideCacheUtil.getCacheSize(this));
 
         textViewVersionID.setText("当前APP版本 :" + OKConstant.APP_VERSION);
-        if (SETTING_SP.getBoolean("AUTO_UPDATE", true)) {
+        if (SETTING_BODY.getBoolean("AUTO_UPDATE", true)) {
             switchCompat.setChecked(true);
         } else {
             switchCompat.setChecked(false);
@@ -88,9 +88,9 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    SETTING_SP.edit().putBoolean("AUTO_UPDATE", true).commit();
+                    SETTING_BODY.edit().putBoolean("AUTO_UPDATE", true).commit();
                 } else {
-                    SETTING_SP.edit().putBoolean("AUTO_UPDATE", false).commit();
+                    SETTING_BODY.edit().putBoolean("AUTO_UPDATE", false).commit();
                 }
             }
         });
@@ -106,13 +106,13 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
                 final RadioButton radioButton3 = (RadioButton) dialogview.findViewById(R.id.setting_ddalog_rb3);
                 final RadioButton radioButton4 = (RadioButton) dialogview.findViewById(R.id.setting_ddalog_rb4);
                 DialogMenu.setView(dialogview);
-                if (SETTING_SP.getString("FONT", "NORM").equals("NORM")) {
+                if (SETTING_BODY.getString("FONT", "NORM").equals("NORM")) {
                     radioButton.setChecked(true);
-                } else if (SETTING_SP.getString("FONT", "NORM").equals("MAX")) {
+                } else if (SETTING_BODY.getString("FONT", "NORM").equals("MAX")) {
                     radioButton2.setChecked(true);
-                } else if (SETTING_SP.getString("FONT", "NORM").equals("CENTRE")) {
+                } else if (SETTING_BODY.getString("FONT", "NORM").equals("CENTRE")) {
                     radioButton3.setChecked(true);
-                } else if (SETTING_SP.getString("FONT", "NORM").equals("MIN")) {
+                } else if (SETTING_BODY.getString("FONT", "NORM").equals("MIN")) {
                     radioButton4.setChecked(true);
                 }
                 radioGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -121,13 +121,13 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
                     public void onCheckedChanged(RadioGroup group, int checkedId) {
 
                         if (checkedId == R.id.setting_ddalog_rb1) {
-                            SETTING_SP.edit().putString("FONT", "NORM").commit();
+                            SETTING_BODY.edit().putString("FONT", "NORM").commit();
                         } else if (checkedId == R.id.setting_ddalog_rb2) {
-                            SETTING_SP.edit().putString("FONT", "MAX").commit();
+                            SETTING_BODY.edit().putString("FONT", "MAX").commit();
                         } else if (checkedId == R.id.setting_ddalog_rb3) {
-                            SETTING_SP.edit().putString("FONT", "CENTRE").commit();
+                            SETTING_BODY.edit().putString("FONT", "CENTRE").commit();
                         } else if (checkedId == R.id.setting_ddalog_rb4) {
-                            SETTING_SP.edit().putString("FONT", "MIN").commit();
+                            SETTING_BODY.edit().putString("FONT", "MIN").commit();
                         }
                     }
                 });
@@ -214,7 +214,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
 
             @Override
             public void onClick(View v) {
-                dbPos = SETTING_SP.getInt("BottomNnavigation", 0);
+                dbPos = SETTING_BODY.getInt("BottomNnavigation", 0);
                 AlertDialog.Builder builder = new AlertDialog.Builder(OKSettingActivity.this);
                 builder.setTitle("选择底部导航样式");
                 builder.setSingleChoiceItems(new String[]{"FIXED+RIPPLE 效果", "FIXED+STATIC 效果", "SHIFTING+STATIC 效果",
@@ -227,7 +227,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
                 builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface arg0, int arg1) {
-                        SETTING_SP.edit().putInt("BottomNnavigation", dbPos).commit();
+                        SETTING_BODY.edit().putInt("BottomNnavigation", dbPos).commit();
                     }
                 });
                 builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -259,7 +259,7 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         mToolbarBack.setVisibility(View.VISIBLE);
         mToolbarTitle.setVisibility(View.VISIBLE);
 
@@ -325,12 +325,22 @@ public class OKSettingActivity extends OKBaseActivity implements OKLoadAppInfoAp
             @Override
             public void onClick(View view) {
                 if (mProgressButton.getState() == OKProgressButton.DOWNLOADING) {
-                    showAlertDialog("版本更新", "正在更新中,确定要关闭对话框?", "关闭", "取消", new DialogInterface.OnClickListener() {
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(OKSettingActivity.this);
+                    dialog.setIcon(R.drawable.ic_launcher);
+                    dialog.setTitle("版本更新");
+                    dialog.setMessage("正在更新中,确定要关闭对话框 ?");
+                    dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
                             mAlertDialog.dismiss();
                         }
                     });
+                    dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface arg0, int arg1) {
+                        }
+                    });
+                    dialog.show();
                 } else {
                     mAlertDialog.dismiss();
                 }

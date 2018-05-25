@@ -145,8 +145,8 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_card_image);
         ButterKnife.bind(this);
-        initUserInfoSharedPreferences();
-        initSystemBar(this);
+        initUserBody();
+        initStatusBar();
         mStartInterfaceType = getIntent().getExtras().getInt(INTENT_KEY_INTERFACE_TYPE);
         mCardBean = (OKCardBean) getIntent().getExtras().getSerializable(KEY_INTENT_IMAGE_CARD);
 
@@ -165,7 +165,7 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
         super.onResume();
 
         OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setCardId(mCardBean.getCardId());
         params.setType(OKManagerCardApi.Params.TYPE_CARD_RELATED);
 
@@ -228,7 +228,7 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
     }
 
     private void findView() {
-        super.findCommonToolbarView(this);
+        super.findCommonToolbarView();
         setSupportActionBar(mToolbar);
 
         mToolbarBack.setVisibility(View.VISIBLE);
@@ -315,14 +315,14 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.isAttention()) {
                         showSnackBar(v, "您已经关注了", "");
                         return;
                     }
 
                     OKManagerUserApi.Params params = new OKManagerUserApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setAttentionUsername(mCardBean.getUserName());
                     params.setType(OKManagerUserApi.Params.TYPE_ADD_ATTENTION);
 
@@ -356,14 +356,14 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.isPraise()) {
                         showSnackBar(v, "您已经点赞了", "");
                         return;
                     }
 
                     OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setCardId(mCardBean.getCardId());
                     params.setType(OKManagerCardApi.Params.TYPE_PRAISE);
 
@@ -382,14 +382,14 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
 
             @Override
             public void onClick(View v) {
-                if (USER_INFO_SP.getBoolean("STATE", false)) {
+                if (USER_BODY.getBoolean("STATE", false)) {
                     if (mCardBindBean != null && mCardBindBean.isWatch()) {
                         showSnackBar(v, "您已经收藏了", "");
                         return;
                     }
 
                     OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-                    params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+                    params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
                     params.setCardId(mCardBean.getCardId());
                     params.setType(OKManagerCardApi.Params.TYPE_WATCH);
 
@@ -560,7 +560,7 @@ public class OKCardTPActivity extends OKBaseActivity implements OKManagerCardApi
     private void addCardBrowsing() {
 
         OKManagerCardApi.Params params = new OKManagerCardApi.Params();
-        params.setUsername(USER_INFO_SP.getString(OKUserInfoBean.KEY_USERNAME, ""));
+        params.setUsername(USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, ""));
         params.setCardId(mCardBean.getCardId());
         params.setType(OKManagerCardApi.Params.TYPE_BROWSING);
 

@@ -15,7 +15,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadSearchApi;
@@ -59,8 +58,8 @@ public class OKSearchActivity extends OKBaseActivity implements OnRefreshListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_search);
-        initSystemBar(this);
-        initUserInfoSharedPreferences();
+        initStatusBar();
+        initUserBody();
         interfaceType = getIntent().getExtras().getInt(INTENT_KEY_INTERFACE_TYPE);
 
         findView();
