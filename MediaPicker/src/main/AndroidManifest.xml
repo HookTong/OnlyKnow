@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.dmcbig.mediapicker">
+    package="com.onlyknow.mediapicker">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -11,28 +11,28 @@
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="${applicationId}.share"
-            android:grantUriPermissions="true"
-            android:exported="false">
+            android:exported="false"
+            android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
 
         <activity
+            android:name="com.onlyknow.mediapicker.PickerActivity"
             android:configChanges="orientation|screenSize"
-            android:windowSoftInputMode="stateAlwaysHidden"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:name="com.dmcbig.mediapicker.PickerActivity" />
+            android:windowSoftInputMode="stateAlwaysHidden" />
         <activity
+            android:name="com.onlyknow.mediapicker.PreviewActivity"
             android:configChanges="orientation|screenSize"
-            android:windowSoftInputMode="stateAlwaysHidden"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:name="com.dmcbig.mediapicker.PreviewActivity" />
+            android:windowSoftInputMode="stateAlwaysHidden" />
         <activity
+            android:name="com.onlyknow.mediapicker.TakePhotoActivity"
             android:configChanges="orientation|screenSize"
-            android:windowSoftInputMode="stateAlwaysHidden"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:name="com.dmcbig.mediapicker.TakePhotoActivity" />
+            android:windowSoftInputMode="stateAlwaysHidden" />
     </application>
 
 </manifest>

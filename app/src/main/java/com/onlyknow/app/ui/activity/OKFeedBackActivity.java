@@ -7,15 +7,15 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
 
-import com.dmcbig.mediapicker.PickerActivity;
-import com.dmcbig.mediapicker.PickerConfig;
-import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKFeedBackApi;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
+import com.onlyknow.mediapicker.PickerActivity;
+import com.onlyknow.mediapicker.PickerConfig;
+import com.onlyknow.mediapicker.bean.MediaBean;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -28,6 +28,9 @@ import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKMimeTypeUtil;
 import com.onlyknow.app.utils.OKNetUtil;
+import com.onlyknow.permission.HiPermission;
+import com.onlyknow.permission.PermissionCallback;
+import com.onlyknow.permission.PermissionItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +38,6 @@ import java.util.Random;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import me.weyye.hipermission.HiPermission;
-import me.weyye.hipermission.PermissionCallback;
-import me.weyye.hipermission.PermissionItem;
 import okhttp3.Request;
 
 public class OKWelcomeActivity extends OKBaseActivity implements PermissionCallback, OKLoadAppInfoApi.onCallBack {

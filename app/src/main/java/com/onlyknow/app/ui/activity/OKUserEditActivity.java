@@ -15,9 +15,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.dmcbig.mediapicker.PickerActivity;
-import com.dmcbig.mediapicker.PickerConfig;
-import com.dmcbig.mediapicker.bean.MediaBean;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
@@ -27,6 +24,9 @@ import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKCircleImageView;
 import com.onlyknow.app.utils.OKDateUtil;
 import com.onlyknow.app.utils.OKSDCardUtil;
+import com.onlyknow.mediapicker.PickerActivity;
+import com.onlyknow.mediapicker.PickerConfig;
+import com.onlyknow.mediapicker.bean.MediaBean;
 import com.yalantis.ucrop.UCrop;
 
 import java.text.SimpleDateFormat;

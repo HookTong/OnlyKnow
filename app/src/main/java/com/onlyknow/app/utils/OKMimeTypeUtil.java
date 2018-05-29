@@ -88,7 +88,7 @@ public class OKMimeTypeUtil {
             return type;
         }
 
-      /* 获取文件的后缀名 */
+        /* 获取文件的后缀名 */
         String end = fName.substring(dotIndex, fName.length()).toLowerCase();
         if (end == "") {
             return type;

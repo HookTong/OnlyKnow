@@ -42,7 +42,7 @@
     <!--android:orientation="horizontal"-->
     <!--android:showDividers="middle"/>-->
 
-    <me.weyye.hipermission.WrapHeightGridView
+    <com.onlyknow.permission.WrapHeightGridView
         android:id="@+id/gvPermission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

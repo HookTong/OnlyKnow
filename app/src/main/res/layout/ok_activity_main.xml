@@ -25,7 +25,7 @@
             android:src="@drawable/textbianji" />
     </RelativeLayout>
 
-    <com.ashokvarma.bottomnavigation.BottomNavigationBar
+    <com.onlyknow.bottomnavigation.BottomNavigationBar
         android:id="@+id/MAIN_bottom_navigation_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

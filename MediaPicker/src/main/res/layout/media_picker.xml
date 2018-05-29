@@ -11,9 +11,10 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/md_light_green_500"
+        android:elevation="15dp"
         android:orientation="horizontal">
 
-        <com.dmcbig.mediapicker.views.SEImageView
+        <com.onlyknow.mediapicker.views.SEImageView
             android:id="@+id/btn_back"
             android:layout_width="22dp"
             android:layout_height="22dp"
@@ -60,7 +61,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/md_light_green_500"
-        android:elevation="5dp"
+        android:elevation="15dp"
         android:orientation="horizontal">
 
         <Button

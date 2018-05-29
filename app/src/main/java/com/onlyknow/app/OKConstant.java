@@ -10,9 +10,9 @@ import java.util.Date;
 import java.util.List;
 
 /*
-*  2018-02-05 15:14
-*  全局静态数据
-* */
+ *  2018-02-05 15:14
+ *  全局静态数据
+ * */
 
 public final class OKConstant {
     public final static String APP_VERSION = "2.0.9"; // app版本号
