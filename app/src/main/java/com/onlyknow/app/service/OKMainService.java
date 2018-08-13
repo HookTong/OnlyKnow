@@ -1,50 +1,90 @@
 package com.onlyknow.app.service;
 
 import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Message;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.hyphenate.EMCallBack;
 import com.hyphenate.chat.EMClient;
 import com.hyphenate.chat.EMMessage;
 import com.hyphenate.chat.EMTextMessageBody;
 import com.hyphenate.exceptions.HyphenateException;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.api.OKServiceResult;
+import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
+import com.onlyknow.app.api.app.OKLoadWeatherApi;
 import com.onlyknow.app.api.user.OKManagerUserApi;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
 import com.onlyknow.app.utils.OKCityUtil;
 import com.onlyknow.app.utils.OKLogUtil;
 import com.onlyknow.app.utils.OKNetUtil;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class OKMainService extends OKBaseService implements AMapLocationListener, OKManagerUserApi.onCallBack {
+public class OKMainService extends OKBaseService implements AMapLocationListener,
+        OKManagerUserApi.onCallBack, OKMainBroadcastReceiver.MainReceiver,
+        OKLoadCarouselAdApi.onCallBack, OKLoadWeatherApi.onCallBack, OKCoordinator.CoordinatorCallBack {
+    private static final String TAG = "OKMainService";
+
+    public interface NoticeCallBack {
+        void onLocationChanged(AMapLocation location);
+
+        void onImStatusChanged(boolean isOnline);
+
+        void onCarouselImageChanged(OKCarouselAdBean bean);
+
+        void onWeatherChanged(OKWeatherBean bean);
+    }
 
     public static boolean isEMLogIn = false;
 
     // 广播接收器
-    private ServiceReceiver serviceReceiver = new ServiceReceiver();
+    private OKMainBroadcastReceiver serviceReceiver;
+
+    private OKCoordinator coordinator;
 
     // 声明AMapLocationClient类对象
     private AMapLocationClient mLocationClient;
 
     private OKManagerUserApi managerUserApi;
 
+    private static Map<Integer, NoticeCallBack> noticeCallBackQueue = new HashMap<>();
+
+    public static int addNoticeCallBack(NoticeCallBack callBack) {
+        noticeIndex = noticeIndex + 1;
+        noticeCallBackQueue.put(noticeIndex, callBack);
+        int index = noticeIndex;
+        return index;
+    }
+
+    public static void removeNoticeCallBack(int index) {
+        NoticeCallBack callBack = noticeCallBackQueue.get(index);
+        if (callBack != null) {
+            noticeCallBackQueue.remove(index);
+        }
+    }
+
     private long locationInterval = 0;
 
-    // IM 方法
+    private static int noticeIndex = -1;
+
+    // 创建IM账号并登录
     private void createIm(final String username, final String password) {
         if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
             new Thread() {
@@ -56,22 +96,162 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
                         EMClient.getInstance().createAccount(username, password);
                     } catch (HyphenateException e) {
                         e.printStackTrace();
+
+                        OKLogUtil.print(TAG, "创建失败(可能因为该账号已创建过), Msg: " + e.getMessage());
                     }
 
                     loginIm(username, password);
+
+                    // Message ms = new Message();
+                    // Bundle bundle = new Bundle();
+                    // bundle.putString("username", username);
+                    // bundle.putString("password", password);
+                    // ms.setData(bundle);
+                    // ms.what = WHAT_IM_LOGIN;
+                    // coordinator.sendCoordinatorMessage(ms);
                 }
             }.start();
         }
     }
 
+    // 登录IM账号
     private void loginIm(String username, String password) {
-        if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password) && USER_BODY.getBoolean("STATE", false)) {
-            EMClient.getInstance().login(username, password, OKMainService.this);
+        if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)
+                && USER_BODY.getBoolean("STATE", false)) {
+            EMClient.getInstance().login(username, password, new EMCallBack() {
+                @Override
+                public void onSuccess() {
+                    isEMLogIn = true;
+
+                    EMClient.getInstance().groupManager().loadAllGroups();
+                    EMClient.getInstance().chatManager().loadAllConversations();
+                    EMClient.getInstance().chatManager().addMessageListener(OKMainService.this);
+
+                    Message ms = coordinator.obtainMessage();
+                    ms.what = WHAT_IM_LOGIN_SUCCESS;
+                    coordinator.sendCoordinatorMessage(ms);
+
+                    OKLogUtil.print(TAG, "登录聊天服务器成功！");
+                }
+
+                @Override
+                public void onError(int i, String s) {
+                    isEMLogIn = false;
+
+                    Message ms = coordinator.obtainMessage();
+                    ms.what = WHAT_IM_LOGIN_FAILURE;
+                    coordinator.sendCoordinatorMessage(ms);
+
+                    OKLogUtil.print(TAG, "登录聊天服务器失败！");
+                }
+
+                @Override
+                public void onProgress(int i, String s) {
+                }
+            });
         }
     }
 
+    // 登出当前登录的IM账号
     private void logoutIm() {
-        EMClient.getInstance().logout(true);
+        EMClient.getInstance().logout(true, new EMCallBack() {
+            @Override
+            public void onSuccess() {
+                Message ms = coordinator.obtainMessage();
+                ms.what = WHAT_IM_LOGOUT_SUCCESS;
+                coordinator.sendCoordinatorMessage(ms);
+
+                OKLogUtil.print(TAG, "当前环信账号登出成功");
+            }
+
+            @Override
+            public void onError(int i, String s) {
+                Message ms = coordinator.obtainMessage();
+                ms.what = WHAT_IM_LOGOUT_FAILURE;
+                coordinator.sendCoordinatorMessage(ms);
+
+                OKLogUtil.print(TAG, "当前环信账号登出失败, Msg: " + s);
+            }
+
+            @Override
+            public void onProgress(int i, String s) {
+            }
+        });
+    }
+
+    // 获取轮播图片
+    private void loadCarouselImage() {
+        if (mLoadCarouselAdApi != null) {
+            mLoadCarouselAdApi.cancelTask();
+        }
+        mLoadCarouselAdApi = new OKLoadCarouselAdApi(this);
+        OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
+        params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
+
+        mLoadCarouselAdApi.requestCarouselAd(params, this);
+    }
+
+    // 获取天气信息
+    private void loadWeather() {
+        if (mLoadWeatherApi != null) {
+            mLoadWeatherApi.cancelTask();
+        }
+        mLoadWeatherApi = new OKLoadWeatherApi(this);
+        OKLoadWeatherApi.Params params = new OKLoadWeatherApi.Params();
+        params.setCityId(USER_BODY.getString("CITY_ID", ""));
+        params.setCityName(USER_BODY.getString("CITY_NAME", ""));
+        params.setDistrict(USER_BODY.getString("DISTRICT", ""));
+        mLoadWeatherApi.requestWeather(params, this);
+    }
+
+    // 返回位置信息到前台线程
+    private void backLocationChanged(AMapLocation location) {
+        if (location == null) return;
+
+        NoticeCallBack callBack;
+        for (Map.Entry<Integer, NoticeCallBack> entry : noticeCallBackQueue.entrySet()) {
+            callBack = entry.getValue();
+            if (callBack != null) {
+                callBack.onLocationChanged(location);
+            }
+        }
+    }
+
+    // 返回Im状态到前台线程
+    private void backImStatusChanged(boolean isOnline) {
+        NoticeCallBack callBack;
+        for (Map.Entry<Integer, NoticeCallBack> entry : noticeCallBackQueue.entrySet()) {
+            callBack = entry.getValue();
+            if (callBack != null) {
+                callBack.onImStatusChanged(isOnline);
+            }
+        }
+    }
+
+    // 返回天气信息到前台线程
+    private void backWeatherChanged(OKWeatherBean bean) {
+        if (bean == null) return;
+
+        NoticeCallBack callBack;
+        for (Map.Entry<Integer, NoticeCallBack> entry : noticeCallBackQueue.entrySet()) {
+            callBack = entry.getValue();
+            if (callBack != null) {
+                callBack.onWeatherChanged(bean);
+            }
+        }
+    }
+
+    // 返回轮播图片到前台线程
+    private void backCarouselImageChanged(OKCarouselAdBean bean) {
+        if (bean == null) return;
+
+        NoticeCallBack callBack;
+        for (Map.Entry<Integer, NoticeCallBack> entry : noticeCallBackQueue.entrySet()) {
+            callBack = entry.getValue();
+            if (callBack != null) {
+                callBack.onCarouselImageChanged(bean);
+            }
+        }
     }
 
     @Override
@@ -82,16 +262,12 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
         initSettingBody();
         initWeatherBody();
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ACTION_MAIN_SERVICE_LOGIN_IM);
-        intentFilter.addAction(ACTION_MAIN_SERVICE_LOGOUT_IM);
-        intentFilter.addAction(ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM);
-        intentFilter.addAction(ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM);
-        intentFilter.addAction(ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM);
-        intentFilter.addAction(OKConstant.ACTION_SHOW_NOTICE);
-        intentFilter.addAction(OKConstant.ACTION_RESET_LOCATION);
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(serviceReceiver, intentFilter);
+        serviceReceiver = new OKMainBroadcastReceiver(this);
+
+        serviceReceiver.registered(this);
+
+        coordinator = new OKCoordinator(this);
+
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 
@@ -106,24 +282,35 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
     public void onDestroy() {
         super.onDestroy();
 
-        unregisterReceiver(serviceReceiver);
-
         EMClient.getInstance().chatManager().removeMessageListener(OKMainService.this);
+
+        serviceReceiver.unregistered();
 
         mLocationClient.stopLocation();
 
         mLocationClient.onDestroy();
 
+        coordinator = null;
+
         if (managerUserApi != null) {
             managerUserApi.cancelTask();
         }
 
-        OKLogUtil.print("---OKMainService.onDestroy--- 重新启动服务");
+        if (mLoadCarouselAdApi != null) {
+            mLoadCarouselAdApi.cancelTask();
+        }
+
+        if (mLoadWeatherApi != null) {
+            mLoadWeatherApi.cancelTask();
+        }
+
+        OKLogUtil.print(TAG, "---OKMainService.onDestroy--- 重新启动服务");
         initNotice("OnlyKnow严重通知", "OKMainService意外终止,正在尝试重启...");
         showNotice("OnlyKnow严重通知");
         startService(new Intent(this, OKMainService.class));
     }
 
+    // 服务初始化
     private void init() {
         if (OKNetUtil.isNet(this)) {
             if (USER_BODY.getBoolean("STATE", false)) {
@@ -145,22 +332,27 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
         mLocationOption.setLocationCacheEnable(true); // 开启缓存机制
         mLocationClient.setLocationOption(mLocationOption); // 给定位客户端对象设置定位参数
         mLocationClient.startLocation(); // 启动定位
+
+        loadCarouselImage();
     }
+
+    private AMapLocation mapLocation;
 
     // 定位结果回调
     @Override
     public void onLocationChanged(AMapLocation amapLocation) {
-
-        if (amapLocation == null) return;
-
+        if (amapLocation == null) {
+            OKLogUtil.print(TAG, "onLocationChanged AMapLocation is Null");
+            return;
+        }
         if (amapLocation.getErrorCode() == 0) {
+            mapLocation = amapLocation;
 
             double longitude = amapLocation.getLongitude(); // 经度
             double latitude = amapLocation.getLatitude(); // 纬度
 
             String cityName = amapLocation.getCity();
             String cityCode = amapLocation.getCityCode();
-            String cityID = OKCityUtil.getCityID(this, cityName.replace("市", "").replace(" ", ""));
             String district = amapLocation.getDistrict();
 
             // 地理位置保存在用户sp中
@@ -169,7 +361,6 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
             editor.putFloat(OKManagerUserApi.Params.KEY_LATITUDE, (float) latitude);
             editor.putString("CITY_NAME", cityName);
             editor.putString("CITY_CODE", cityCode);
-            editor.putString("CITY_ID", cityID);
             editor.putString("DISTRICT", district);
             editor.commit();
 
@@ -178,7 +369,6 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
             weatherEditor.putFloat(OKManagerUserApi.Params.KEY_LATITUDE, (float) latitude);
             weatherEditor.putString("CITY_NAME", cityName);
             weatherEditor.putString("CITY_CODE", cityCode);
-            weatherEditor.putString("CITY_ID", cityID);
             weatherEditor.putString("DISTRICT", district);
             weatherEditor.commit();
 
@@ -186,7 +376,6 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
             String name = USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "");
             String pass = USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, "");
             if (!TextUtils.isEmpty(name) && OKNetUtil.isNet(this)) {
-
                 OKManagerUserApi.Params params = new OKManagerUserApi.Params();
                 params.setUsername(name);
                 params.setPassword(pass);
@@ -199,38 +388,19 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
                 }
                 managerUserApi = new OKManagerUserApi(this);
                 managerUserApi.requestManagerUser(params, this);
-
             }
 
-            OKLogUtil.print("位置信息 经度:" + String.valueOf(longitude) + " 纬度:" + String.valueOf(latitude));
+            // 城市名称需要移除后缀
+            String cityNameTmp = cityName.replace("市", "").replace(" ", "");
+            // 请求异步获取CityId
+            OKCityUtil.requestCityID(this, cityNameTmp, coordinator);
 
+            OKLogUtil.print(TAG, "位置信息: " + mapLocation.toString());
         } else {
-            //定位失败时，可通过ErrCode（错误码）信息来确定失败的原因,errInfo是错误信息,详见错误码表!
-            OKLogUtil.print("MapError", "ErrCode:" + amapLocation.getErrorCode() + ", errInfo:" + amapLocation.getErrorInfo());
+            //定位失败时,可通过ErrCode(错误码)信息来确定失败的原因,errInfo是错误信息,详见错误码表.
+            OKLogUtil.print(TAG, "定位失败, ErrorCode: " + amapLocation.getErrorCode()
+                    + ", ErrorInfo: " + amapLocation.getErrorInfo());
         }
-
-    }
-
-    // 环信登录回调
-    @Override
-    public void onSuccess() {
-        super.onSuccess();
-
-        isEMLogIn = true;
-
-        EMClient.getInstance().groupManager().loadAllGroups();
-        EMClient.getInstance().chatManager().loadAllConversations();
-        EMClient.getInstance().chatManager().addMessageListener(OKMainService.this);
-        OKLogUtil.print("登录聊天服务器成功！");
-    }
-
-    @Override
-    public void onError(int i, String s) {
-        super.onError(i, s);
-
-        isEMLogIn = false;
-
-        OKLogUtil.print("登录聊天服务器失败！");
     }
 
     // 以下是环信消息接收回调
@@ -252,6 +422,8 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
                 showNotice(fromName);
             }
         }
+
+        OKLogUtil.print(TAG, "收到新消息");
     }
 
     // 更新用户地理位置的结果回调
@@ -259,107 +431,209 @@ public class OKMainService extends OKBaseService implements AMapLocationListener
     public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
         if (OKManagerUserApi.Params.TYPE_UPDATE_LOCATION.equals(type)) {
             if (result != null && result.isSuccess()) {
-                OKLogUtil.print("用户地理位置更新成功!");
+                backLocationChanged(mapLocation);
+
+                OKLogUtil.print(TAG, "用户地理位置更新成功!");
             } else {
-                OKLogUtil.print("用户地理位置更新失败!");
+                OKLogUtil.print(TAG, "用户地理位置更新失败!");
             }
         }
     }
 
-    private class ServiceReceiver extends BroadcastReceiver {
+    @Override
+    public void onMainReceiver(Context context, Intent intent) {
+        String action = intent.getAction();
+        if (ACTION_MAIN_SERVICE_LOGIN_IM.equals(action)) {
+            Bundle mBundle = intent.getExtras();
+            if (mBundle == null) {
+                return;
+            }
+            String username = mBundle.getString(OKUserInfoBean.KEY_USERNAME, "");
+            String password = mBundle.getString(OKUserInfoBean.KEY_PASSWORD, "");
+            if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
+                loginIm(username, password);
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
+                OKLogUtil.print(TAG, "用户开始登录环信账号");
+            } else {
+                OKLogUtil.print(TAG, "用户试图登录环信但没有账号信息");
+            }
+        } else if (ACTION_MAIN_SERVICE_LOGOUT_IM.equals(action)) {
+            logoutIm();
 
-            String action = intent.getAction();
+            OKLogUtil.print(TAG, "用户开始登出环信账号");
+        } else if (ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM.equals(action)) {
+            Bundle mBundle = intent.getExtras();
+            if (mBundle == null) {
+                return;
+            }
+            String username = mBundle.getString(OKUserInfoBean.KEY_USERNAME, "");
+            String password = mBundle.getString(OKUserInfoBean.KEY_PASSWORD, "");
+            if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
+                createIm(username, password);
 
-            OKLogUtil.print("OKMainService 收到广播 : " + action);
+                OKLogUtil.print(TAG, "用户开始创建环信账号");
+            } else {
+                OKLogUtil.print(TAG, "用户试图创建环信账号但没有账号信息");
+            }
+        } else if (ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM.equals(action)) {
+            EMClient.getInstance().chatManager().addMessageListener(OKMainService.this);
 
-            if (ACTION_MAIN_SERVICE_LOGIN_IM.equals(action)) {
+            OKLogUtil.print(TAG, "用户添加了环信消息监听器");
+        } else if (ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM.equals(action)) {
+            EMClient.getInstance().chatManager().removeMessageListener(OKMainService.this);
 
-                Bundle mBundle = intent.getExtras();
-                if (mBundle == null) {
-                    return;
-                }
-                String username = mBundle.getString(OKUserInfoBean.KEY_USERNAME, "");
-                String password = mBundle.getString(OKUserInfoBean.KEY_PASSWORD, "");
-                if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
-                    loginIm(username, password);
-                } else {
-                    OKLogUtil.print("用户试图登录环信但没有账号信息");
-                }
+            OKLogUtil.print(TAG, "用户移除了环信消息监听器");
+        } else if (OKConstant.ACTION_SHOW_NOTICE.equals(action)) {
+            Bundle mBundle = intent.getExtras();
+            if (mBundle == null) {
+                return;
+            }
+            int type = mBundle.getInt("TYPE", -1);
+            switch (type) {
+                case 0:
+                    String title = mBundle.getString("TITLE", "");
+                    String content = mBundle.getString("CONTENT", "");
+                    initNotice(title, content);
+                    showNotice(title);
 
-            } else if (ACTION_MAIN_SERVICE_LOGOUT_IM.equals(action)) {
-
-                logoutIm();
-
-            } else if (ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM.equals(action)) {
-
-                Bundle mBundle = intent.getExtras();
-                if (mBundle == null) {
-                    return;
-                }
-                String username = mBundle.getString(OKUserInfoBean.KEY_USERNAME, "");
-                String password = mBundle.getString(OKUserInfoBean.KEY_PASSWORD, "");
-                if (!TextUtils.isEmpty(username) && !TextUtils.isEmpty(password)) {
-                    createIm(username, password);
-                } else {
-                    OKLogUtil.print("用户试图创建环信账号但没有账号信息");
-                }
-
-            } else if (ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM.equals(action)) {
-
-                EMClient.getInstance().chatManager().addMessageListener(OKMainService.this);
-
-            } else if (ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM.equals(action)) {
-
-                EMClient.getInstance().chatManager().removeMessageListener(OKMainService.this);
-
-            } else if (OKConstant.ACTION_SHOW_NOTICE.equals(action)) {
-
-                Bundle mBundle = intent.getExtras();
-                if (mBundle == null) {
-                    return;
-                }
-                int type = mBundle.getInt("TYPE", -1);
-                switch (type) {
-                    case 0:
-                        String title = mBundle.getString("TITLE", "");
-                        String content = mBundle.getString("CONTENT", "");
-                        initNotice(title, content);
-                        showNotice(title);
-                        break;
-                    default:
-                        break;
-                }
-
-            } else if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
-
-                NetworkInfo info = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);//获取联网状态的NetworkInfo对象
-
-                if (info == null) return;
-
-                if (NetworkInfo.State.CONNECTED == info.getState() && info.isAvailable()) {//如果当前的网络连接成功并且网络连接可用
+                    OKLogUtil.print(TAG, "用户发送了一个通知");
+                    break;
+                default:
+                    break;
+            }
+        } else if (ConnectivityManager.CONNECTIVITY_ACTION.equals(action)) {
+            NetworkInfo info = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);//获取联网状态的NetworkInfo对象
+            if (info == null) return;
+            if (NetworkInfo.State.CONNECTED == info.getState() && info.isAvailable()) {//如果当前的网络连接成功并且网络连接可用
+                if (!EMClient.getInstance().isConnected()) {
                     if (USER_BODY.getBoolean("STATE", false)) { // 登录IM
                         String name = USER_BODY.getString(OKUserInfoBean.KEY_USERNAME, "");
                         String pass = USER_BODY.getString(OKUserInfoBean.KEY_PASSWORD, "");
                         createIm(name, pass);
                     }
-                } else {
-                    OKLogUtil.print("网络连接已断开");
                 }
 
-            } else if (OKConstant.ACTION_RESET_LOCATION.equals(action)) {
-
-                long nowTime = new Date().getTime();
-                if ((nowTime - locationInterval) > 10000) {
-                    mLocationClient.startLocation();
-                    locationInterval = nowTime;
-                } else {
-                    OKLogUtil.print("用户定位过于频繁!10秒之后再重新定位");
-                }
-
+                OKLogUtil.print(TAG, "网络已连接");
+            } else {
+                OKLogUtil.print(TAG, "网络连接已断开");
             }
+        } else if (OKConstant.ACTION_RESET_LOCATION.equals(action)) {
+            long nowTime = new Date().getTime();
+            if ((nowTime - locationInterval) > 10000) {
+                mLocationClient.startLocation();
+                locationInterval = nowTime;
+
+                OKLogUtil.print(TAG, "开始定位");
+            } else {
+                OKLogUtil.print(TAG, "用户定位过于频繁!10秒之后再重新定位");
+            }
+        } else if (ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE.equals(action)) {
+            if (mCarouselAdBean == null) {
+                loadCarouselImage();
+            } else {
+                if (((new Date().getTime()) - mCarouselAdBean.getRequestTime() >= 120000)) {
+                    loadCarouselImage();
+                } else {
+                    backCarouselImageChanged(mCarouselAdBean);
+                }
+            }
+
+            OKLogUtil.print(TAG, "用户请求获取轮播图片");
+        } else if (ACTION_MAIN_SERVICE_GET_WEATHER.equals(action)) {
+            if (mWeatherBean == null) {
+                loadWeather();
+            } else {
+                if (((new Date().getTime()) - mWeatherBean.getRequestTime() >= 120000)) {
+                    loadWeather();
+                } else {
+                    backWeatherChanged(mWeatherBean);
+                }
+            }
+
+            OKLogUtil.print(TAG, "用户请求获取天气信息");
         }
+    }
+
+    private OKLoadCarouselAdApi mLoadCarouselAdApi;
+
+    private OKCarouselAdBean mCarouselAdBean;
+
+    @Override
+    public void loadCarouselAdComplete(OKCarouselAdBean bean) {
+        if (bean != null) {
+            bean.getCarouselImages();
+            bean.getAdImages();
+            mCarouselAdBean = bean;
+            mCarouselAdBean.setRequestTime(new Date().getTime());
+            backCarouselImageChanged(mCarouselAdBean);
+
+            OKLogUtil.print(TAG, "轮播图片获取成功, RequestTime: " + mCarouselAdBean.getRequestTime());
+        } else {
+            OKLogUtil.print(TAG, "轮播图片获取失败");
+        }
+    }
+
+    private OKLoadWeatherApi mLoadWeatherApi;
+
+    private OKWeatherBean mWeatherBean;
+
+    @Override
+    public void loadWeatherComplete(OKWeatherBean weather) {
+        if (weather != null) {
+            mWeatherBean = weather;
+            mWeatherBean.setRequestTime(new Date().getTime());
+            backWeatherChanged(mWeatherBean);
+
+            OKLogUtil.print(TAG, "天气信息获取成功, RequestTime: " + mWeatherBean.getRequestTime());
+        } else {
+            OKLogUtil.print(TAG, "天气信息获取失败");
+        }
+    }
+
+    @Override
+    public void coordinatorMessage(Message msg) {
+        switch (msg.what) {
+            case WHAT_IM_LOGIN:
+                Bundle bundle = msg.getData();
+                String username = bundle.getString("username");
+                String password = bundle.getString("password");
+                loginIm(username, password);
+
+                OKLogUtil.print(TAG, "执行登录协调消息");
+                break;
+            case WHAT_IM_LOGIN_SUCCESS:
+                backImStatusChanged(true);
+
+                OKLogUtil.print(TAG, "执行登录成功协调消息");
+                break;
+            case WHAT_IM_LOGIN_FAILURE:
+                backImStatusChanged(false);
+
+                OKLogUtil.print(TAG, "执行登录失败协调消息");
+                break;
+            case WHAT_IM_LOGOUT_SUCCESS:
+                backImStatusChanged(false);
+
+                OKLogUtil.print(TAG, "执行登出成功协调消息");
+                break;
+            case WHAT_IM_LOGOUT_FAILURE:
+                backImStatusChanged(true);
+
+                OKLogUtil.print(TAG, "执行登出失败协调消息");
+                break;
+            case WHAT_CITY_ID_GET:
+                String cityID = (String) msg.obj;
+                USER_BODY.edit().putString("CITY_ID", cityID).commit();
+                WEATHER_BODY.edit().putString("CITY_ID", cityID).commit();
+                // 请求获取天气信息
+                loadWeather();
+
+                OKLogUtil.print(TAG, "执行CityId获取结果协调消息");
+                break;
+            default:
+                break;
+        }
+
+        OKLogUtil.print(TAG, "收到协调消息: " + msg.what);
     }
 }

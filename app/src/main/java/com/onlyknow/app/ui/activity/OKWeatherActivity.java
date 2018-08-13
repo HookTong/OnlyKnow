@@ -12,11 +12,14 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.amap.api.location.AMapLocation;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadWeatherApi;
 import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKWeatherBean;
+import com.onlyknow.app.service.OKBaseService;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.ui.view.OKSEImageView;
 import com.onlyknow.app.utils.OKLoadBannerImage;
@@ -41,7 +44,9 @@ import butterknife.ButterKnife;
  * Created by ReSet on 2018/03/01.
  */
 
-public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherApi.onCallBack {
+public class OKWeatherActivity extends OKBaseActivity implements OKMainService.NoticeCallBack {
+    private final String TAG = "OKWeatherActivity";
+
     @Bind(R.id.ok_collapsing_toolbar_back_image)
     OKSEImageView okCollapsingToolbarBackImage;
 
@@ -131,6 +136,8 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
 
     private OKWeatherBean mOKWeatherBean;
 
+    private int noticeIndex;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,6 +148,9 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
             finish();
             return;
         }
+
+        noticeIndex = OKMainService.addNoticeCallBack(this);
+
         initUserBody();
         initWeatherBody();
         init();
@@ -156,6 +166,13 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
     protected void onPause() {
         super.onPause();
         stopBanner();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        OKMainService.removeNoticeCallBack(noticeIndex);
     }
 
     private void init() {
@@ -352,40 +369,45 @@ public class OKWeatherActivity extends OKBaseActivity implements OKLoadWeatherAp
         }
     }
 
-    private OKLoadWeatherApi mWeatherApi;
-
     private void getWeatherInfo() {
         if (OKNetUtil.isNet(this)) {
-            if (mWeatherApi != null) {
-                mWeatherApi.cancelTask();
-            }
-
-            OKLoadWeatherApi.Params params = new OKLoadWeatherApi.Params();
-            params.setCityId(USER_BODY.getString("CITY_ID", ""));
-            params.setCityName(USER_BODY.getString("CITY_NAME", ""));
-            params.setDistrict(USER_BODY.getString("DISTRICT", ""));
-
-            mWeatherApi = new OKLoadWeatherApi(this);
-            mWeatherApi.requestWeather(params, this);
+            sendUserBroadcast(OKBaseService.ACTION_MAIN_SERVICE_GET_WEATHER, null);
         } else {
             showSnackBar(okActivityWeatherCollapsingToolbarLayout, "没有网络连接", "");
         }
     }
 
     @Override
-    public void loadWeatherComplete(OKWeatherBean weatherBean) {
-        if (weatherBean == null) {
+    public void onLocationChanged(AMapLocation location) {
+        OKLogUtil.print(TAG, "onLocationChanged");
+    }
+
+    @Override
+    public void onImStatusChanged(boolean isOnline) {
+        OKLogUtil.print(TAG, "onImStatusChanged");
+    }
+
+    @Override
+    public void onCarouselImageChanged(OKCarouselAdBean bean) {
+        OKLogUtil.print(TAG, "onCarouselImageChanged");
+    }
+
+    @Override
+    public void onWeatherChanged(OKWeatherBean bean) {
+        if (bean == null) {
             mProgressBar.setVisibility(View.GONE);
             showSnackBar(okActivityWeatherCollapsingToolbarLayout, "天气获取失败", "ErrorCode: " + OKConstant.WEATHER_BEAN_ERROR);
             return;
         }
 
-        mOKWeatherBean = weatherBean;
+        mOKWeatherBean = bean;
 
         saveWeatherInfo(mOKWeatherBean);
 
         bindWeatherInfo();
 
         mProgressBar.setVisibility(View.GONE);
+
+        OKLogUtil.print(TAG, "onWeatherChanged");
     }
 }

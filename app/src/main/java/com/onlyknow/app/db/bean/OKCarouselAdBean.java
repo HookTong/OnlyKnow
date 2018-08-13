@@ -33,6 +33,8 @@ public class OKCarouselAdBean {
     private List<CarouselImage> carouselImages;
     private List<ADImage> adImages;
 
+    private long requestTime = 0;
+
     public int getGroupId() {
         return groupId;
     }
@@ -135,6 +137,14 @@ public class OKCarouselAdBean {
 
     public void setGroupDate(Date groupDate) {
         this.groupDate = groupDate;
+    }
+
+    public long getRequestTime() {
+        return requestTime;
+    }
+
+    public void setRequestTime(long requestTime) {
+        this.requestTime = requestTime;
     }
 
     public List<CarouselImage> getCarouselImages() {

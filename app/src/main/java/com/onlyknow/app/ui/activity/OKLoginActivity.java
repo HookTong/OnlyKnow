@@ -9,24 +9,34 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.amap.api.location.AMapLocation;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 import com.onlyknow.app.utils.OKDateUtil;
 
-public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.onCallBack {
+public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.onCallBack,
+        OKMainService.NoticeCallBack {
     private AppCompatButton but;
     private EditText editTextUserName, editTextPssword;
     private TextView textView;
 
     private OKManagerUserApi okManagerUserApi;
 
+    private int noticeIndex;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_login);
+
+        noticeIndex = OKMainService.addNoticeCallBack(this);
+
         initUserBody();
         findView();
         init();
@@ -45,8 +55,14 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
         }
     }
 
-    private void init() {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
+        OKMainService.removeNoticeCallBack(noticeIndex);
+    }
+
+    private void init() {
         textView.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -91,11 +107,9 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
 
     @Override
     public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
-        closeProgressDialog();
-
         if (OKManagerUserApi.Params.TYPE_LOGIN.equals(type)) {
-
             if (result == null || !result.isSuccess()) {
+                closeProgressDialog();
                 showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");
                 return;
             }
@@ -103,6 +117,7 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
             OKUserInfoBean userInfoBean = (OKUserInfoBean) result.getData();
 
             if (userInfoBean == null) {
+                closeProgressDialog();
                 showSnackBar(but, "登录失败,请检查用户名和密码以及网络设置!", "");
                 return;
             }
@@ -138,11 +153,30 @@ public class OKLoginActivity extends OKBaseActivity implements OKManagerUserApi.
             mBundle.putString(OKUserInfoBean.KEY_PASSWORD, userInfoBean.getUserPassword());
             sendUserBroadcast(ACTION_MAIN_SERVICE_LOGIN_IM, mBundle);
 
-            showSnackBar(but, "登录成功", "");
+            showSnackBar(but, "登录成功,后台正在登录IM聊天服务器.", "");
 
-            finish();
-        } else {
-            showSnackBar(but, "异常操作类型!", "");
+            // finish();
         }
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation location) {
+    }
+
+    @Override
+    public void onImStatusChanged(boolean isOnline) {
+        closeProgressDialog();
+
+        showSnackBar(but, "IM聊天服务器登录" + (isOnline ? "成功!" : "失败!"), "");
+
+        finish();
+    }
+
+    @Override
+    public void onCarouselImageChanged(OKCarouselAdBean bean) {
+    }
+
+    @Override
+    public void onWeatherChanged(OKWeatherBean bean) {
     }
 }

@@ -26,6 +26,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.amap.api.location.AMapLocation;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
@@ -33,6 +34,8 @@ import com.onlyknow.app.api.card.OKLoadHistoryCardApi;
 import com.onlyknow.app.db.OKDatabaseHelper;
 import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKCarouselAdBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -54,8 +57,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener,
-        NavigationView.OnNavigationItemSelectedListener, OKLoadHistoryCardApi.onCallBack, OKLoadCarouselAdApi.onCallBack {
+public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener,
+        OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener,
+        OKLoadHistoryCardApi.onCallBack, OKMainService.NoticeCallBack {
     private AppBarLayout appBarLayout;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private OKKenBurnsView mHeaderPicture;
@@ -70,9 +74,9 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     private OKLoadHistoryCardApi mOKLoadHistoryCardApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
-    private OKLoadCarouselAdApi carouselAdApi;
-
     private long touch_image_time = 0;
+
+    private int noticeIndex;
 
     private View rootView;
 
@@ -80,10 +84,15 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (rootView == null) {
             rootView = inflater.inflate(R.layout.ok_fragment_history, container, false);
+
+            noticeIndex = OKMainService.addNoticeCallBack(this);
+
             findView(rootView);
             init();
             return rootView;
         } else {
+            noticeIndex = OKMainService.addNoticeCallBack(this);
+
             return rootView;
         }
     }
@@ -112,12 +121,10 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     public void onDestroyView() {
         super.onDestroyView();
 
+        OKMainService.removeNoticeCallBack(noticeIndex);
+
         if (mOKLoadHistoryCardApi != null) {
             mOKLoadHistoryCardApi.cancelTask();
-        }
-
-        if (carouselAdApi != null) {
-            carouselAdApi.cancelTask();
         }
 
         if (null != rootView) {
@@ -175,13 +182,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
         mRecyclerView.setAdapter(mEntryViewAdapter);
 
         // 请求轮播图片
-        OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
-        params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
-        if (carouselAdApi != null) {
-            carouselAdApi.cancelTask();
-        }
-        carouselAdApi = new OKLoadCarouselAdApi(getActivity());
-        carouselAdApi.requestCarouselAd(params, this);
+        sendUserBroadcast(OKMainService.ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE, null);
 
         floatingActionButton.setOnClickListener(new OnClickListener() {
 
@@ -261,13 +262,7 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
                     showSnackBar(v, "再点一次获取轮播图片!", "");
                 } else {
                     // 请求轮播图片
-                    OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
-                    params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
-                    if (carouselAdApi != null) {
-                        carouselAdApi.cancelTask();
-                    }
-                    carouselAdApi = new OKLoadCarouselAdApi(getActivity());
-                    carouselAdApi.requestCarouselAd(params, OKHistoryScreen.this);
+                    sendUserBroadcast(OKMainService.ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE, null);
 
                     showSnackBar(v, "重新获取轮播图片", "");
                 }
@@ -367,10 +362,24 @@ public class OKHistoryScreen extends OKBaseFragment implements OnOffsetChangedLi
     }
 
     @Override
-    public void loadCarouselAdComplete(OKCarouselAdBean bean) {
-        if (bean == null) return;
+    public void onLocationChanged(AMapLocation location) {
 
+    }
+
+    @Override
+    public void onImStatusChanged(boolean isOnline) {
+
+    }
+
+    @Override
+    public void onCarouselImageChanged(OKCarouselAdBean bean) {
+        if (bean == null) return;
         mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImages());
+    }
+
+    @Override
+    public void onWeatherChanged(OKWeatherBean bean) {
+
     }
 
     private class EntryViewAdapter extends RecyclerView.Adapter<EntryViewAdapter.EntryViewHolder> {

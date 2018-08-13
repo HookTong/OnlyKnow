@@ -24,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.amap.api.location.AMapLocation;
 import com.onlyknow.app.OKConstant;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.app.OKLoadCarouselAdApi;
@@ -32,6 +33,8 @@ import com.onlyknow.app.api.user.OKManagerUserApi;
 import com.onlyknow.app.db.bean.OKCardBean;
 import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseFragment;
 import com.onlyknow.app.ui.activity.OKCardTPActivity;
 import com.onlyknow.app.ui.activity.OKCardTWActivity;
@@ -55,8 +58,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener, OnLoadMoreListener,
-        NavigationView.OnNavigationItemSelectedListener, OKLoadNearCardApi.onCallBack, OKLoadCarouselAdApi.onCallBack {
+public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListener, OnRefreshListener,
+        OnLoadMoreListener, NavigationView.OnNavigationItemSelectedListener,
+        OKLoadNearCardApi.onCallBack, OKMainService.NoticeCallBack {
     private AppBarLayout appBarLayout;
     private FloatingActionButton fabReGet;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
@@ -71,11 +75,11 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     private OKLoadNearCardApi mOKLoadNearCardApi;
     private List<OKCardBean> mCardBeanList = new ArrayList<>();
 
-    private OKLoadCarouselAdApi carouselAdApi;
-
     private long locationInterval = 0;
 
     private long touch_image_time = 0;
+
+    private int noticeIndex;
 
     private View rootView;
 
@@ -86,10 +90,14 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
             initUserBody();
             initWeatherBody();
 
+            noticeIndex = OKMainService.addNoticeCallBack(this);
+
             findView(rootView);
             init();
             return rootView;
         } else {
+            noticeIndex = OKMainService.addNoticeCallBack(this);
+
             return rootView;
         }
     }
@@ -117,12 +125,10 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     public void onDestroyView() {
         super.onDestroyView();
 
+        OKMainService.removeNoticeCallBack(noticeIndex);
+
         if (mOKLoadNearCardApi != null) {
             mOKLoadNearCardApi.cancelTask();
-        }
-
-        if (carouselAdApi != null) {
-            carouselAdApi.cancelTask();
         }
 
         if (null != rootView) {
@@ -180,13 +186,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
         mRecyclerView.setAdapter(mCardViewAdapter);
 
         // 请求轮播图片
-        OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
-        params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
-        if (carouselAdApi != null) {
-            carouselAdApi.cancelTask();
-        }
-        carouselAdApi = new OKLoadCarouselAdApi(getActivity());
-        carouselAdApi.requestCarouselAd(params, this);
+        sendUserBroadcast(OKMainService.ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE, null);
 
         fabReGet.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -236,13 +236,7 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
                     showSnackBar(v, "再点一次获取轮播图片!", "");
                 } else {
                     // 请求轮播图片
-                    OKLoadCarouselAdApi.Params params = new OKLoadCarouselAdApi.Params();
-                    params.setType(OKLoadCarouselAdApi.Params.TYPE_NEW);
-                    if (carouselAdApi != null) {
-                        carouselAdApi.cancelTask();
-                    }
-                    carouselAdApi = new OKLoadCarouselAdApi(getActivity());
-                    carouselAdApi.requestCarouselAd(params, OKNearScreen.this);
+                    sendUserBroadcast(OKMainService.ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE, null);
 
                     showSnackBar(v, "重新获取轮播图片", "");
                 }
@@ -350,10 +344,25 @@ public class OKNearScreen extends OKBaseFragment implements OnOffsetChangedListe
     }
 
     @Override
-    public void loadCarouselAdComplete(OKCarouselAdBean bean) {
-        if (bean == null) return;
+    public void onLocationChanged(AMapLocation location) {
+        if (mRefreshLayout.getState() != RefreshState.Refreshing
+                && mRefreshLayout.getState() != RefreshState.Loading) {
+            mRefreshLayout.autoRefresh();
+        }
+    }
 
+    @Override
+    public void onImStatusChanged(boolean isOnline) {
+    }
+
+    @Override
+    public void onCarouselImageChanged(OKCarouselAdBean bean) {
+        if (bean == null) return;
         mHeaderPicture.setCarouselByUrl(this.getActivity(), bean.getCarouselImages());
+    }
+
+    @Override
+    public void onWeatherChanged(OKWeatherBean bean) {
     }
 
     private class CardViewAdapter extends RecyclerView.Adapter<CardViewAdapter.CardViewHolder> {

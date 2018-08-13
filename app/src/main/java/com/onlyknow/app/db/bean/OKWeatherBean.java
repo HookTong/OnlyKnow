@@ -15,6 +15,9 @@ public class OKWeatherBean {
     public String status;
     public Data data;
 
+    // -----------------
+    public long requestTime = 0;
+
     public static class Data {
         public String wendu;
         public String ganmao;
@@ -208,6 +211,14 @@ public class OKWeatherBean {
 
     public void setData(Data data) {
         this.data = data;
+    }
+
+    public long getRequestTime() {
+        return requestTime;
+    }
+
+    public void setRequestTime(long requestTime) {
+        this.requestTime = requestTime;
     }
 
     public final static String toJson(OKWeatherBean bean) {

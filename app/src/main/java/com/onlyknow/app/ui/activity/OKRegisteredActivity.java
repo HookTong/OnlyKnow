@@ -12,16 +12,22 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.amap.api.location.AMapLocation;
 import com.onlyknow.app.R;
 import com.onlyknow.app.api.OKServiceResult;
 import com.onlyknow.app.api.user.OKManagerUserApi;
+import com.onlyknow.app.db.bean.OKCarouselAdBean;
 import com.onlyknow.app.db.bean.OKUserInfoBean;
+import com.onlyknow.app.db.bean.OKWeatherBean;
+import com.onlyknow.app.service.OKMainService;
 import com.onlyknow.app.ui.OKBaseActivity;
 
 import java.util.Date;
 
-public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUserApi.onCallBack {
+public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUserApi.onCallBack,
+        OKMainService.NoticeCallBack {
     private AppCompatButton buttonSigNup;
     private EditText editTextUserName, editTextNickName, editTextPhone, editTextEmail, editTextPassword;
     private RadioGroup sexRg;
@@ -33,10 +39,15 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
 
     private OKManagerUserApi okManagerUserApi;
 
+    private int noticeIndex;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ok_activity_registered);
+
+        noticeIndex = OKMainService.addNoticeCallBack(this);
+
         findView();
         init();
     }
@@ -53,6 +64,13 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
         if (okManagerUserApi != null) {
             okManagerUserApi.cancelTask();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        OKMainService.removeNoticeCallBack(noticeIndex);
     }
 
     private void findView() {
@@ -219,15 +237,12 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
 
     @Override
     public void managerUserComplete(OKServiceResult<Object> result, String type, int pos) {
-        closeProgressDialog();
-
         if (OKManagerUserApi.Params.TYPE_REGISTERED.equals(type)) {
-
             if (result == null) {
+                closeProgressDialog();
                 showSnackBar(buttonSigNup, "注册失败,服务器未返回数据!", "");
                 return;
             }
-
             if (result.isSuccess()) {
                 // 向环信注册账号
                 Bundle mBundle = new Bundle();
@@ -235,12 +250,37 @@ public class OKRegisteredActivity extends OKBaseActivity implements OKManagerUse
                 mBundle.putString(OKUserInfoBean.KEY_PASSWORD, imPass);
                 sendUserBroadcast(ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM, mBundle);
 
-                showSnackBar(buttonSigNup, "注册成功", "");
+                showSnackBar(buttonSigNup, "注册成功,后台正在注册并登录IM聊天服务器.", "");
 
-                finish();
+                // finish();
             } else {
+                closeProgressDialog();
                 showSnackBar(buttonSigNup, "注册失败," + result.getMsg(), "");
             }
         }
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation location) {
+
+    }
+
+    @Override
+    public void onImStatusChanged(boolean isOnline) {
+        closeProgressDialog();
+
+        showSnackBar(buttonSigNup, "IM聊天服务器登录" + (isOnline ? "成功" : "失败"), "");
+
+        finish();
+    }
+
+    @Override
+    public void onCarouselImageChanged(OKCarouselAdBean bean) {
+
+    }
+
+    @Override
+    public void onWeatherChanged(OKWeatherBean bean) {
+
     }
 }

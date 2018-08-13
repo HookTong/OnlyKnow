@@ -26,7 +26,7 @@ import java.util.List;
  * Created by Reset on 2018/05/24.
  */
 
-public class OKBaseService extends Service implements EMCallBack, EMMessageListener {
+public class OKBaseService extends Service implements EMMessageListener {
     private final String TAG = "OKBaseService";
 
     protected NotificationManager mNotificationManager;
@@ -34,11 +34,20 @@ public class OKBaseService extends Service implements EMCallBack, EMMessageListe
 
     protected SharedPreferences USER_BODY, SETTING_BODY, WEATHER_BODY;
 
-    protected final String ACTION_MAIN_SERVICE_LOGIN_IM = "ACTION_MAIN_SERVICE_LOGIN_IM";
-    protected final String ACTION_MAIN_SERVICE_LOGOUT_IM = "ACTION_MAIN_SERVICE_LOGOUT_IM";
-    protected final String ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM = "ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM";
-    protected final String ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM";
-    protected final String ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM";
+    public final static int WHAT_IM_LOGIN = 990;
+    public final static int WHAT_IM_LOGIN_SUCCESS = 991;
+    public final static int WHAT_IM_LOGIN_FAILURE = 992;
+    public final static int WHAT_IM_LOGOUT_SUCCESS = 993;
+    public final static int WHAT_IM_LOGOUT_FAILURE = 994;
+    public final static int WHAT_CITY_ID_GET = 995;
+
+    public final static String ACTION_MAIN_SERVICE_LOGIN_IM = "ACTION_MAIN_SERVICE_LOGIN_IM";
+    public final static String ACTION_MAIN_SERVICE_LOGOUT_IM = "ACTION_MAIN_SERVICE_LOGOUT_IM";
+    public final static String ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM = "ACTION_MAIN_SERVICE_CREATE_ACCOUNT_IM";
+    public final static String ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_ADD_MESSAGE_LISTENER_IM";
+    public final static String ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM = "ACTION_MAIN_SERVICE_REMOVE_MESSAGE_LISTENER_IM";
+    public final static String ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE = "ACTION_MAIN_SERVICE_GET_CAROUSE_IMAGE";
+    public final static String ACTION_MAIN_SERVICE_GET_WEATHER = "ACTION_MAIN_SERVICE_GET_WEATHER";
 
     protected final void initUserBody() {
         if (USER_BODY == null) {
@@ -99,21 +108,6 @@ public class OKBaseService extends Service implements EMCallBack, EMMessageListe
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    @Override
-    public void onSuccess() {
-        OKLogUtil.print(TAG, "onSuccess");
-    }
-
-    @Override
-    public void onError(int i, String s) {
-        OKLogUtil.print(TAG, "onError:" + i + " Msg:" + s);
-    }
-
-    @Override
-    public void onProgress(int i, String s) {
-        OKLogUtil.print(TAG, "onProgress:" + i + " Msg:" + s);
     }
 
     @Override
